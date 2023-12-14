@@ -1,4 +1,5 @@
 use std::io::{Error, ErrorKind, Read, Result, Write};
+use crate::primitive::*;
 
 macro_rules! variable_len_util {
     ($primitive: ident, $length: literal, $read_variable: ident, $write_variable: ident, $cause: literal,
