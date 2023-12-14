@@ -1,9 +1,10 @@
-/target
-/Cargo.lock
 /*
 
 ### Cargo ###
 !/.gitignore
 !/Cargo.lock
 !/Cargo.toml
+
+### Project ###
 !/src
+!/README.md
