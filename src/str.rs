@@ -20,6 +20,6 @@ pub fn read_string(source: &mut impl Readable) -> Result<String> {
         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
     }
 }
-pub fn write_string(target: &mut impl Writable, message: &String) -> Result<usize> {
+pub fn write_string(target: &mut impl Writable, message: &str) -> Result<usize> {
     write_u8_vec(target, message.as_bytes())
 }
