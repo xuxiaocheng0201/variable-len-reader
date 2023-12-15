@@ -1,4 +1,4 @@
-# Variable Len Reader
+# 可变长数据读写器
 
 ![Crate](https://img.shields.io/crates/v/variable-len-reader.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/xuxiaocheng0201/variable-len-reader)
@@ -6,20 +6,18 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/xuxiaocheng0201/variable-len-reader)
 ![GitHub](https://img.shields.io/github/license/xuxiaocheng0201/variable-len-reader)
 
-**Read this in other languages: [English](README.md), [简体中文](README_zh.md).**
+**其他语言版本：[English](README.md)，[简体中文](README_zh.md)。**
 
-# Description
+# 描述
 
-A Rust crate to read variable length data. (VarInt)
+一个类似于 VarInt 的可变长数据读写器。
 
->Read and write compressed data. Of each such byte, only 7 bits will be used to describe the actual value
-since its most significant bit indicates whether the next byte is part of the same int.
-Micro-optimization for int values that are expected to have values below 128.
+>读取和写入压缩过数据。在每个这样的字节中，只有7位将用于描述实际值，
+它的最高有效位指示下一个字节是否是同一int的一部分。
 
+# 用法
 
-# Usage
-
-Add this to your `Cargo.toml`:
+将以下内容添加到你的`Cargo.toml`：
 
 ```toml
 [dependencies]
@@ -27,9 +25,9 @@ variable-len-reader = "*"
 ```
 
 
-# Example
+# 示例
 
-Directly use in tcp stream:
+直接在tcp流中使用：
 
 ```rust
 use std::net::{TcpListener, TcpStream};
@@ -41,16 +39,16 @@ fn main() {
     let mut client = TcpStream::connect(addr).unwrap();
     let mut server = server.incoming().next().unwrap().unwrap();
 
-    // Write
+    // 写
     write_variable_u32(&mut client, 4321).unwrap();
 
-    // Read
+    // 读
     let message = read_variable_u32(&mut server).unwrap();
     assert_eq!(4321, message);
 }
 ```
 
-Use with [bytes](https://crates.io/crates/bytes) crate:
+和 [bytes](https://crates.io/crates/bytes) 库一起使用：
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
@@ -59,13 +57,13 @@ use variable_len_reader::variable_len::{read_variable_u32, write_variable_u32};
 fn main() {
     let mut writer = BytesMut::new().writer();
 
-    // Write
+    // 写
     write_variable_u32(&mut writer, 1234).unwrap();
 
     let bytes = writer.into_inner();
     let mut reader = bytes.reader();
 
-    // Read
+    // 读
     let message = read_variable_u32(&mut reader).unwrap();
     assert_eq!(1234, message);
 }
