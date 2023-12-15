@@ -6,8 +6,6 @@ pub mod primitive;
 pub mod variable_len;
 #[cfg(feature = "str")]
 pub mod str;
-#[cfg(feature = "bytes")]
-mod bytes;
 
 pub trait Readable {
     fn read(&mut self) -> Result<u8>;
@@ -31,7 +29,7 @@ pub trait Writable {
     }
 }
 
-impl Readable for dyn Read {
+impl<R: Read> Readable for R {
     fn read(&mut self) -> Result<u8> {
         let mut bytes = [0; 1];
         self.read_exact(&mut bytes)?;
@@ -43,7 +41,7 @@ impl Readable for dyn Read {
     }
 }
 
-impl Writable for dyn Write {
+impl<W: Write> Writable for W {
     fn write(&mut self, byte: u8) -> Result<()> {
         self.write_all(&[byte])
     }

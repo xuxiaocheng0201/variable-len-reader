@@ -9,7 +9,6 @@ license = "MIT"
 repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 
 [dependencies]
-bytes = { version = "*", default-features = false, optional = true }
 
 [features]
 default = ["str"]
