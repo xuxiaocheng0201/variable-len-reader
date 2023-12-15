@@ -1,10 +1,10 @@
 # Variable Len Reader
 
-![Crate](https://img.shields.io/crates/v/variable-len-reader.svg)
-![GitHub last commit](https://img.shields.io/github/last-commit/xuxiaocheng0201/variable-len-reader)
-![GitHub issues](https://img.shields.io/github/issues-raw/xuxiaocheng0201/variable-len-reader)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/xuxiaocheng0201/variable-len-reader)
-![GitHub](https://img.shields.io/github/license/xuxiaocheng0201/variable-len-reader)
+[![Crate](https://img.shields.io/crates/v/variable-len-reader.svg)](https://crates.io/crates/variable-len-reader)
+[![GitHub last commit](https://img.shields.io/github/last-commit/xuxiaocheng0201/variable-len-reader)](https://github.com/xuxiaocheng0201/variable-len-reader/commits/master)
+[![GitHub issues](https://img.shields.io/github/issues-raw/xuxiaocheng0201/variable-len-reader)](https://github.com/xuxiaocheng0201/variable-len-reader/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/xuxiaocheng0201/variable-len-reader)](https://github.com/xuxiaocheng0201/variable-len-reader/pulls)
+[![GitHub](https://img.shields.io/github/license/xuxiaocheng0201/variable-len-reader)](https://github.com/xuxiaocheng0201/variable-len-reader/blob/master/LICENSE)
 
 **Read this in other languages: [English](README.md), [简体中文](README_zh.md).**
 
