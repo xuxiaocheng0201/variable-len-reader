@@ -1,41 +1,41 @@
-use std::io::{Read, Result, Write};
+use std::io::Result;
+use crate::{Readable, Writable};
 
-pub fn read_u8(source: &mut impl Read) -> Result<u8> {
-    let mut bytes = [0; 1];
-    source.read_exact(&mut bytes)?;
-    Ok(bytes[0])
+pub fn read_u8(source: &mut impl Readable) -> Result<u8> {
+    source.read()
 }
-pub fn write_u8(target: &mut impl Write, message: u8) -> Result<usize> {
-    target.write_all(&[message])?;
+pub fn write_u8(target: &mut impl Writable, message: u8) -> Result<usize> {
+    target.write(message)?;
     Ok(1)
 }
-pub fn read_bool(source: &mut impl Read) -> Result<bool> {
+
+pub fn read_bool(source: &mut impl Readable) -> Result<bool> {
     Ok(read_u8(source)? != 0)
 }
-pub fn write_bool(target: &mut impl Write, message: bool) -> Result<usize> {
+pub fn write_bool(target: &mut impl Writable, message: bool) -> Result<usize> {
     write_u8(target, if message { 1 } else { 0 })
 }
 
 macro_rules! primitive_util {
     ($primitive: ident, $length: literal, $read: ident, $read_be: ident, $write: ident, $write_be: ident) => {
-        pub fn $read(source: &mut impl Read) -> Result<$primitive> {
+        pub fn $read(source: &mut impl Readable) -> Result<$primitive> {
             let mut bytes = [0; $length];
-            source.read_exact(&mut bytes)?;
+            source.read_more(&mut bytes)?;
             Ok($primitive::from_le_bytes(bytes))
         }
-        pub fn $read_be(source: &mut impl Read) -> Result<$primitive> {
+        pub fn $read_be(source: &mut impl Readable) -> Result<$primitive> {
             let mut bytes = [0; $length];
-            source.read_exact(&mut bytes)?;
+            source.read_more(&mut bytes)?;
             Ok($primitive::from_be_bytes(bytes))
         }
-        pub fn $write(target: &mut impl Write, message: $primitive) -> Result<usize> {
+        pub fn $write(target: &mut impl Writable, message: $primitive) -> Result<usize> {
             let m = $primitive::to_le_bytes(message);
-            target.write_all(&m)?;
+            target.write_more(&m)?;
             Ok(m.len())
         }
-        pub fn $write_be(target: &mut impl Write, message: $primitive) -> Result<usize> {
+        pub fn $write_be(target: &mut impl Writable, message: $primitive) -> Result<usize> {
             let m = $primitive::to_be_bytes(message);
-            target.write_all(&m)?;
+            target.write_more(&m)?;
             Ok(m.len())
         }
     };

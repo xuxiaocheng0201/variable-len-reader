@@ -1,10 +1,11 @@
-use std::io::{Error, ErrorKind, Read, Result, Write};
+use std::io::{Error, ErrorKind, Result};
 use crate::primitive::*;
+use crate::{Readable, Writable};
 
 macro_rules! variable_len_util {
     ($primitive: ident, $length: literal, $read_variable: ident, $write_variable: ident, $cause: literal,
     $read: ident, $write: ident, $inside_type: ident, $num_bits: literal, $next_bit: literal, $offset_position: literal) => {
-        pub fn $read_variable(source: &mut impl Read) -> Result<$primitive> {
+        pub fn $read_variable(source: &mut impl Readable) -> Result<$primitive> {
             let mut value = 0;
             let mut position = 0;
             loop {
@@ -20,7 +21,7 @@ macro_rules! variable_len_util {
             }
             Ok(value)
         }
-        pub fn $write_variable(target: &mut impl Write, message: $primitive) -> Result<usize> {
+        pub fn $write_variable(target: &mut impl Writable, message: $primitive) -> Result<usize> {
             let mut size = 0;
             let mut value = message;
             while value >> $offset_position > 0 {
