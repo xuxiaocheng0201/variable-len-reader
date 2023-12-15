@@ -42,11 +42,11 @@ fn main() {
     let mut server = server.incoming().next().unwrap().unwrap();
 
     // Write
-    write_variable_u32(&mut client, 4321).unwrap();
+    write_variable_u32(&mut client, 1234).unwrap();
 
     // Read
     let message = read_variable_u32(&mut server).unwrap();
-    assert_eq!(4321, message);
+    assert_eq!(1234, message);
 }
 ```
 
@@ -60,13 +60,13 @@ fn main() {
     let mut writer = BytesMut::new().writer();
 
     // Write
-    write_variable_u32(&mut writer, 1234).unwrap();
+    write_variable_u32(&mut writer, 4321).unwrap();
 
     let bytes = writer.into_inner();
     let mut reader = bytes.reader();
 
     // Read
     let message = read_variable_u32(&mut reader).unwrap();
-    assert_eq!(1234, message);
+    assert_eq!(4321, message);
 }
 ```
