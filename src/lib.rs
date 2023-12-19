@@ -1,6 +1,7 @@
 use std::io::{Error, ErrorKind, Read, Result, Write};
+use varint_rs::{VarintReader, VarintWriter};
 
-pub trait VariableReadable: varint_rs::VarintReader {
+pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader>::Error> {
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {
             buf[i] = self.read()?;
@@ -25,7 +26,7 @@ pub trait VariableReadable: varint_rs::VarintReader {
     }
 }
 
-pub trait VariableWritable: varint_rs::VarintWriter {
+pub trait VariableWritable: VarintWriter where Error: From<<Self as VarintWriter>::Error> {
     fn write_more(&mut self, bytes: &[u8]) -> Result<()> {
         for i in 0..bytes.len() {
             self.write(bytes[i])?;
