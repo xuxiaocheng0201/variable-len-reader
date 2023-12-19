@@ -83,6 +83,7 @@ mod test {
 
     macro_rules! raw_test_0 {
         ($tester: ident, $primitive: ty, $reader: ident, $writer: ident, $num: expr) => {
+            let p = $num;
             let mut cursor = Cursor::new(Vec::new());
             cursor.$writer(p).expect(&format!("Failed to write {} at {}.", p, stringify!($tester)));
             cursor.set_position(0);

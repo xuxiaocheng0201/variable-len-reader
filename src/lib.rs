@@ -5,6 +5,8 @@ mod raw;
 mod varint;
 #[cfg(feature = "signed")]
 pub mod zigzag;
+#[cfg(feature = "signed")]
+mod signed;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
@@ -31,6 +33,9 @@ pub trait VariableReadable {
     raw::define_raw_read!();
 
     varint::define_varint_read!();
+
+    #[cfg(feature = "signed")]
+    signed::define_signed_read!();
 
     // #[cfg(feature = "vec_u8")]
     // #[inline]
@@ -70,6 +75,9 @@ pub trait VariableWritable {
     raw::define_raw_write!();
 
     varint::define_varint_write!();
+
+    #[cfg(feature = "signed")]
+    signed::define_signed_write!();
 
 //     #[cfg(feature = "vec_u8")]
 //     #[inline]
