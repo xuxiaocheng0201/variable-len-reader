@@ -7,8 +7,8 @@ mod varint;
 pub mod zigzag;
 #[cfg(feature = "signed")]
 mod signed;
-#[cfg(feature = "async")]
-pub mod asynchronous;
+#[cfg(feature = "signed")]
+use crate::zigzag::Zigzag;
 
 pub trait VariableReadable {
     fn read(&mut self) -> Result<u8>;
@@ -37,23 +37,23 @@ pub trait VariableReadable {
     #[cfg(feature = "signed")]
     signed::define_signed_read!();
 
-    // #[cfg(feature = "vec_u8")]
-    // #[inline]
-    // fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
-    //     let length = self.read_u128_varint()? as usize;
-    //     let mut bytes = vec![0; length];
-    //     self.read_more(&mut bytes)?;
-    //     Ok(bytes)
-    // }
-    //
-    // #[cfg(feature = "string")]
-    // #[inline]
-    // fn read_string(&mut self) -> Result<String> {
-    //     match String::from_utf8(self.read_u8_vec()?) {
-    //         Ok(s) => Ok(s),
-    //         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-    //     }
-    // }
+    #[cfg(feature = "vec_u8")]
+    #[inline]
+    fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
+        let length = self.read_u128_varint()? as usize;
+        let mut bytes = vec![0; length];
+        self.read_more(&mut bytes)?;
+        Ok(bytes)
+    }
+
+    #[cfg(feature = "string")]
+    #[inline]
+    fn read_string(&mut self) -> Result<String> {
+        match String::from_utf8(self.read_u8_vec()?) {
+            Ok(s) => Ok(s),
+            Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
+        }
+    }
 }
 
 pub trait VariableWritable {
@@ -79,18 +79,18 @@ pub trait VariableWritable {
     #[cfg(feature = "signed")]
     signed::define_signed_write!();
 
-//     #[cfg(feature = "vec_u8")]
-//     #[inline]
-//     fn write_u8_vec(&mut self, message: &[u8]) -> Result<()> {
-//         self.write_u128_varint(message.len() as u128)?;
-//         self.write_more(message)
-//     }
-//
-//     #[cfg(feature = "string")]
-//     #[inline]
-//     fn write_string(&mut self, message: &str) -> Result<()> {
-//         self.write_u8_vec(message.as_bytes())
-//     }
+    #[cfg(feature = "vec_u8")]
+    #[inline]
+    fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
+        self.write_u128_varint(message.len() as u128)?;
+        self.write_more(message)
+    }
+
+    #[cfg(feature = "string")]
+    #[inline]
+    fn write_string(&mut self, message: &str) -> Result<usize> {
+        self.write_u8_vec(message.as_bytes())
+    }
 }
 
 impl<R: Read> VariableReadable for R {

@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data."
@@ -16,7 +16,6 @@ raw = []
 signed = []
 vec_u8 = []
 string = ["vec_u8"]
-async = []
 
 [badges]
 maintenance = { status = "actively-developed" }
