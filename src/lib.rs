@@ -42,7 +42,7 @@ pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader
 pub trait VariableWritable: VarintWriter where Error: From<<Self as VarintWriter>::Error> {
     #[inline]
     fn write_bool(&mut self, b: bool) -> Result<()> {
-        self.write(if b { 1 } else { 0 })
+        Ok(self.write(if b { 1 } else { 0 })?)
     }
 
     fn write_more(&mut self, bytes: &[u8]) -> Result<()> {
