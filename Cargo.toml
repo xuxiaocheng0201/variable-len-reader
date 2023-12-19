@@ -10,10 +10,11 @@ repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 keywords = ["varint", "io"]
 
 [dependencies]
-varint-rs = "^2.2"
+varint-rs = { version = "^2.2", default-features = false, features = ["std"] }
 
 [features]
 default = ["string"]
 
+signed = ["varint-rs/signed"]
 vec_u8 = []
 string = ["vec_u8"]
