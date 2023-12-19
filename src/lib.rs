@@ -4,6 +4,15 @@ use varint_rs::{VarintReader, VarintWriter};
 pub extern crate varint_rs as varint;
 
 pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader>::Error> {
+    #[inline]
+    fn read_bool(&mut self)-> Result<bool> {
+        match self.read()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
+        }
+    }
+
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {
             buf[i] = self.read()?;
@@ -12,6 +21,7 @@ pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader
     }
 
     #[cfg(feature = "vec_u8")]
+    #[inline]
     fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
         let length = self.read_u128_varint()? as usize;
         let mut bytes = vec![0; length];
@@ -20,6 +30,7 @@ pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader
     }
 
     #[cfg(feature = "string")]
+    #[inline]
     fn read_string(&mut self) -> Result<String> {
         match String::from_utf8(self.read_u8_vec()?) {
             Ok(s) => Ok(s),
@@ -29,6 +40,11 @@ pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader
 }
 
 pub trait VariableWritable: VarintWriter where Error: From<<Self as VarintWriter>::Error> {
+    #[inline]
+    fn write_bool(&mut self, b: bool) -> Result<()> {
+        self.write(if b { 1 } else { 0 })
+    }
+
     fn write_more(&mut self, bytes: &[u8]) -> Result<()> {
         for i in 0..bytes.len() {
             self.write(bytes[i])?;
@@ -37,12 +53,14 @@ pub trait VariableWritable: VarintWriter where Error: From<<Self as VarintWriter
     }
 
     #[cfg(feature = "vec_u8")]
+    #[inline]
     fn write_u8_vec(&mut self, message: &[u8]) -> Result<()> {
         self.write_u128_varint(message.len() as u128)?;
         self.write_more(message)
     }
 
     #[cfg(feature = "string")]
+    #[inline]
     fn write_string(&mut self, message: &str) -> Result<()> {
         self.write_u8_vec(message.as_bytes())
     }
