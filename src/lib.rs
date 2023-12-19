@@ -1,9 +1,15 @@
 use std::io::{Error, ErrorKind, Read, Result, Write};
-use varint_rs::{VarintReader, VarintWriter};
 
-pub extern crate varint_rs as varint;
+#[cfg(feature = "raw")]
+mod raw;
+#[cfg(feature = "signed")]
+pub mod zigzag;
+#[cfg(feature = "async")]
+pub mod asynchronous;
 
-pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader>::Error> {
+pub trait VariableReadable {
+    fn read(&mut self) -> Result<u8>;
+
     #[inline]
     fn read_bool(&mut self)-> Result<bool> {
         match self.read()? {
@@ -20,53 +26,68 @@ pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader
         Ok(())
     }
 
-    #[cfg(feature = "vec_u8")]
-    #[inline]
-    fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
-        let length = self.read_u128_varint()? as usize;
-        let mut bytes = vec![0; length];
-        self.read_more(&mut bytes)?;
-        Ok(bytes)
-    }
+    #[cfg(feature = "raw")]
+    raw::define_raw_read!();
 
-    #[cfg(feature = "string")]
-    #[inline]
-    fn read_string(&mut self) -> Result<String> {
-        match String::from_utf8(self.read_u8_vec()?) {
-            Ok(s) => Ok(s),
-            Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-        }
-    }
+    // #[cfg(feature = "vec_u8")]
+    // #[inline]
+    // fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
+    //     let length = self.read_u128_varint()? as usize;
+    //     let mut bytes = vec![0; length];
+    //     self.read_more(&mut bytes)?;
+    //     Ok(bytes)
+    // }
+    //
+    // #[cfg(feature = "string")]
+    // #[inline]
+    // fn read_string(&mut self) -> Result<String> {
+    //     match String::from_utf8(self.read_u8_vec()?) {
+    //         Ok(s) => Ok(s),
+    //         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
+    //     }
+    // }
 }
 
-pub trait VariableWritable: VarintWriter where Error: From<<Self as VarintWriter>::Error> {
+pub trait VariableWritable {
+    fn write(&mut self, byte: u8) -> Result<usize>;
+
     #[inline]
-    fn write_bool(&mut self, b: bool) -> Result<()> {
-        Ok(self.write(if b { 1 } else { 0 })?)
+    fn write_bool(&mut self, b: bool) -> Result<usize> {
+        self.write(if b { 1 } else { 0 })
     }
 
-    fn write_more(&mut self, bytes: &[u8]) -> Result<()> {
+    fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
         for i in 0..bytes.len() {
             self.write(bytes[i])?;
         }
-        Ok(())
+        Ok(bytes.len())
     }
 
-    #[cfg(feature = "vec_u8")]
-    #[inline]
-    fn write_u8_vec(&mut self, message: &[u8]) -> Result<()> {
-        self.write_u128_varint(message.len() as u128)?;
-        self.write_more(message)
-    }
+    #[cfg(feature = "raw")]
+    raw::define_raw_write!();
 
-    #[cfg(feature = "string")]
-    #[inline]
-    fn write_string(&mut self, message: &str) -> Result<()> {
-        self.write_u8_vec(message.as_bytes())
-    }
+//     #[cfg(feature = "vec_u8")]
+//     #[inline]
+//     fn write_u8_vec(&mut self, message: &[u8]) -> Result<()> {
+//         self.write_u128_varint(message.len() as u128)?;
+//         self.write_more(message)
+//     }
+//
+//     #[cfg(feature = "string")]
+//     #[inline]
+//     fn write_string(&mut self, message: &str) -> Result<()> {
+//         self.write_u8_vec(message.as_bytes())
+//     }
 }
 
 impl<R: Read> VariableReadable for R {
+    #[inline]
+    fn read(&mut self) -> Result<u8> {
+        let mut buf = [0];
+        self.read_exact(&mut buf)?;
+        Ok(buf[0])
+    }
+
     #[inline]
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         self.read_exact(buf)
@@ -75,7 +96,14 @@ impl<R: Read> VariableReadable for R {
 
 impl<W: Write> VariableWritable for W {
     #[inline]
-    fn write_more(&mut self, bytes: &[u8]) -> Result<()> {
-        self.write_all(bytes)
+    fn write(&mut self, byte: u8) -> Result<usize> {
+        self.write_all(&[byte])?;
+        Ok(1)
+    }
+
+    #[inline]
+    fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
+        self.write_all(bytes)?;
+        Ok(bytes.len())
     }
 }

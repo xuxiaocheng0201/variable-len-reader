@@ -9,15 +9,14 @@ license = "MIT"
 repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 keywords = ["varint", "io"]
 
-[dependencies]
-varint-rs = { version = "^2.2", default-features = false, features = ["std"] }
-
 [features]
-default = ["string", "signed"]
+default = ["raw", "signed", "string"]
 
-signed = ["varint-rs/signed"]
+raw = []
+signed = []
 vec_u8 = []
 string = ["vec_u8"]
+async = []
 
 [badges]
 maintenance = { status = "actively-developed" }
