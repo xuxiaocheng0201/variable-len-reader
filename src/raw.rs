@@ -2,13 +2,15 @@ macro_rules! raw_read {
     ($primitive: ty, $read_le: ident, $read_be: ident) => {
         #[inline]
         fn $read_le(&mut self) -> Result<$primitive> {
-            let mut bytes = [0; std::mem::size_of::<$primitive>()];
+            const SIZE: usize = std::mem::size_of::<$primitive>();
+            let mut bytes = [0; SIZE];
             self.read_more(&mut bytes)?;
             Ok(<$primitive>::from_le_bytes(bytes))
         }
         #[inline]
         fn $read_be(&mut self) -> Result<$primitive> {
-            let mut bytes = [0; std::mem::size_of::<$primitive>()];
+            const SIZE: usize = std::mem::size_of::<$primitive>();
+            let mut bytes = [0; SIZE];
             self.read_more(&mut bytes)?;
             Ok(<$primitive>::from_be_bytes(bytes))
         }
@@ -79,16 +81,26 @@ mod test {
     use std::io::Cursor;
     use crate::{VariableReadable, VariableWritable};
 
+    macro_rules! raw_test_0 {
+        ($tester: ident, $primitive: ty, $reader: ident, $writer: ident, $num: expr) => {
+            let mut cursor = Cursor::new(Vec::new());
+            cursor.$writer(p).expect(&format!("Failed to write {} at {}.", p, stringify!($tester)));
+            cursor.set_position(0);
+            let q = cursor.$reader().expect(&format!("Failed to read {} at {}.", p, stringify!($tester)));
+            assert_eq!(p, q, "Not same: {} != {} at {}. bytes: {:?}", p, q, stringify!($tester), cursor.into_inner());
+        };
+    }
+
     macro_rules! raw_test {
         ($tester: ident, $primitive: ty, $reader: ident, $writer: ident) => {
             #[test]
             fn $tester() {
+                // Test first.
+                raw_test_0!($tester, $primitive, $reader, $writer, <$primitive>::MIN);
+                raw_test_0!($tester, $primitive, $reader, $writer, <$primitive>::MAX);
+                raw_test_0!($tester, $primitive, $reader, $writer, 0);
                 for p in <$primitive>::MIN..=<$primitive>::MAX {
-                    let mut cursor = Cursor::new(Vec::new());
-                    cursor.$writer(p).expect(&format!("Failed to write {} at {}.", p, stringify!($tester)));
-                    cursor.set_position(0);
-                    let q = cursor.$reader().expect(&format!("Failed to read {} at {}.", p, stringify!($tester)));
-                    assert_eq!(p, q, "Not same: {} != {} at {}", p, q, stringify!($tester));
+                    raw_test_0!($tester, $primitive, $reader, $writer, p);
                 }
             }
         };

@@ -2,6 +2,7 @@ use std::io::{Error, ErrorKind, Read, Result, Write};
 
 #[cfg(feature = "raw")]
 mod raw;
+mod varint;
 #[cfg(feature = "signed")]
 pub mod zigzag;
 #[cfg(feature = "async")]
@@ -28,6 +29,8 @@ pub trait VariableReadable {
 
     #[cfg(feature = "raw")]
     raw::define_raw_read!();
+
+    varint::define_varint_read!();
 
     // #[cfg(feature = "vec_u8")]
     // #[inline]
@@ -65,6 +68,8 @@ pub trait VariableWritable {
 
     #[cfg(feature = "raw")]
     raw::define_raw_write!();
+
+    varint::define_varint_write!();
 
 //     #[cfg(feature = "vec_u8")]
 //     #[inline]
