@@ -1,6 +1,8 @@
 use std::io::{Error, ErrorKind, Read, Result, Write};
 use varint_rs::{VarintReader, VarintWriter};
 
+pub extern crate varint_rs as varint;
+
 pub trait VariableReadable: VarintReader where Error: From<<Self as VarintReader>::Error> {
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {

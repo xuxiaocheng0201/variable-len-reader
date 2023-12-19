@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading variable length data."
@@ -18,3 +18,6 @@ default = ["string"]
 signed = ["varint-rs/signed"]
 vec_u8 = []
 string = ["vec_u8"]
+
+[badges]
+maintenance = { status = "actively-developed" }
