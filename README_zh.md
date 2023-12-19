@@ -15,13 +15,14 @@
 >读取和写入压缩过数据。在每个这样的字节中，只有7位将用于描述实际值，
 它的最高有效位指示下一个字节是否是同一int的一部分。
 
+
 # 用法
 
 将以下内容添加到你的`Cargo.toml`：
 
 ```toml
 [dependencies]
-variable-len-reader = "*"
+variable-len-reader = "~0.3"
 ```
 
 
