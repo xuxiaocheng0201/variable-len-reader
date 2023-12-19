@@ -10,7 +10,7 @@
 
 # 描述
 
-一个类似于 VarInt 的可变长数据读写器。
+一个类似于 VarInt 的可变长数据读写器。（基于 [varint-rs](https://crates.io/crates/varint-rs)）
 
 >读取和写入压缩过数据。在每个这样的字节中，只有7位将用于描述实际值，
 它的最高有效位指示下一个字节是否是同一int的一部分。
@@ -32,7 +32,7 @@ variable-len-reader = "~0.3"
 
 ```rust
 use std::net::{TcpListener, TcpStream};
-use variable_len_reader::variable_len::{read_variable_u32, write_variable_u32};
+use variable_len_reader::{VariableReadable, VariableWritable};
 
 fn main() {
     let addr = "localhost:25564";
@@ -41,11 +41,11 @@ fn main() {
     let mut server = server.incoming().next().unwrap().unwrap();
 
     // 写
-    write_variable_u32(&mut client, 1234).unwrap();
+    client.write_string(&"Hello world!").unwrap();
 
     // 读
-    let message = read_variable_u32(&mut server).unwrap();
-    assert_eq!(1234, message);
+    let message = server.read_string().unwrap();
+    assert_eq!("Hello world!", message);
 }
 ```
 
@@ -53,19 +53,22 @@ fn main() {
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
-use variable_len_reader::variable_len::{read_variable_u32, write_variable_u32};
+use variable_len_reader::{VariableReadable, VariableWritable};
 
 fn main() {
+    let message = "Hello world!";
     let mut writer = BytesMut::new().writer();
 
     // 写
-    write_variable_u32(&mut writer, 4321).unwrap();
+    writer.write_string(message).unwrap();
 
     let bytes = writer.into_inner();
+    assert_eq!(message.len() as u8, bytes[0]);
+    assert_eq!(message.as_bytes(), &bytes[1..]);
     let mut reader = bytes.reader();
 
     // 读
-    let message = read_variable_u32(&mut reader).unwrap();
-    assert_eq!(4321, message);
+    let string = reader.read_string().unwrap();
+    assert_eq!(message, string);
 }
 ```

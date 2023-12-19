@@ -10,7 +10,7 @@
 
 # Description
 
-A Rust crate to read variable length data. (VarInt)
+A Rust crate to read variable length data. (Based on [varint-rs](https://crates.io/crates/varint-rs))
 
 >Read and write compressed data. Of each such byte, only 7 bits will be used to describe the actual value
 since its most significant bit indicates whether the next byte is part of the same int.
@@ -33,7 +33,7 @@ Directly use in tcp stream:
 
 ```rust
 use std::net::{TcpListener, TcpStream};
-use variable_len_reader::variable_len::{read_variable_u32, write_variable_u32};
+use variable_len_reader::{VariableReadable, VariableWritable};
 
 fn main() {
     let addr = "localhost:25564";
@@ -42,11 +42,11 @@ fn main() {
     let mut server = server.incoming().next().unwrap().unwrap();
 
     // Write
-    write_variable_u32(&mut client, 1234).unwrap();
+    client.write_string(&"Hello world!").unwrap();
 
     // Read
-    let message = read_variable_u32(&mut server).unwrap();
-    assert_eq!(1234, message);
+    let message = server.read_string().unwrap();
+    assert_eq!("Hello world!", message);
 }
 ```
 
@@ -54,19 +54,22 @@ Use with [bytes](https://crates.io/crates/bytes) crate:
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
-use variable_len_reader::variable_len::{read_variable_u32, write_variable_u32};
+use variable_len_reader::{VariableReadable, VariableWritable};
 
 fn main() {
+    let message = "Hello world!";
     let mut writer = BytesMut::new().writer();
 
     // Write
-    write_variable_u32(&mut writer, 4321).unwrap();
+    writer.write_string(message).unwrap();
 
     let bytes = writer.into_inner();
+    assert_eq!(message.len() as u8, bytes[0]);
+    assert_eq!(message.as_bytes(), &bytes[1..]);
     let mut reader = bytes.reader();
 
     // Read
-    let message = read_variable_u32(&mut reader).unwrap();
-    assert_eq!(4321, message);
+    let string = reader.read_string().unwrap();
+    assert_eq!(message, string);
 }
 ```
