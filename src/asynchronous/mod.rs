@@ -1,12 +1,19 @@
-use std::future::Future;
 use std::io::{Error, ErrorKind, Result};
-use std::pin::Pin;
+#[cfg(any(feature = "async_bools", feature = "async_raw", feature = "async_varint", feature = "async_signed", feature = "async_vec_u8", feature = "async_string"))]
+use std::{
+    future::Future,
+    pin::Pin
+};
 use async_trait::async_trait;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+#[cfg(feature = "async_signed")]
 use crate::zigzag::Zigzag;
 
+#[cfg(feature = "async_bools")]
+mod bools;
 #[cfg(feature = "async_raw")]
 mod raw;
+#[cfg(feature = "async_varint")]
 mod varint;
 #[cfg(feature = "async_signed")]
 mod signed;
@@ -16,13 +23,16 @@ pub trait AsyncVariableReadable: Unpin + Send {
     async fn read(&mut self) -> Result<u8>;
 
     #[inline]
-    async fn read_bool(&mut self)-> Result<bool> {
+    async fn read_bool(&mut self) -> Result<bool> {
         match self.read().await? {
             0 => Ok(false),
             1 => Ok(true),
             i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
         }
     }
+
+    #[cfg(feature = "async_bools")]
+    bools::define_bools_read!();
 
     async fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {
@@ -34,6 +44,7 @@ pub trait AsyncVariableReadable: Unpin + Send {
     #[cfg(feature = "async_raw")]
     raw::define_raw_read!();
 
+    #[cfg(feature = "async_varint")]
     crate::varint::define_varint_read!();
 
     #[cfg(feature = "async_signed")]
@@ -67,6 +78,9 @@ pub trait AsyncVariableWritable: Unpin + Send {
         self.write(if b { 1 } else { 0 }).await
     }
 
+    #[cfg(feature = "async_bools")]
+    bools::define_bools_write!();
+
     async fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
         for i in 0..bytes.len() {
             self.write(bytes[i]).await?;
@@ -77,6 +91,7 @@ pub trait AsyncVariableWritable: Unpin + Send {
     #[cfg(feature = "async_raw")]
     raw::define_raw_write!();
 
+    #[cfg(feature = "async_varint")]
     crate::varint::define_varint_write!();
 
     #[cfg(feature = "async_signed")]

@@ -5,8 +5,11 @@ use crate::zigzag::Zigzag;
 #[cfg(feature = "async")]
 pub extern crate async_trait;
 
+#[cfg(feature = "bools")]
+mod bools;
 #[cfg(feature = "raw")]
 mod raw;
+#[cfg(any(feature = "varint", feature = "async_varint"))]
 mod varint;
 #[cfg(any(feature = "signed", feature = "async_signed"))]
 pub mod zigzag;
@@ -19,13 +22,16 @@ pub trait VariableReadable {
     fn read(&mut self) -> Result<u8>;
 
     #[inline]
-    fn read_bool(&mut self)-> Result<bool> {
+    fn read_bool(&mut self) -> Result<bool> {
         match self.read()? {
             0 => Ok(false),
             1 => Ok(true),
             i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
         }
     }
+
+    #[cfg(feature = "bools")]
+    bools::define_bools_read!();
 
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {
@@ -37,6 +43,7 @@ pub trait VariableReadable {
     #[cfg(feature = "raw")]
     raw::define_raw_read!();
 
+    #[cfg(feature = "varint")]
     varint::define_varint_read!();
 
     #[cfg(feature = "signed")]
@@ -69,6 +76,9 @@ pub trait VariableWritable {
         self.write(if b { 1 } else { 0 })
     }
 
+    #[cfg(feature = "bools")]
+    bools::define_bools_write!();
+
     fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
         for i in 0..bytes.len() {
             self.write(bytes[i])?;
@@ -79,6 +89,7 @@ pub trait VariableWritable {
     #[cfg(feature = "raw")]
     raw::define_raw_write!();
 
+    #[cfg(feature = "varint")]
     varint::define_varint_write!();
 
     #[cfg(feature = "signed")]

@@ -1,3 +1,4 @@
+#[cfg(feature = "varint")]
 macro_rules! varint_read {
     ($primitive: ty, $read_varint: ident, $inside_type: ty, $read_raw: ident) => {
         fn $read_varint(&mut self) -> Result<$primitive> {
@@ -22,6 +23,7 @@ macro_rules! varint_read {
         }
     };
 }
+#[cfg(feature = "varint")]
 pub(crate) use varint_read;
 
 macro_rules! define_varint_read {
@@ -46,6 +48,7 @@ macro_rules! define_varint_read {
 }
 pub(crate) use define_varint_read;
 
+#[cfg(feature = "varint")]
 macro_rules! varint_write {
     ($primitive: ty, $write_varint: ident, $inside_type: ty, $write_raw: ident) => {
         fn $write_varint(&mut self, num: $primitive) -> Result<usize> {
@@ -63,6 +66,7 @@ macro_rules! varint_write {
         }
     };
 }
+#[cfg(feature = "varint")]
 pub(crate) use varint_write;
 
 macro_rules! define_varint_write {
