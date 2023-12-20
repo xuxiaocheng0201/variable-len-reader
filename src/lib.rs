@@ -1,14 +1,16 @@
 use std::io::{Error, ErrorKind, Read, Result, Write};
+#[cfg(feature = "signed")]
+use crate::zigzag::Zigzag;
 
 #[cfg(feature = "raw")]
 mod raw;
 mod varint;
-#[cfg(feature = "signed")]
+#[cfg(any(feature = "signed", feature = "async_signed"))]
 pub mod zigzag;
-#[cfg(feature = "signed")]
+#[cfg(any(feature = "signed", feature = "async_signed"))]
 mod signed;
-#[cfg(feature = "signed")]
-use crate::zigzag::Zigzag;
+#[cfg(feature = "async")]
+pub mod asynchronous;
 
 pub trait VariableReadable {
     fn read(&mut self) -> Result<u8>;
