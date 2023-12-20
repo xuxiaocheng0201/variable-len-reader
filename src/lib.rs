@@ -2,6 +2,9 @@ use std::io::{Error, ErrorKind, Read, Result, Write};
 #[cfg(feature = "signed")]
 use crate::zigzag::Zigzag;
 
+#[cfg(feature = "async")]
+pub extern crate async_trait;
+
 #[cfg(feature = "raw")]
 mod raw;
 mod varint;
