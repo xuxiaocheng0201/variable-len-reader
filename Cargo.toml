@@ -11,7 +11,7 @@ categories = ["encoding", "parser-implementations"]
 keywords = ["varint", "zigzag", "io", "async"]
 
 [dependencies]
-async-trait = { version = "*", optional = true, default-features = false }
+async-trait = { version = ">=0.1", optional = true, default-features = false }
 tokio = { version = ">=1", optional = true, default-features = false }
 
 [features]
