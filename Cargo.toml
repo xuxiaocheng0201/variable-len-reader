@@ -10,6 +10,7 @@ repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 documentation = "https://docs.rs/variable-len-reader/"
 categories = ["encoding", "parser-implementations"]
 keywords = ["varint", "zigzag", "io", "async"]
+exclude = ["test-builds.bat"]
 
 [dependencies]
 async-trait = { version = "0", optional = true, default-features = false }
@@ -23,7 +24,7 @@ raw = []
 varint = ["raw"]
 long_varint = ["varint"]
 signed = ["varint"]
-long_signed = ["signed"]
+long_signed = ["signed", "long_varint"]
 vec_u8 = ["varint"]
 string = ["vec_u8"]
 
@@ -34,7 +35,7 @@ async_raw = ["async"]
 async_varint = ["async_raw"]
 async_long_varint = ["async_varint"]
 async_signed = ["async_varint"]
-async_long_signed = ["async_signed"]
+async_long_signed = ["async_signed", "async_long_varint"]
 async_vec_u8 = ["async_varint"]
 async_string = ["async_vec_u8"]
 

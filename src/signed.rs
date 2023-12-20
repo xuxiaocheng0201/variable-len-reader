@@ -1,4 +1,3 @@
-#[cfg(feature = "signed")]
 macro_rules! signed_read {
     ($primitive: ty, $read_signed: ident, $read_varint: ident) => {
         fn $read_signed(&mut self) -> Result<$primitive> {
@@ -6,7 +5,6 @@ macro_rules! signed_read {
         }
     };
 }
-#[cfg(feature = "signed")]
 pub(crate) use signed_read;
 
 macro_rules! define_signed_read {
@@ -46,7 +44,6 @@ macro_rules! define_signed_read {
 }
 pub(crate) use define_signed_read;
 
-#[cfg(feature = "signed")]
 macro_rules! signed_write {
     ($primitive: ty, $write_signed: ident, $write_varint: ident) => {
         fn $write_signed(&mut self, num: $primitive) -> Result<usize> {
@@ -54,7 +51,6 @@ macro_rules! signed_write {
         }
     };
 }
-#[cfg(feature = "signed")]
 pub(crate) use signed_write;
 
 macro_rules! define_signed_write {

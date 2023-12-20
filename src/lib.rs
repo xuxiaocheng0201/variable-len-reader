@@ -9,12 +9,12 @@ pub extern crate async_trait;
 mod bools;
 #[cfg(feature = "raw")]
 mod raw;
-#[cfg(any(feature = "varint", feature = "async_varint"))]
+#[cfg(feature = "varint")]
 mod varint;
+#[cfg(feature = "signed")]
+mod signed;
 #[cfg(any(feature = "signed", feature = "async_signed"))]
 pub mod zigzag;
-#[cfg(any(feature = "signed", feature = "async_signed"))]
-mod signed;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
