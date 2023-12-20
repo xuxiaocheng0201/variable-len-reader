@@ -10,7 +10,7 @@
 
 # Description
 
-A Rust crate to read variable length data. (Based on [varint-rs](https://crates.io/crates/varint-rs))
+A Rust crate to read variable length data based on varint format.
 
 >Read and write compressed data. Of each such byte, only 7 bits will be used to describe the actual value
 since its most significant bit indicates whether the next byte is part of the same int.
@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-variable-len-reader = "~0.4"
+variable-len-reader = "~0.5"
 ```
 
 
@@ -71,5 +71,28 @@ fn main() {
     // Read
     let string = reader.read_string().unwrap();
     assert_eq!(message, string);
+}
+```
+
+Async mode with [tokio](https://crates.io/crates/tokio) crate:
+(Require 'async_default' feature)
+
+```rust
+use tokio::net::{TcpListener, TcpStream};
+use variable_len_reader::asynchronous::{AsyncVariableReadable, AsyncVariableWritable};
+
+#[tokio::main]
+async fn main() {
+    let addr = "localhost:25564";
+    let server = TcpListener::bind(addr).await.unwrap();
+    let mut client = TcpStream::connect(addr).await.unwrap();
+    let (mut server, _) = server.accept().await.unwrap();
+
+    // Write
+    client.write_string(&"Hello tokio!").await.unwrap();
+
+    // Read
+    let message = server.read_string().await.unwrap();
+    assert_eq!("Hello tokio!", message);
 }
 ```

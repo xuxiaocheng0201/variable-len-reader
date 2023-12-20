@@ -10,7 +10,7 @@
 
 # 描述
 
-一个类似于 VarInt 的可变长数据读写器。（基于 [varint-rs](https://crates.io/crates/varint-rs)）
+一个类似于 VarInt 的可变长数据读写器。
 
 >读取和写入压缩过数据。在每个这样的字节中，只有7位将用于描述实际值，
 它的最高有效位指示下一个字节是否是同一int的一部分。
@@ -22,7 +22,7 @@
 
 ```toml
 [dependencies]
-variable-len-reader = "~0.4"
+variable-len-reader = "~0.5"
 ```
 
 
@@ -70,5 +70,28 @@ fn main() {
     // 读
     let string = reader.read_string().unwrap();
     assert_eq!(message, string);
+}
+```
+
+基于 [tokio](https://crates.io/crates/tokio) 的异步模式:
+(需要启用 'async_default' 功能)
+
+```rust
+use tokio::net::{TcpListener, TcpStream};
+use variable_len_reader::asynchronous::{AsyncVariableReadable, AsyncVariableWritable};
+
+#[tokio::main]
+async fn main() {
+    let addr = "localhost:25564";
+    let server = TcpListener::bind(addr).await.unwrap();
+    let mut client = TcpStream::connect(addr).await.unwrap();
+    let (mut server, _) = server.accept().await.unwrap();
+
+    // 写
+    client.write_string(&"Hello tokio!").await.unwrap();
+
+    // 读
+    let message = server.read_string().await.unwrap();
+    assert_eq!("Hello tokio!", message);
 }
 ```
