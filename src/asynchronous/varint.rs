@@ -26,6 +26,43 @@ macro_rules! varint_read {
 }
 pub(crate) use varint_read;
 
+macro_rules! define_varint_read {
+    () => {
+        varint::varint_read!(u16, read_u16_varint, u8, read_u8_ne);
+
+        varint::varint_read!(u32, read_u32_varint, u8, read_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u32, read_u32_varint_2_le, u16, read_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u32, read_u32_varint_2_be, u16, read_u16_be);
+
+        varint::varint_read!(u64, read_u64_varint, u8, read_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u64, read_u64_varint_2_le, u16, read_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u64, read_u64_varint_2_be, u16, read_u16_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u64, read_u64_varint_4_le, u32, read_u32_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u64, read_u64_varint_4_be, u32, read_u32_be);
+
+        varint::varint_read!(u128, read_u128_varint, u8, read_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_2_le, u16, read_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_2_be, u16, read_u16_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_4_le, u32, read_u32_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_4_be, u32, read_u32_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_8_le, u64, read_u64_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_read!(u128, read_u128_varint_8_be, u64, read_u64_be);
+    };
+}
+pub(crate) use define_varint_read;
+
 macro_rules! varint_write {
     ($primitive: ty, $write_varint: ident, $inside_type: ty, $write_raw: ident) => {
         fn $write_varint(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
@@ -46,3 +83,40 @@ macro_rules! varint_write {
     };
 }
 pub(crate) use varint_write;
+
+macro_rules! define_varint_write {
+    () => {
+        varint::varint_write!(u16, write_u16_varint, u8, write_u8_ne);
+
+        varint::varint_write!(u32, write_u32_varint, u8, write_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u32, write_u32_varint_2_le, u16, write_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u32, write_u32_varint_2_be, u16, write_u16_be);
+
+        varint::varint_write!(u64, write_u64_varint, u8, write_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u64, write_u64_varint_2_le, u16, write_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u64, write_u64_varint_2_be, u16, write_u16_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u64, write_u64_varint_4_le, u32, write_u32_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u64, write_u64_varint_4_be, u32, write_u32_be);
+
+        varint::varint_write!(u128, write_u128_varint, u8, write_u8_ne);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_2_le, u16, write_u16_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_2_be, u16, write_u16_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_4_le, u32, write_u32_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_4_be, u32, write_u32_be);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_8_le, u64, write_u64_le);
+        #[cfg(feature = "async_long_varint")]
+        varint::varint_write!(u128, write_u128_varint_8_be, u64, write_u64_be);
+    };
+}
+pub(crate) use define_varint_write;

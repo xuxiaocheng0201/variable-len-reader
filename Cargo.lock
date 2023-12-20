@@ -160,7 +160,7 @@ checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
 
 [[package]]
 name = "variable-len-reader"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "async-trait",
  "tokio",

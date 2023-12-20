@@ -12,10 +12,6 @@
 
 A Rust crate to read variable length data based on varint format.
 
->Read and write compressed data. Of each such byte, only 7 bits will be used to describe the actual value
-since its most significant bit indicates whether the next byte is part of the same int.
-Micro-optimization for int values that are expected to have values below 128.
-
 
 # Usage
 
@@ -23,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-variable-len-reader = "~0.5"
+variable-len-reader = "1"
 ```
 
 

@@ -45,10 +45,10 @@ pub trait AsyncVariableReadable: Unpin + Send {
     raw::define_raw_read!();
 
     #[cfg(feature = "async_varint")]
-    crate::varint::define_varint_read!();
+    varint::define_varint_read!();
 
     #[cfg(feature = "async_signed")]
-    crate::signed::define_signed_read!();
+    signed::define_signed_read!();
 
     #[cfg(feature = "async_vec_u8")]
     #[inline]
@@ -92,10 +92,10 @@ pub trait AsyncVariableWritable: Unpin + Send {
     raw::define_raw_write!();
 
     #[cfg(feature = "async_varint")]
-    crate::varint::define_varint_write!();
+    varint::define_varint_write!();
 
     #[cfg(feature = "async_signed")]
-    crate::signed::define_signed_write!();
+    signed::define_signed_write!();
 
     #[cfg(feature = "async_vec_u8")]
     #[inline]
