@@ -1,6 +1,7 @@
 macro_rules! define_bools_read {
     () => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_2(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -13,6 +14,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_3(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -26,6 +28,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_4(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -40,6 +43,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_5(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -55,6 +59,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_6(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool, bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -71,6 +76,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_7(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool, bool, bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -88,6 +94,7 @@ macro_rules! define_bools_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_bools_8(&mut self) -> Pin<Box<dyn Future<Output = Result<(bool, bool, bool, bool, bool, bool, bool, bool)>> + Send + '_>> {
             Box::pin(async move {
                 let b = self.read().await?;
@@ -109,6 +116,7 @@ pub(crate) use define_bools_read;
 macro_rules! define_bools_write {
     () => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_2(&mut self, b1: bool, b2: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b01; }
@@ -116,6 +124,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_3(&mut self, b1: bool, b2: bool, b3: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b001; }
@@ -124,6 +133,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_4(&mut self, b1: bool, b2: bool, b3: bool, b4: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b0001; }
@@ -133,6 +143,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_5(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b00001; }
@@ -143,6 +154,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_6(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b000001; }
@@ -154,6 +166,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_7(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool, b7: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b0000001; }
@@ -166,6 +179,7 @@ macro_rules! define_bools_write {
             Box::pin(async move { self.write(b).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_bools_8(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool, b7: bool, b8: bool) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             let mut b = 0;
             if b1 { b |= 0b00000001; }
@@ -230,6 +244,7 @@ mod codegen {
         let mut buf = Cursor::new(Vec::new());
         for i in 2..=8 {
             writeln!(buf, "        #[inline]").unwrap();
+            writeln!(buf, "        #[must_use = \"futures do nothing unless you `.await` or poll them\"]").unwrap();
             write!(buf, "        fn write_bools_{i}(&mut self").unwrap();
             for j in 1..=i {
                 write!(buf, ", b{j}: bool").unwrap();

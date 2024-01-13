@@ -1,6 +1,7 @@
 macro_rules! raw_read {
     ($primitive: ty, $read_le: ident, $read_be: ident) => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $read_le(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
             const SIZE: usize = std::mem::size_of::<$primitive>();
             Box::pin(async move {
@@ -10,6 +11,7 @@ macro_rules! raw_read {
             })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $read_be(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
             const SIZE: usize = std::mem::size_of::<$primitive>();
             Box::pin(async move {
@@ -25,10 +27,12 @@ pub(crate) use raw_read;
 macro_rules! define_raw_read {
     () => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_u8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<u8>> + Send + '_>> {
             Box::pin(async move { Ok(u8::from_ne_bytes([self.read().await?])) })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn read_i8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<i8>> + Send + '_>> {
             Box::pin(async move { Ok(i8::from_ne_bytes([self.read().await?])) })
         }
@@ -47,10 +51,12 @@ pub(crate) use define_raw_read;
 macro_rules! raw_write {
     ($primitive: ty, $write_le: ident, $write_be: ident) => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $write_le(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             Box::pin(async move { self.write_more(&<$primitive>::to_le_bytes(num)).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $write_be(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             Box::pin(async move { self.write_more(&<$primitive>::to_be_bytes(num)).await })
         }
@@ -61,10 +67,12 @@ pub(crate) use raw_write;
 macro_rules! define_raw_write {
     () => {
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_u8_ne(&mut self, num: u8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             Box::pin(async move { self.write(num.to_ne_bytes()[0]).await })
         }
         #[inline]
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn write_i8_ne(&mut self, num: i8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             Box::pin(async move { self.write(num.to_ne_bytes()[0]).await })
         }

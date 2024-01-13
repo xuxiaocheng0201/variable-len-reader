@@ -1,5 +1,6 @@
 macro_rules! varint_read {
     ($primitive: ty, $read_varint: ident, $inside_type: ty, $read_raw: ident) => {
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $read_varint(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
             const SIZE: usize = std::mem::size_of::<$primitive>() << 3;// * 8
             const NUM_BITS: $inside_type = <$inside_type>::MAX >> 1;
@@ -65,6 +66,7 @@ pub(crate) use define_varint_read;
 
 macro_rules! varint_write {
     ($primitive: ty, $write_varint: ident, $inside_type: ty, $write_raw: ident) => {
+        #[must_use = "futures do nothing unless you `.await` or poll them"]
         fn $write_varint(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
             const NUM_BITS: $inside_type = <$inside_type>::MAX >> 1;
             const SIGN_BIT: $inside_type = NUM_BITS + 1;

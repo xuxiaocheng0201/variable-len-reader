@@ -7,6 +7,7 @@
 
 ### Project ###
 !/src
+!/build.rs
 !/LICENSE
 !/README.md
 !/README_zh.md
