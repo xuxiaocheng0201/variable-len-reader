@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::io::{Error, ErrorKind, Read, Result, Write};
 #[cfg(feature = "signed")]
 use crate::zigzag::Zigzag;

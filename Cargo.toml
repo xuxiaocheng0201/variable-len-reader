@@ -39,5 +39,8 @@ async_long_signed = ["async_signed", "async_long_varint"]
 async_vec_u8 = ["async_varint"]
 async_string = ["async_vec_u8"]
 
+[build-dependencies]
+reportme = "~0.2"
+
 [badges]
 maintenance = { status = "actively-developed" }
