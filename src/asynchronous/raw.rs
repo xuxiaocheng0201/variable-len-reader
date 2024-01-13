@@ -2,7 +2,7 @@ macro_rules! raw_read {
     ($primitive: ty, $read_le: ident, $read_be: ident) => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $read_le(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
+        fn $read_le(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> where Self: Unpin {
             const SIZE: usize = std::mem::size_of::<$primitive>();
             Box::pin(async move {
                 let mut bytes = [0; SIZE];
@@ -12,7 +12,7 @@ macro_rules! raw_read {
         }
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $read_be(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
+        fn $read_be(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> where Self: Unpin {
             const SIZE: usize = std::mem::size_of::<$primitive>();
             Box::pin(async move {
                 let mut bytes = [0; SIZE];
@@ -28,13 +28,13 @@ macro_rules! define_raw_read {
     () => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn read_u8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<u8>> + Send + '_>> {
-            Box::pin(async move { Ok(u8::from_ne_bytes([self.read().await?])) })
+        fn read_u8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<u8>> + Send + '_>> where Self: Unpin {
+            Box::pin(async move { Ok(u8::from_ne_bytes([self.read_single().await?])) })
         }
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn read_i8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<i8>> + Send + '_>> {
-            Box::pin(async move { Ok(i8::from_ne_bytes([self.read().await?])) })
+        fn read_i8_ne(&mut self) -> Pin<Box<dyn Future<Output = Result<i8>> + Send + '_>> where Self: Unpin {
+            Box::pin(async move { Ok(i8::from_ne_bytes([self.read_single().await?])) })
         }
         raw::raw_read!(u16, read_u16_le, read_u16_be);
         raw::raw_read!(i16, read_i16_le, read_i16_be);
@@ -52,12 +52,12 @@ macro_rules! raw_write {
     ($primitive: ty, $write_le: ident, $write_be: ident) => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $write_le(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
+        fn $write_le(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin {
             Box::pin(async move { self.write_more(&<$primitive>::to_le_bytes(num)).await })
         }
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $write_be(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
+        fn $write_be(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin {
             Box::pin(async move { self.write_more(&<$primitive>::to_be_bytes(num)).await })
         }
     };
@@ -68,13 +68,13 @@ macro_rules! define_raw_write {
     () => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn write_u8_ne(&mut self, num: u8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
-            Box::pin(async move { self.write(num.to_ne_bytes()[0]).await })
+        fn write_u8_ne(&mut self, num: u8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin {
+            Box::pin(async move { self.write_single(num.to_ne_bytes()[0]).await })
         }
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn write_i8_ne(&mut self, num: i8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
-            Box::pin(async move { self.write(num.to_ne_bytes()[0]).await })
+        fn write_i8_ne(&mut self, num: i8) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin {
+            Box::pin(async move { self.write_single(num.to_ne_bytes()[0]).await })
         }
         raw::raw_write!(u16, write_u16_le, write_u16_be);
         raw::raw_write!(i16, write_i16_le, write_i16_be);

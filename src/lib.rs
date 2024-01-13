@@ -4,9 +4,6 @@ use std::io::{Error, ErrorKind, Read, Result, Write};
 #[cfg(feature = "signed")]
 use crate::zigzag::Zigzag;
 
-#[cfg(feature = "async")]
-pub extern crate async_trait;
-
 #[cfg(feature = "bools")]
 mod bools;
 #[cfg(feature = "raw")]
@@ -21,11 +18,11 @@ pub mod zigzag;
 pub mod asynchronous;
 
 pub trait VariableReadable {
-    fn read(&mut self) -> Result<u8>;
+    fn read_single(&mut self) -> Result<u8>;
 
     #[inline]
     fn read_bool(&mut self) -> Result<bool> {
-        match self.read()? {
+        match self.read_single()? {
             0 => Ok(false),
             1 => Ok(true),
             i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
@@ -37,7 +34,7 @@ pub trait VariableReadable {
 
     fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
         for i in 0..buf.len() {
-            buf[i] = self.read()?;
+            buf[i] = self.read_single()?;
         }
         Ok(())
     }
@@ -71,11 +68,11 @@ pub trait VariableReadable {
 }
 
 pub trait VariableWritable {
-    fn write(&mut self, byte: u8) -> Result<usize>;
+    fn write_single(&mut self, byte: u8) -> Result<usize>;
 
     #[inline]
     fn write_bool(&mut self, b: bool) -> Result<usize> {
-        self.write(if b { 1 } else { 0 })
+        self.write_single(if b { 1 } else { 0 })
     }
 
     #[cfg(feature = "bools")]
@@ -83,7 +80,7 @@ pub trait VariableWritable {
 
     fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
         for i in 0..bytes.len() {
-            self.write(bytes[i])?;
+            self.write_single(bytes[i])?;
         }
         Ok(bytes.len())
     }
@@ -113,7 +110,7 @@ pub trait VariableWritable {
 
 impl<R: Read> VariableReadable for R {
     #[inline]
-    fn read(&mut self) -> Result<u8> {
+    fn read_single(&mut self) -> Result<u8> {
         let mut buf = [0];
         self.read_exact(&mut buf)?;
         Ok(buf[0])
@@ -127,7 +124,7 @@ impl<R: Read> VariableReadable for R {
 
 impl<W: Write> VariableWritable for W {
     #[inline]
-    fn write(&mut self, byte: u8) -> Result<usize> {
+    fn write_single(&mut self, byte: u8) -> Result<usize> {
         self.write_all(&[byte])?;
         Ok(1)
     }

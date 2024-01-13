@@ -2,7 +2,7 @@ macro_rules! define_bools_read {
     () => {
         #[inline]
         fn read_bools_2(&mut self) -> Result<(bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b11 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -12,7 +12,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_3(&mut self) -> Result<(bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b111 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -23,7 +23,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_4(&mut self) -> Result<(bool, bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b1111 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -35,7 +35,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_5(&mut self) -> Result<(bool, bool, bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b11111 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -48,7 +48,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_6(&mut self) -> Result<(bool, bool, bool, bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b111111 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -62,7 +62,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_7(&mut self) -> Result<(bool, bool, bool, bool, bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             if b > 0b1111111 {
                 return Err(Error::new(ErrorKind::InvalidData, "Invalid bools."));
             }
@@ -77,7 +77,7 @@ macro_rules! define_bools_read {
         }
         #[inline]
         fn read_bools_8(&mut self) -> Result<(bool, bool, bool, bool, bool, bool, bool, bool)> {
-            let b = self.read()?;
+            let b = self.read_single()?;
             let b1 = b & 0b00000001 != 0;
             let b2 = b & 0b00000010 != 0;
             let b3 = b & 0b00000100 != 0;
@@ -99,7 +99,7 @@ macro_rules! define_bools_write {
             let mut b = 0;
             if b1 { b |= 0b01; }
             if b2 { b |= 0b10; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_3(&mut self, b1: bool, b2: bool, b3: bool) -> Result<usize> {
@@ -107,7 +107,7 @@ macro_rules! define_bools_write {
             if b1 { b |= 0b001; }
             if b2 { b |= 0b010; }
             if b3 { b |= 0b100; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_4(&mut self, b1: bool, b2: bool, b3: bool, b4: bool) -> Result<usize> {
@@ -116,7 +116,7 @@ macro_rules! define_bools_write {
             if b2 { b |= 0b0010; }
             if b3 { b |= 0b0100; }
             if b4 { b |= 0b1000; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_5(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool) -> Result<usize> {
@@ -126,7 +126,7 @@ macro_rules! define_bools_write {
             if b3 { b |= 0b00100; }
             if b4 { b |= 0b01000; }
             if b5 { b |= 0b10000; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_6(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool) -> Result<usize> {
@@ -137,7 +137,7 @@ macro_rules! define_bools_write {
             if b4 { b |= 0b001000; }
             if b5 { b |= 0b010000; }
             if b6 { b |= 0b100000; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_7(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool, b7: bool) -> Result<usize> {
@@ -149,7 +149,7 @@ macro_rules! define_bools_write {
             if b5 { b |= 0b0010000; }
             if b6 { b |= 0b0100000; }
             if b7 { b |= 0b1000000; }
-            self.write(b)
+            self.write_single(b)
         }
         #[inline]
         fn write_bools_8(&mut self, b1: bool, b2: bool, b3: bool, b4: bool, b5: bool, b6: bool, b7: bool, b8: bool) -> Result<usize> {
@@ -162,7 +162,7 @@ macro_rules! define_bools_write {
             if b6 { b |= 0b00100000; }
             if b7 { b |= 0b01000000; }
             if b8 { b |= 0b10000000; }
-            self.write(b)
+            self.write_single(b)
         }
     };
 }
@@ -182,7 +182,7 @@ mod codegen {
                 write!(buf, ", bool").unwrap();
             }
             writeln!(buf, ")> {{").unwrap();
-            writeln!(buf, "            let b = self.read()?;").unwrap();
+            writeln!(buf, "            let b = self.read_single()?;").unwrap();
             if i < 8 {
                 write!(buf, "            if b > 0b").unwrap();
                 for _ in 0..i {

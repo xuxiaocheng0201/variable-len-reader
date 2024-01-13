@@ -22,11 +22,11 @@ macro_rules! define_raw_read {
     () => {
         #[inline]
         fn read_u8_ne(&mut self) -> Result<u8> {
-            Ok(u8::from_ne_bytes([self.read()?]))
+            Ok(u8::from_ne_bytes([self.read_single()?]))
         }
         #[inline]
         fn read_i8_ne(&mut self) -> Result<i8> {
-            Ok(i8::from_ne_bytes([self.read()?]))
+            Ok(i8::from_ne_bytes([self.read_single()?]))
         }
         raw::raw_read!(u16, read_u16_le, read_u16_be);
         raw::raw_read!(i16, read_i16_le, read_i16_be);
@@ -58,11 +58,11 @@ macro_rules! define_raw_write {
     () => {
         #[inline]
         fn write_u8_ne(&mut self, num: u8) -> Result<usize> {
-            self.write(num.to_ne_bytes()[0])
+            self.write_single(num.to_ne_bytes()[0])
         }
         #[inline]
         fn write_i8_ne(&mut self, num: i8) -> Result<usize> {
-            self.write(num.to_ne_bytes()[0])
+            self.write_single(num.to_ne_bytes()[0])
         }
         raw::raw_write!(u16, write_u16_le, write_u16_be);
         raw::raw_write!(i16, write_i16_le, write_i16_be);

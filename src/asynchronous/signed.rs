@@ -2,7 +2,7 @@ macro_rules! signed_read {
     ($primitive: ty, $read_signed: ident, $read_varint: ident) => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $read_signed(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> {
+        fn $read_signed(&mut self) -> Pin<Box<dyn Future<Output = Result<$primitive>> + Send + '_>> where Self: Unpin {
             Box::pin(async move { Ok(self.$read_varint().await?.zigzag()) })
         }
     };
@@ -50,7 +50,7 @@ macro_rules! signed_write {
     ($primitive: ty, $write_signed: ident, $write_varint: ident) => {
         #[inline]
         #[must_use = "futures do nothing unless you `.await` or poll them"]
-        fn $write_signed(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
+        fn $write_signed(&mut self, num: $primitive) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin {
             Box::pin(async move { self.$write_varint(num.zigzag()).await })
         }
     };
