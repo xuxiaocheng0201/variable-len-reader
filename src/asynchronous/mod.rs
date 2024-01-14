@@ -1,7 +1,6 @@
 #![allow(unused_imports, unused)] // TODO
 
 use std::io::{Error, ErrorKind, Result};
-// #[cfg(any(feature = "async_bools", feature = "async_raw", feature = "async_varint", feature = "async_signed", feature = "async_vec_u8", feature = "async_string"))]
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
@@ -18,66 +17,7 @@ mod raw;
 mod varint;
 #[cfg(feature = "async_signed")]
 mod signed;
-
-pin_project! {
-    #[derive(Debug)]
-    #[project(!Unpin)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadSingle<'a, R: Unpin> where R: ?Sized {
-        #[pin]
-        reader: &'a mut R,
-    }
-}
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadSingle<'a, R> {
-    type Output = Result<u8>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut me = self.project();
-        R::poll_read_single(Pin::new(&mut *me.reader), cx)
-    }
-}
-
-pin_project! {
-    #[derive(Debug)]
-    #[project(!Unpin)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadMore<'a, R: Unpin> where R: ?Sized {
-        #[pin]
-        reader: &'a mut R,
-        #[pin]
-        buf: ReadBuf<'a>,
-    }
-}
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadMore<'a, R> {
-    type Output = Result<()>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut me = self.project();
-        R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut *me.buf)
-    }
-}
-
-pin_project! {
-    #[derive(Debug)]
-    #[project(!Unpin)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadBool<'a, R: Unpin> where R: ?Sized {
-        #[pin]
-        reader: &'a mut R,
-    }
-}
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadBool<'a, R> {
-    type Output = Result<bool>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut me = self.project();
-        Poll::Ready(match ready!(R::poll_read_single(Pin::new(&mut *me.reader), cx))? {
-            0 => Ok(false),
-            1 => Ok(true),
-            i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
-        })
-    }
-}
+mod reader;
 
 pub trait AsyncVariableReadable {
     fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>>;
@@ -89,53 +29,20 @@ pub trait AsyncVariableReadable {
         }
         Poll::Ready(Ok(()))
     }
-
-    #[inline]
-    fn read_single(&mut self) -> ReadSingle<Self> where Self: Unpin {
-        ReadSingle { reader: self }
-    }
-
-    #[inline]
-    fn read_more<'a>(&'a mut self, buf: &'a mut [u8]) -> ReadMore<Self> where Self: Unpin {
-        ReadMore { reader: self, buf: ReadBuf::new(buf) }
-    }
-
-    #[inline]
-    fn read_bool(&mut self) -> ReadBool<Self> where Self: Unpin {
-        ReadBool { reader: self }
-    }
-
-    // #[cfg(feature = "async_bools")]
-    // bools::define_bools_read!();
-    //
-    // #[cfg(feature = "async_raw")]
-    // raw::define_raw_read!();
-    //
-    // #[cfg(feature = "async_varint")]
-    // varint::define_varint_read!();
-    //
-    // #[cfg(feature = "async_signed")]
-    // signed::define_signed_read!();
-    //
-    // #[cfg(feature = "async_vec_u8")]
-    // #[inline]
-    // async fn read_u8_vec(&mut self) -> Result<Vec<u8>> where Self: Unpin {
-    //     let length = self.read_u128_varint().await? as usize;
-    //     let mut bytes = vec![0; length];
-    //     self.read_more(&mut bytes).await?;
-    //     Ok(bytes)
-    // }
-    //
-    // #[cfg(feature = "async_string")]
-    // #[inline]
-    // async fn read_string(&mut self) -> Result<String> where Self: Unpin {
-    //     match String::from_utf8(self.read_u8_vec().await?) {
-    //         Ok(s) => Ok(s),
-    //         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-    //     }
-    // }
 }
 
+pub use reader::*;
+
+
+macro_rules! write_func {
+    ($b: ty, $func: ident, $future: ident) => {
+        #[inline]
+        fn $func(&mut self, b: $b) -> $future<Self> where Self: Unpin {
+            $future { writer: self, b }
+        }
+    };
+}
+use write_func;
 
 pin_project! {
     #[derive(Debug)]
@@ -217,10 +124,7 @@ pub trait AsyncVariableWritable {
         WriteMore { writer: self, bytes }
     }
 
-    #[inline]
-    fn write_bool(&mut self, b: bool) -> WriteBool<Self> where Self: Unpin {
-        WriteBool { writer: self, b }
-    }
+    write_func!(bool, write_bool, WriteBool);
 
 //     #[cfg(feature = "async_bools")]
 //     bools::define_bools_write!();
@@ -249,18 +153,6 @@ pub trait AsyncVariableWritable {
 //     }
 }
 
-impl<R: AsyncRead + Unpin> AsyncVariableReadable for R {
-    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>> {
-        let mut buf = [0];
-        ready!(R::poll_read(self, cx, &mut ReadBuf::new(&mut buf)))?;
-        Poll::Ready(Ok(buf[0]))
-    }
-
-    fn poll_read_more(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<()>> {
-        R::poll_read(self, cx, buf)
-    }
-}
-
 impl<W: AsyncWrite + Unpin> AsyncVariableWritable for W {
     fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize>> {
         W::poll_write(self, cx, &[byte])
@@ -271,18 +163,32 @@ impl<W: AsyncWrite + Unpin> AsyncVariableWritable for W {
     }
 }
 
+impl AsyncVariableReadable for std::sync::mpsc::Receiver<u8> {
+    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>> {
+        todo!()
+    }
+
+    fn poll_read_more(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<()>> {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::ops::Deref;
+    use std::sync::mpsc::channel;
+    use crate::asynchronous::AsyncVariableRead;
     use crate::asynchronous::AsyncVariableReadable;
+    use crate::asynchronous::AsyncVariableReader;
     use crate::asynchronous::AsyncVariableWritable;
 
     #[tokio::test]
     async fn read_single() {
-        let buf = [1, 2];
-        let mut buf = buf.as_ref();
+        let mut buf = [1u8, 2];
+        let mut buf: AsyncVariableRead<&[u8]> = buf.as_ref().into();
         let a = buf.read_single().await.unwrap();
         assert_eq!(a, 1);
-        assert_eq!(buf, &[2]);
+        assert_eq!(buf.deref(), &[2]);
     }
 
     #[tokio::test]
@@ -292,6 +198,11 @@ mod tests {
         let mut a = [0, 0];
         buf.read_more(&mut a).await.unwrap();
         assert_eq!(a, [1, 2]);
+    }
+
+    #[tokio::test]
+    async fn read_more_slice() {
+        let (receiver, sender) = channel::<u8>();
     }
 
     #[tokio::test]

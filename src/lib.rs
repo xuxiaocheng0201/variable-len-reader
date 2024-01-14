@@ -4,6 +4,9 @@ use std::io::{Error, ErrorKind, Read, Result, Write};
 #[cfg(feature = "signed")]
 use crate::zigzag::Zigzag;
 
+extern crate pin_project_lite;
+extern crate tokio;
+
 #[cfg(feature = "bools")]
 mod bools;
 #[cfg(feature = "raw")]
