@@ -1,6 +1,5 @@
 use std::future::Future;
 use std::io::{Error, ErrorKind, Result};
-use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use pin_project_lite::pin_project;
@@ -12,12 +11,12 @@ pin_project! {
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadSingle<'a, R: Unpin> where R: ?Sized {
+    pub struct ReadSingle<'a, R: ?Sized> {
         #[pin]
         reader: &'a mut R,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadSingle<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadSingle<'a, R> {
     type Output = Result<u8>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -30,19 +29,18 @@ pin_project! {
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadMore<'a, R: Unpin> where R: ?Sized {
+    pub struct ReadMore<'a, R: ?Sized> {
         #[pin]
         reader: &'a mut R,
-        #[pin]
         buf: ReadBuf<'a>,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadMore<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadMore<'a, R> {
     type Output = Result<()>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
-        R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut *me.buf)
+        R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.buf)
     }
 }
 
@@ -50,12 +48,12 @@ pin_project! {
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadBool<'a, R: Unpin> where R: ?Sized {
+    pub struct ReadBool<'a, R: ?Sized> {
         #[pin]
         reader: &'a mut R,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadBool<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
     type Output = Result<bool>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -118,37 +116,76 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     // }
 }
 
-impl<R: AsyncVariableReadable + ?Sized> AsyncVariableReader for R {
+impl<R: AsyncVariableReadable> AsyncVariableReader for R {
 }
 
-#[repr(transparent)]
-pub struct AsyncVariableRead<R>(R) where R: AsyncRead;
-impl<R: AsyncRead> Deref for AsyncVariableRead<R> {
-    type Target = R;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl<R: AsyncRead> DerefMut for AsyncVariableRead<R> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-impl<R: AsyncRead> From<R> for AsyncVariableRead<R> {
-    fn from(value: R) -> Self {
-        Self(value)
-    }
-}
-
-impl<R: AsyncRead + Unpin> AsyncVariableReadable for AsyncVariableRead<R> {
-    fn poll_read_single(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>> {
+impl<R: AsyncRead + Unpin> AsyncVariableReadable for R {
+    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>> {
         let mut buf = [0];
-        ready!(R::poll_read(Pin::new(&mut self.0), cx, &mut ReadBuf::new(&mut buf)))?;
+        ready!(R::poll_read(self, cx, &mut ReadBuf::new(&mut buf)))?;
         Poll::Ready(Ok(buf[0]))
     }
 
     fn poll_read_more(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<()>> {
-        R::poll_read(Pin::new(&mut self.0), cx, buf)
+        let origin = buf.remaining();
+        ready!(R::poll_read(self, cx, buf))?;
+        if buf.remaining() == 0 {
+            Poll::Ready(Ok(()))
+        } else if buf.remaining() == origin {
+            Poll::Ready(Err(Error::new(ErrorKind::UnexpectedEof, "read 0 byte")))
+        } else {
+            cx.waker().clone().wake();
+            Poll::Pending
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+    use anyhow::Result;
+    use tokio::net::{TcpListener, TcpStream};
+    use tokio::spawn;
+    use tokio::task::JoinHandle;
+    use tokio::time::sleep;
+    use crate::asynchronous::AsyncVariableReader;
+
+    #[tokio::test]
+    async fn read_single() -> Result<()> {
+        let buf = [1u8, 2];
+        let mut buf = buf.as_ref();
+        let a = buf.read_single().await?;
+        assert_eq!(a, 1);
+        assert_eq!(buf, &[2]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn read_more() -> Result<()> {
+        let buf = [1, 2];
+        let mut buf = buf.as_ref();
+        let mut a = [0, 0];
+        buf.read_more(&mut a).await?;
+        assert_eq!(a, [1, 2]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn read_more_twice() -> Result<()> {
+        let server = TcpListener::bind("localhost:0").await?;
+        let mut client = TcpStream::connect(server.local_addr()?).await?;
+        let mut server = server.accept().await?.0;
+
+        let mut buf = [0, 0];
+        let _: JoinHandle<Result<()>> = spawn(async move {
+            use tokio::io::AsyncWriteExt;
+            server.write_all(&[1]).await?;
+            sleep(Duration::from_millis(300)).await;
+            server.write_all(&[2]).await?;
+            Ok(())
+        });
+        client.read_more(buf.as_mut()).await?;
+        assert_eq!(buf, [1, 2]);
+        Ok(())
     }
 }

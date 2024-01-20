@@ -25,7 +25,7 @@ macro_rules! varint_read {
         }
     };
 }
-pub(crate) use varint_read;
+
 
 macro_rules! define_varint_read {
     () => {
@@ -62,7 +62,7 @@ macro_rules! define_varint_read {
         varint::varint_read!(u128, read_u128_varint_8_be, u64, read_u64_be);
     };
 }
-pub(crate) use define_varint_read;
+
 
 macro_rules! varint_write {
     ($primitive: ty, $write_varint: ident, $inside_type: ty, $write_raw: ident) => {
@@ -84,7 +84,7 @@ macro_rules! varint_write {
         }
     };
 }
-pub(crate) use varint_write;
+
 
 macro_rules! define_varint_write {
     () => {
@@ -121,4 +121,4 @@ macro_rules! define_varint_write {
         varint::varint_write!(u128, write_u128_varint_8_be, u64, write_u64_be);
     };
 }
-pub(crate) use define_varint_write;
+

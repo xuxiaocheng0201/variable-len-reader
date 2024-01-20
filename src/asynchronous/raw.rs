@@ -8,9 +8,9 @@ macro_rules! read_raw_future {
                 #[pin]
                 reader: &'a mut R,
                 #[pin]
-                b: $crate::tokio::io::ReadBuf<'a>,
-                #[pin]
                 buf: [u8; std::mem::size_of::<$primitive>()],
+                #[pin]
+                read: usize,
             }
         }
         impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin + ?Sized> std::future::Future for $future<'a, R> {
@@ -18,8 +18,18 @@ macro_rules! read_raw_future {
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
-                ready!(R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut *me.b))?;
-                std::task::Poll::Ready(Ok(<$primitive>::$func(*me.buf)))
+                let mut buf = $crate::tokio::io::ReadBuf::new(&mut *me.buf);
+                buf.advance(*me.read);
+                match R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut buf) {
+                    std::task::Poll::Pending => {
+                        *me.read = buf.filled().len();
+                        std::task::Poll::Pending
+                    },
+                    std::task::Poll::Ready(e) => {
+                        e?;
+                        std::task::Poll::Ready(Ok(<$primitive>::$func(*me.buf)))
+                    }
+                }
             }
         }
     };
@@ -31,8 +41,8 @@ macro_rules! read_raw_func {
         #[inline]
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
             const SIZE: usize = std::mem::size_of::<$primitive>();
-            let mut buf = [0; SIZE];
-            $future { reader: self, b: $crate::tokio::io::ReadBuf::new(&mut buf), buf }
+            let buf = [0; SIZE];
+            $future { reader: self, buf, read: 0 }
         }
     };
 }
@@ -97,7 +107,7 @@ pub(crate) use define_read_raw_func;
 
 #[cfg(test)]
 mod read_tests {
-    use crate::asynchronous::{AsyncVariableRead, AsyncVariableReadable, AsyncVariableReader};
+    
 
     #[tokio::test]
     async fn read_u8() {
@@ -149,7 +159,7 @@ macro_rules! write_raw_future {
 
     };
 }
-pub(crate) use write_raw_future;
+
 
 
 // macro_rules! raw_write {
