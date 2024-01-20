@@ -116,7 +116,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     // }
 }
 
-impl<R: AsyncVariableReadable> AsyncVariableReader for R {
+impl<R: AsyncVariableReadable + ?Sized> AsyncVariableReader for R {
 }
 
 impl<R: AsyncRead + Unpin> AsyncVariableReadable for R {
