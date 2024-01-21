@@ -435,6 +435,7 @@ name = "variable-len-reader"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "pin-project-lite",
  "reportme",
  "tokio",
