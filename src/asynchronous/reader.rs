@@ -5,7 +5,7 @@ use std::task::{Context, Poll, ready};
 use pin_project_lite::pin_project;
 use tokio::io::AsyncRead;
 use crate::asynchronous::AsyncVariableReadable;
-use crate::util::bufs::ReadBuf;
+use crate::util::bufs::*;
 
 pin_project! {
     #[derive(Debug)]
@@ -40,7 +40,7 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadMore<'a, R> {
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
-        R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.buf)
+        R::poll_read_more(Pin::new(&mut *me.reader), cx, me.buf)
     }
 }
 
@@ -68,7 +68,7 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
 
 #[cfg(feature = "async_raw")]
 macro_rules! read_raw_future {
-    ($primitive: ty, $future: ident, $func: ident) => {
+    ($primitive: ty, $future: ident, $func: ident, $buf: ident) => {
         $crate::pin_project_lite::pin_project! {
             #[derive(Debug)]
             #[project(!Unpin)]
@@ -76,8 +76,7 @@ macro_rules! read_raw_future {
             pub struct $future<'a, R: ?Sized> {
                 #[pin]
                 reader: &'a mut R,
-                buf: [u8; std::mem::size_of::<$primitive>()],
-                read: usize,
+                buf: $buf,
             }
         }
         impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin + ?Sized> std::future::Future for $future<'a, R> {
@@ -85,82 +84,73 @@ macro_rules! read_raw_future {
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
-                let byte = std::task::ready!(R::poll_read_single(std::pin::Pin::new(&mut *me.reader), cx))?;
-                (*me.buf)[*me.read] = byte;
-                *me.read += 1;
-                if *me.read >= (*me.buf).len() {
-                    std::task::Poll::Ready(Ok(<$primitive>::$func(*me.buf)))
-                } else {
-                    cx.waker().wake_by_ref();
-                    std::task::Poll::Pending
-                }
+                ready!(R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.buf.into()))?;
+                Poll::Ready(Ok(<$primitive>::$func((*me.buf).into_inner())))
             }
         }
     };
 }
 #[cfg(feature = "async_raw")]
 macro_rules! read_raw_func {
-    ($primitive: ty, $func: ident, $future: ident) => {
+    ($primitive: ty, $func: ident, $future: ident, $buf: ident) => {
         #[inline]
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
-            const SIZE: usize = std::mem::size_of::<$primitive>();
-            let buf = [0; SIZE];
-            $future { reader: self, buf, read: 0 }
+            $future { reader: self, buf: $buf::new() }
         }
     };
 }
 #[cfg(feature = "async_raw")]
 macro_rules! define_read_raw_futures {
     () => {
-        read_raw_future!(u8, ReadU8RawNe, from_ne_bytes);
-        read_raw_future!(i8, ReadI8RawNe, from_ne_bytes);
+        read_raw_future!(u8, ReadU8RawNe, from_ne_bytes, OwnedReadBuf8);
+        read_raw_future!(i8, ReadI8RawNe, from_ne_bytes, OwnedReadBuf8);
 
-        read_raw_future!(u16, ReadU16RawLe, from_le_bytes);
-        read_raw_future!(u16, ReadU16RawBe, from_be_bytes);
-        read_raw_future!(i16, ReadI16RawLe, from_le_bytes);
-        read_raw_future!(i16, ReadI16RawBe, from_be_bytes);
+        read_raw_future!(u16, ReadU16RawLe, from_le_bytes, OwnedReadBuf16);
+        read_raw_future!(u16, ReadU16RawBe, from_be_bytes, OwnedReadBuf16);
+        read_raw_future!(i16, ReadI16RawLe, from_le_bytes, OwnedReadBuf16);
+        read_raw_future!(i16, ReadI16RawBe, from_be_bytes, OwnedReadBuf16);
 
-        read_raw_future!(u32, ReadU32RawLe, from_le_bytes);
-        read_raw_future!(u32, ReadU32RawBe, from_be_bytes);
-        read_raw_future!(i32, ReadI32RawLe, from_le_bytes);
-        read_raw_future!(i32, ReadI32RawBe, from_be_bytes);
+        read_raw_future!(u32, ReadU32RawLe, from_le_bytes, OwnedReadBuf32);
+        read_raw_future!(u32, ReadU32RawBe, from_be_bytes, OwnedReadBuf32);
+        read_raw_future!(i32, ReadI32RawLe, from_le_bytes, OwnedReadBuf32);
+        read_raw_future!(i32, ReadI32RawBe, from_be_bytes, OwnedReadBuf32);
 
-        read_raw_future!(u64, ReadU64RawLe, from_le_bytes);
-        read_raw_future!(u64, ReadU64RawBe, from_be_bytes);
-        read_raw_future!(i64, ReadI64RawLe, from_le_bytes);
-        read_raw_future!(i64, ReadI64RawBe, from_be_bytes);
+        read_raw_future!(u64, ReadU64RawLe, from_le_bytes, OwnedReadBuf64);
+        read_raw_future!(u64, ReadU64RawBe, from_be_bytes, OwnedReadBuf64);
+        read_raw_future!(i64, ReadI64RawLe, from_le_bytes, OwnedReadBuf64);
+        read_raw_future!(i64, ReadI64RawBe, from_be_bytes, OwnedReadBuf64);
 
-        read_raw_future!(u128, ReadU128RawLe, from_le_bytes);
-        read_raw_future!(u128, ReadU128RawBe, from_be_bytes);
-        read_raw_future!(i128, ReadI128RawLe, from_le_bytes);
-        read_raw_future!(i128, ReadI128RawBe, from_be_bytes);
+        read_raw_future!(u128, ReadU128RawLe, from_le_bytes, OwnedReadBuf128);
+        read_raw_future!(u128, ReadU128RawBe, from_be_bytes, OwnedReadBuf128);
+        read_raw_future!(i128, ReadI128RawLe, from_le_bytes, OwnedReadBuf128);
+        read_raw_future!(i128, ReadI128RawBe, from_be_bytes, OwnedReadBuf128);
     };
 }
 #[cfg(feature = "async_raw")]
 macro_rules! define_read_raw_func {
     () => {
-        read_raw_func!(u8, read_u8_raw, ReadU8RawNe);
-        read_raw_func!(i8, read_i8_raw, ReadI8RawNe);
+        read_raw_func!(u8, read_u8_raw, ReadU8RawNe, OwnedReadBuf8);
+        read_raw_func!(i8, read_i8_raw, ReadI8RawNe, OwnedReadBuf8);
 
-        read_raw_func!(u16, read_u16_raw_le, ReadU16RawLe);
-        read_raw_func!(u16, read_u16_raw_be, ReadU16RawBe);
-        read_raw_func!(i16, read_i16_raw_le, ReadI16RawLe);
-        read_raw_func!(i16, read_i16_raw_be, ReadI16RawBe);
+        read_raw_func!(u16, read_u16_raw_le, ReadU16RawLe, OwnedReadBuf16);
+        read_raw_func!(u16, read_u16_raw_be, ReadU16RawBe, OwnedReadBuf16);
+        read_raw_func!(i16, read_i16_raw_le, ReadI16RawLe, OwnedReadBuf16);
+        read_raw_func!(i16, read_i16_raw_be, ReadI16RawBe, OwnedReadBuf16);
 
-        read_raw_func!(u32, read_u32_raw_le, ReadU32RawLe);
-        read_raw_func!(u32, read_u32_raw_be, ReadU32RawBe);
-        read_raw_func!(i32, read_i32_raw_le, ReadI32RawLe);
-        read_raw_func!(i32, read_i32_raw_be, ReadI32RawBe);
+        read_raw_func!(u32, read_u32_raw_le, ReadU32RawLe, OwnedReadBuf32);
+        read_raw_func!(u32, read_u32_raw_be, ReadU32RawBe, OwnedReadBuf32);
+        read_raw_func!(i32, read_i32_raw_le, ReadI32RawLe, OwnedReadBuf32);
+        read_raw_func!(i32, read_i32_raw_be, ReadI32RawBe, OwnedReadBuf32);
 
-        read_raw_func!(u64, read_u64_raw_le, ReadU64RawLe);
-        read_raw_func!(u64, read_u64_raw_be, ReadU64RawBe);
-        read_raw_func!(i64, read_i64_raw_le, ReadI64RawLe);
-        read_raw_func!(i64, read_i64_raw_be, ReadI64RawBe);
+        read_raw_func!(u64, read_u64_raw_le, ReadU64RawLe, OwnedReadBuf64);
+        read_raw_func!(u64, read_u64_raw_be, ReadU64RawBe, OwnedReadBuf64);
+        read_raw_func!(i64, read_i64_raw_le, ReadI64RawLe, OwnedReadBuf64);
+        read_raw_func!(i64, read_i64_raw_be, ReadI64RawBe, OwnedReadBuf64);
 
-        read_raw_func!(u128, read_u128_raw_le, ReadU128RawLe);
-        read_raw_func!(u128, read_u128_raw_be, ReadU128RawBe);
-        read_raw_func!(i128, read_i128_raw_le, ReadI128RawLe);
-        read_raw_func!(i128, read_i128_raw_be, ReadI128RawBe);
+        read_raw_func!(u128, read_u128_raw_le, ReadU128RawLe, OwnedReadBuf128);
+        read_raw_func!(u128, read_u128_raw_be, ReadU128RawBe, OwnedReadBuf128);
+        read_raw_func!(i128, read_i128_raw_le, ReadI128RawLe, OwnedReadBuf128);
+        read_raw_func!(i128, read_i128_raw_be, ReadI128RawBe, OwnedReadBuf128);
     };
 }
 #[cfg(feature = "async_raw")]
@@ -182,11 +172,11 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadBool { reader: self }
     }
 
-    // #[cfg(feature = "async_bools")]
-    // bools::define_bools_read!();
-
     #[cfg(feature = "async_raw")]
     define_read_raw_func!();
+
+    // #[cfg(feature = "async_bools")]
+    // bools::define_bools_read!();
 
     // #[cfg(feature = "async_varint")]
     // varint::define_varint_read!();

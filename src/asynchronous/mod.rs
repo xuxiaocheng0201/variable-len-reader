@@ -18,6 +18,9 @@ pub use reader::*;
 mod writer;
 pub use writer::*;
 
+#[cfg(test)]
+mod tests;
+
 pub trait AsyncVariableReadable {
     fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>>;
 

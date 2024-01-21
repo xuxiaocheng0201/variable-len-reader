@@ -64,6 +64,35 @@ impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteBool<'a, W> {
     }
 }
 
+#[cfg(feature = "async_raw")]
+macro_rules! write_raw_future {
+    ($primitive: ty, $future: ident, $func: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: Unpin> where W: ?Sized {
+                #[pin]
+                writer: &'a mut W,
+                buf: [u8; std::mem::size_of::<$primitive>()],
+                written: usize,
+            }
+        }
+        impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
+            type Output = std::io::Result<usize>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                let mut me = self.project();
+                let bytes = <$primitive>::to_le_bytes(*me.b);
+                ready!(R::poll_write_more(Pin::new(&mut *me.writer), cx, &bytes))?;
+                std::task::Poll::Ready(Ok(<$primitive>::$func(bytes)))
+                W::poll_write_single(Pin::new(&mut *me.writer), cx, *me.byte)
+            }
+        }
+
+    };
+}
+
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]
     fn write_single(&mut self, byte: u8) -> WriteSingle<Self> where Self: Unpin {

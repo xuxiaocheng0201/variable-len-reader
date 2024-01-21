@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-#![forbid(unsafe_code)]
 
 use std::io::Result;
 use crate::util::bufs::{ReadBuf, WriteBuf};
