@@ -97,6 +97,39 @@ macro_rules! write_raw_func {
         }
     };
 }
+#[cfg(feature = "async_raw_size")]
+macro_rules! write_raw_size_future {
+    ($future: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: Unpin> where W: ?Sized {
+                #[pin]
+                writer: &'a mut W,
+                buf: OwnedWriteBuf128,
+            }
+        }
+        impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
+            type Output = std::io::Result<usize>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                let mut me = self.project();
+                W::poll_write_more(Pin::new(&mut *me.writer), cx, &mut me.buf.into())
+            }
+        }
+    };
+}
+#[cfg(feature = "async_raw_size")]
+macro_rules! write_raw_size_func {
+    ($primitive: ty, $func: ident, $future: ident, $to: ident) => {
+        #[inline]
+        fn $func(&mut self, num: $primitive) -> $future<Self> where Self: Unpin {
+            let buf = OwnedWriteBuf128::new(u128::$to(num as u128));
+            $future { writer: self, buf }
+        }
+    };
+}
 #[cfg(feature = "async_raw")]
 macro_rules! define_write_raw_futures {
     () => {
@@ -122,6 +155,15 @@ macro_rules! define_write_raw_futures {
         write_raw_future!(WriteU128RawBe, OwnedWriteBuf128);
         write_raw_future!(WriteI128RawLe, OwnedWriteBuf128);
         write_raw_future!(WriteI128RawBe, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_future!(WriteUsizeRawLe);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_future!(WriteUsizeRawBe);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_future!(WriteIsizeRawLe);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_future!(WriteIsizeRawBe);
     };
 }
 #[cfg(feature = "async_raw")]
@@ -149,10 +191,21 @@ macro_rules! define_read_raw_func {
         write_raw_func!(u128, write_u128_raw_be, WriteU128RawBe, to_be_bytes, OwnedWriteBuf128);
         write_raw_func!(i128, write_i128_raw_le, WriteI128RawLe, to_le_bytes, OwnedWriteBuf128);
         write_raw_func!(i128, write_i128_raw_be, WriteI128RawBe, to_be_bytes, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_func!(usize, write_usize_raw_le, WriteUsizeRawLe, to_le_bytes);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_func!(usize, write_usize_raw_be, WriteUsizeRawBe, to_be_bytes);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_func!(isize, write_isize_raw_le, WriteIsizeRawLe, to_le_bytes);
+        #[cfg(feature = "async_raw_size")]
+        write_raw_size_func!(isize, write_isize_raw_be, WriteIsizeRawBe, to_be_bytes);
     };
 }
 #[cfg(feature = "async_raw")]
 define_write_raw_futures!();
+
+
 
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]

@@ -14,6 +14,15 @@ macro_rules! read_raw {
         }
     };
 }
+#[cfg(feature = "raw_size")]
+macro_rules! read_raw_size {
+    ($primitive: ty, $func: ident, $from: ident) => {
+        #[inline]
+        fn $func(&mut self) -> Result<$primitive> {
+            self.$from().map(|v| v as $primitive)
+        }
+    };
+}
 #[cfg(feature = "raw")]
 macro_rules! define_read_raw {
     () => {
@@ -41,25 +50,13 @@ macro_rules! define_read_raw {
         read_raw!(i128, read_i128_raw_be, from_be_bytes);
 
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn read_usize_raw_le(&mut self) -> Result<usize> {
-            self.read_u128_raw_le().map(|v| v as usize)
-        }
+        read_raw_size!(usize, read_usize_raw_le, from_le_bytes);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn read_usize_raw_be(&mut self) -> Result<usize> {
-            self.read_u128_raw_be().map(|v| v as usize)
-        }
+        read_raw_size!(usize, read_usize_raw_be, from_be_bytes);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn read_isize_raw_le(&mut self) -> Result<isize> {
-            self.read_i128_raw_le().map(|v| v as isize)
-        }
+        read_raw_size!(isize, read_isize_raw_le, from_le_bytes);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn read_isize_raw_be(&mut self) -> Result<isize> {
-            self.read_i128_raw_be().map(|v| v as isize)
-        }
+        read_raw_size!(isize, read_isize_raw_be, from_be_bytes);
     }
 }
 

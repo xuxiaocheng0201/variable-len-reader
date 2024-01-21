@@ -99,6 +99,39 @@ macro_rules! read_raw_func {
         }
     };
 }
+#[cfg(feature = "async_raw_size")]
+macro_rules! read_raw_size_future {
+    ($primitive: ty, $future: ident, $from: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, R: ?Sized> {
+                #[pin]
+                reader: &'a mut R,
+                buf: OwnedReadBuf128,
+            }
+        }
+        impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin + ?Sized> std::future::Future for $future<'a, R> {
+            type Output = std::io::Result<$primitive>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                let mut me = self.project();
+                ready!(R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.buf.into()))?;
+                Poll::Ready(Ok(u128::$from((*me.buf).into_inner()) as $primitive))
+            }
+        }
+    };
+}
+#[cfg(feature = "async_raw_size")]
+macro_rules! read_raw_func_size {
+    ($func: ident, $future: ident) => {
+        #[inline]
+        fn $func(&mut self) -> $future<Self> where Self: Unpin {
+            $future { reader: self, buf: OwnedReadBuf128::new() }
+        }
+    };
+}
 #[cfg(feature = "async_raw")]
 macro_rules! define_read_raw_futures {
     () => {
@@ -124,6 +157,15 @@ macro_rules! define_read_raw_futures {
         read_raw_future!(u128, ReadU128RawBe, from_be_bytes, OwnedReadBuf128);
         read_raw_future!(i128, ReadI128RawLe, from_le_bytes, OwnedReadBuf128);
         read_raw_future!(i128, ReadI128RawBe, from_be_bytes, OwnedReadBuf128);
+
+        #[cfg(feature = "async_raw_size")]
+        read_raw_size_future!(usize, ReadUsizeRawLe, from_le_bytes);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_size_future!(usize, ReadUsizeRawBe, from_be_bytes);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_size_future!(isize, ReadIsizeRawLe, from_le_bytes);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_size_future!(isize, ReadIsizeRawBe, from_be_bytes);
     };
 }
 #[cfg(feature = "async_raw")]
@@ -151,6 +193,15 @@ macro_rules! define_read_raw_func {
         read_raw_func!(u128, read_u128_raw_be, ReadU128RawBe, OwnedReadBuf128);
         read_raw_func!(i128, read_i128_raw_le, ReadI128RawLe, OwnedReadBuf128);
         read_raw_func!(i128, read_i128_raw_be, ReadI128RawBe, OwnedReadBuf128);
+
+        #[cfg(feature = "async_raw_size")]
+        read_raw_func_size!(read_usize_raw_le, ReadUsizeRawLe);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_func_size!(read_usize_raw_be, ReadUsizeRawBe);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_func_size!(read_isize_raw_le, ReadIsizeRawLe);
+        #[cfg(feature = "async_raw_size")]
+        read_raw_func_size!(read_isize_raw_be, ReadIsizeRawBe);
     };
 }
 #[cfg(feature = "async_raw")]
