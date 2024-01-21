@@ -99,6 +99,79 @@ impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
 }
 
 
+macro_rules! impl_write_buf {
+    () => {
+        pub fn skip(&mut self, cnt: usize) {
+            let new = self.read.checked_add(cnt).expect("read overflow");
+            assert!(
+                new <= self.buf.len(),
+                "read must not become larger than buf.len()"
+            );
+            self.read = new;
+        }
+
+        pub fn buf(&self) -> &[u8] {
+            &self.buf
+        }
+
+        pub fn read(&self) -> usize {
+            self.read
+        }
+
+        pub fn left(&self) -> usize {
+            self.buf.len() - self.read
+        }
+
+        pub fn get(&self) -> u8 {
+            assert!(
+                self.left() >= 1,
+                "left() must large than 1"
+            );
+            self.buf[self.read]
+        }
+
+        pub fn take(&mut self) -> u8 {
+            let val = self.get();
+            self.read += 1;
+            val
+        }
+
+        pub fn get_slice(&self, len: usize) -> &[u8] {
+            assert!(
+                self.left() >= len,
+                "left() must large than len"
+            );
+            &self.buf[self.read..self.read + len]
+        }
+
+        pub fn take_slice(&mut self, len: usize) -> &[u8] {
+            assert!(
+                self.left() >= len,
+                "left() must large than len"
+            );
+            let slice = &self.buf[self.read..self.read + len];
+            self.read += len;
+            slice
+        }
+    };
+}
+#[cfg(feature = "bytes")]
+macro_rules! impl_buf {
+    () => {
+        fn remaining(&self) -> usize {
+            self.left()
+        }
+
+        fn chunk(&self) -> &[u8] {
+            self.buf
+        }
+
+        fn advance(&mut self, cnt: usize) {
+            self.skip(cnt)
+        }
+    };
+}
+
 #[derive(Debug)]
 pub struct WriteBuf<'a> {
     buf: &'a [u8],
@@ -112,77 +185,16 @@ impl<'a> WriteBuf<'a> {
             read: 0,
         }
     }
-
-    pub fn skip(&mut self, cnt: usize) {
-        let new = self.read.checked_add(cnt).expect("read overflow");
-        assert!(
-            new <= self.buf.len(),
-            "read must not become larger than buf.len()"
-        );
-        self.read = new;
-    }
-
-    pub fn buf(&self) -> &[u8] {
-        self.buf
-    }
-
-    pub fn read(&self) -> usize {
-        self.read
-    }
-
-    pub fn left(&self) -> usize {
-        self.buf.len() - self.read
-    }
-
-    pub fn get(&self) -> u8 {
-        assert!(
-            self.left() >= 1,
-            "left() must large than 1"
-        );
-        self.buf[self.read]
-    }
-
-    pub fn take(&mut self) -> u8 {
-        let val = self.get();
-        self.read += 1;
-        val
-    }
-
-    pub fn get_slice(&self, len: usize) -> &[u8] {
-        assert!(
-            self.left() >= len,
-            "left() must large than len"
-        );
-        &self.buf[self.read..self.read + len]
-    }
-
-    pub fn take_slice(&mut self, len: usize) -> &[u8] {
-        assert!(
-            self.left() >= len,
-            "left() must large than len"
-        );
-        let slice = &self.buf[self.read..self.read + len];
-        self.read += len;
-        slice
-    }
+    impl_write_buf!();
 }
 
 #[cfg(feature = "bytes")]
 impl<'a> bytes::Buf for WriteBuf<'a> {
-    fn remaining(&self) -> usize {
-        self.left()
-    }
-
-    fn chunk(&self) -> &[u8] {
-        self.buf
-    }
-
-    fn advance(&mut self, cnt: usize) {
-        self.skip(cnt)
-    }
+    impl_buf!();
 }
 
 
+#[macro_export]
 macro_rules! define_read_buf {
     ($name: ident, $n: expr) => {
         #[derive(Debug)]
@@ -208,9 +220,10 @@ macro_rules! define_read_buf {
         }
         impl<'a> From<&'a mut $name> for ReadBuf<'a> {
             fn from(value: &'a mut $name) -> Self {
-                let mut buf = Self::new(&mut value.buf);
-                buf.advance(value.filled);
-                buf
+                Self {
+                    buf: &mut value.buf,
+                    filled: value.filled,
+                }
             }
         }
     };
@@ -221,3 +234,48 @@ define_read_buf!(OwnedReadBuf16, std::mem::size_of::<u16>());
 define_read_buf!(OwnedReadBuf32, std::mem::size_of::<u32>());
 define_read_buf!(OwnedReadBuf64, std::mem::size_of::<u64>());
 define_read_buf!(OwnedReadBuf128, std::mem::size_of::<u128>());
+
+
+#[macro_export]
+macro_rules! define_write_buf {
+    ($name: ident, $n: expr) => {
+        #[derive(Debug)]
+        pub struct $name {
+            buf: [u8; $n],
+            read: usize,
+        }
+        impl $name {
+            pub fn new(buf: [u8; $n]) -> $name {
+                $name {
+                    buf,
+                    read: 0,
+                }
+            }
+            pub fn into_inner(&self) -> [u8; $n] {
+                self.buf
+            }
+            pub fn buf_mut(&mut self) -> &mut [u8] {
+                &mut self.buf
+            }
+            impl_write_buf!();
+        }
+        #[cfg(feature = "bytes")]
+        impl bytes::Buf for $name {
+            impl_buf!();
+        }
+        impl<'a> From<&'a mut $name> for WriteBuf<'a> {
+            fn from(value: &'a mut $name) -> Self {
+                Self {
+                    buf: &value.buf,
+                    read: value.read,
+                }
+            }
+        }
+    };
+}
+
+define_write_buf!(OwnedWriteBuf8, std::mem::size_of::<u8>());
+define_write_buf!(OwnedWriteBuf16, std::mem::size_of::<u16>());
+define_write_buf!(OwnedWriteBuf32, std::mem::size_of::<u32>());
+define_write_buf!(OwnedWriteBuf64, std::mem::size_of::<u64>());
+define_write_buf!(OwnedWriteBuf128, std::mem::size_of::<u128>());

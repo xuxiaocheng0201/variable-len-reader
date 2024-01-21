@@ -18,12 +18,12 @@ macro_rules! test_func {
 mod raw {
     use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
 
-    // test_func!(u8_ne, u8, read_u8_raw, write_u8_raw);
-    // test_func!(i8_ne, i8, read_i8_raw, write_i8_raw);
-    // test_func!(u16_le, u16, read_u16_raw_le, write_u16_raw_le);
-    // test_func!(u16_be, u16, read_u16_raw_be, write_u16_raw_be);
-    // test_func!(i16_le, i16, read_i16_raw_le, write_i16_raw_le);
-    // test_func!(i16_be, i16, read_i16_raw_be, write_i16_raw_be);
+    test_func!(u8_ne, u8, read_u8_raw, write_u8_raw);
+    test_func!(i8_ne, i8, read_i8_raw, write_i8_raw);
+    test_func!(u16_le, u16, read_u16_raw_le, write_u16_raw_le);
+    test_func!(u16_be, u16, read_u16_raw_be, write_u16_raw_be);
+    test_func!(i16_le, i16, read_i16_raw_le, write_i16_raw_le);
+    test_func!(i16_be, i16, read_i16_raw_be, write_i16_raw_be);
     // test_func!(u32_le, u32, read_u32_raw_le, write_u32_raw_le);
     // test_func!(u32_be, u32, read_u32_raw_be, write_u32_raw_be);
     // test_func!(i32_le, i32, read_i32_raw_le, write_i32_raw_le);

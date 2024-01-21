@@ -68,7 +68,7 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
 
 #[cfg(feature = "async_raw")]
 macro_rules! read_raw_future {
-    ($primitive: ty, $future: ident, $func: ident, $buf: ident) => {
+    ($primitive: ty, $future: ident, $from: ident, $buf: ident) => {
         $crate::pin_project_lite::pin_project! {
             #[derive(Debug)]
             #[project(!Unpin)]
@@ -85,7 +85,7 @@ macro_rules! read_raw_future {
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
                 ready!(R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.buf.into()))?;
-                Poll::Ready(Ok(<$primitive>::$func((*me.buf).into_inner())))
+                Poll::Ready(Ok(<$primitive>::$from((*me.buf).into_inner())))
             }
         }
     };
@@ -221,7 +221,7 @@ impl<R: AsyncRead + Unpin> AsyncVariableReadable for R {
         let mut tokio_buf = buf.into();
         ready!(R::poll_read(self, cx, &mut tokio_buf))?;
         let remaining = tokio_buf.remaining();
-        buf.advance(remaining - origin);
+        buf.advance(origin - remaining);
         let left = buf.left();
         if left == 0 {
             Poll::Ready(Ok(()))
