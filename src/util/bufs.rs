@@ -1,5 +1,3 @@
-use bytes::buf::UninitSlice;
-
 pub struct ReadBuf<'a> {
     buf: &'a mut [u8],
     filled: usize,
@@ -75,8 +73,8 @@ unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
         self.advance(cnt)
     }
 
-    fn chunk_mut(&mut self) -> &mut UninitSlice {
-        UninitSlice::new(self.buf_mut())
+    fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
+        bytes::buf::UninitSlice::new(self.buf_mut())
     }
 }
 

@@ -1,24 +1,15 @@
 #![doc = include_str!("../README.md")]
+#![forbid(unsafe_code)]
 
 use std::io::Result;
-use crate::bufs::{ReadBuf, WriteBuf};
-// #[cfg(feature = "signed")]
-// use crate::zigzag::Zigzag;
+use crate::util::bufs::{ReadBuf, WriteBuf};
 
 extern crate pin_project_lite;
 extern crate tokio;
 
-pub mod bufs;
-// #[cfg(feature = "raw")]
-// mod raw;
+pub mod util;
 // #[cfg(feature = "bools")]
 // mod bools;
-// #[cfg(feature = "varint")]
-// mod varint;
-// #[cfg(feature = "signed")]
-// mod signed;
-#[cfg(any(feature = "signed", feature = "async_signed"))]
-pub mod zigzag;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
