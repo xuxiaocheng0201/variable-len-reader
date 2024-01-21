@@ -8,8 +8,6 @@ extern crate pin_project_lite;
 extern crate tokio;
 
 pub mod util;
-// #[cfg(feature = "bools")]
-// mod bools;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
@@ -45,7 +43,7 @@ pub trait VariableWritable {
     }
 }
 
-#[cfg(test)]
+#[cfg(test)] // TODO
 pub(crate) mod channel {
     use std::io::Result;
     use std::sync::mpsc::{Receiver, Sender};

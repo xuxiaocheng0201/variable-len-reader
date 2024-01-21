@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct ReadBuf<'a> {
     buf: &'a mut [u8],
     filled: usize,
@@ -63,6 +64,14 @@ impl<'a> ReadBuf<'a> {
     }
 }
 
+impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
+    fn from(value: &'b mut ReadBuf<'a>) -> Self {
+        let mut buf = Self::new(value.buf);
+        buf.advance(value.filled);
+        buf
+    }
+}
+
 #[cfg(feature = "bytes")]
 unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     fn remaining_mut(&self) -> usize {
@@ -78,6 +87,7 @@ unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct WriteBuf<'a> {
     buf: &'a [u8],
     read: usize,

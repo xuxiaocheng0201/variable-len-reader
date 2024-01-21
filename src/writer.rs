@@ -163,7 +163,7 @@ macro_rules! define_write_varint {
         #[cfg(feature = "varint_size")]
         #[inline]
         fn write_usize_varint(&mut self, num: usize) -> Result<usize> {
-            write.write_u128_varint(num as usize)
+            self.write_u128_varint(num as u128)
         }
     };
 }
