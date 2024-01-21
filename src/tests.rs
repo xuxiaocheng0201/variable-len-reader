@@ -63,7 +63,7 @@ mod bools {
         };
     }
 
-    crate::test_func!(bools_2, read_bools_2, write_bools_2, 2);
+    test_func!(bools_2, read_bools_2, write_bools_2, 2);
     test_func!(bools_3, read_bools_3, write_bools_3, 3);
     test_func!(bools_4, read_bools_4, write_bools_4, 4);
     test_func!(bools_5, read_bools_5, write_bools_5, 5);

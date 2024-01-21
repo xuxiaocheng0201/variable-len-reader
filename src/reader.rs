@@ -39,6 +39,27 @@ macro_rules! define_read_raw {
         read_raw!(u128, read_u128_raw_be, from_be_bytes);
         read_raw!(i128, read_i128_raw_le, from_le_bytes);
         read_raw!(i128, read_i128_raw_be, from_be_bytes);
+
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn read_usize_raw_le(&mut self) -> Result<usize> {
+            self.read_u128_raw_le().map(|v| v as usize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn read_usize_raw_be(&mut self) -> Result<usize> {
+            self.read_u128_raw_be().map(|v| v as usize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn read_isize_raw_le(&mut self) -> Result<isize> {
+            self.read_i128_raw_le().map(|v| v as isize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn read_isize_raw_be(&mut self) -> Result<isize> {
+            self.read_i128_raw_be().map(|v| v as isize)
+        }
     }
 }
 
@@ -151,6 +172,12 @@ macro_rules! define_read_varint {
         read_varint!(u128, read_u128_varint_16_le, u128, read_u128_raw_le);
         #[cfg(feature = "long_varint")]
         read_varint!(u128, read_u128_varint_16_be, u128, read_u128_raw_be);
+
+        #[cfg(feature = "varint_size")]
+        #[inline]
+        fn read_usize_varint(&mut self) -> Result<usize> {
+            self.read_u128_varint().map(|v| v as usize)
+        }
     };
 }
 
@@ -216,6 +243,12 @@ macro_rules! define_read_signed {
         read_signed!(i128, read_i128_varint_16_le, read_u128_varint_16_le);
         #[cfg(feature = "long_signed")]
         read_signed!(i128, read_i128_varint_16_be, read_u128_varint_16_be);
+
+        #[cfg(feature = "varint_size")]
+        #[inline]
+        fn read_isize_varint(&mut self) -> Result<isize> {
+            self.read_i128_varint().map(|v| v as isize)
+        }
     };
 }
 
@@ -241,23 +274,23 @@ pub trait VariableReader: VariableReadable {
     #[cfg(feature = "signed")]
     define_read_signed!();
 
-    // #[cfg(feature = "vec_u8")]
-    // #[inline]
-    // fn read_u8_vec(&mut self) -> std::io::Result<Vec<u8>> {
-    //     let length = self.read_u128_varint()? as usize;
-    //     let mut bytes = vec![0; length];
-    //     self.read_more(&mut bytes)?;
-    //     Ok(bytes)
-    // }
-    //
-    // #[cfg(feature = "string")]
-    // #[inline]
-    // fn read_string(&mut self) -> std::io::Result<String> {
-    //     match String::from_utf8(self.read_u8_vec()?) {
-    //         Ok(s) => Ok(s),
-    //         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-    //     }
-    // }
+    #[cfg(feature = "vec_u8")]
+    #[inline]
+    fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
+        let length = self.read_usize_varint()?;
+        let mut bytes = vec![0; length];
+        self.read_more(&mut ReadBuf::new(&mut bytes))?;
+        Ok(bytes)
+    }
+
+    #[cfg(feature = "string")]
+    #[inline]
+    fn read_string(&mut self) -> Result<String> {
+        match String::from_utf8(self.read_u8_vec()?) {
+            Ok(s) => Ok(s),
+            Err(e) => Err(Error::new(ErrorKind::InvalidData, e)),
+        }
+    }
 }
 
 impl<R: VariableReadable> VariableReader for R {

@@ -36,6 +36,27 @@ macro_rules! define_write_raw {
         write_raw!(u128, write_u128_raw_be, to_be_bytes);
         write_raw!(i128, write_i128_raw_le, to_le_bytes);
         write_raw!(i128, write_i128_raw_be, to_be_bytes);
+
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn write_usize_raw_le(&mut self) -> Result<usize> {
+            self.write_u128_raw_le().map(|v| v as usize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn write_usize_raw_be(&mut self) -> Result<usize> {
+            self.write_u128_raw_be().map(|v| v as usize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn write_isize_raw_le(&mut self) -> Result<isize> {
+            self.write_i128_raw_le().map(|v| v as isize)
+        }
+        #[cfg(feature = "raw_size")]
+        #[inline]
+        fn write_isize_raw_be(&mut self) -> Result<isize> {
+            self.write_i128_raw_be().map(|v| v as isize)
+        }
     };
 }
 
@@ -138,6 +159,12 @@ macro_rules! define_write_varint {
         write_varint!(u128, write_u128_varint_16_le, u128, write_u128_raw_le);
         #[cfg(feature = "long_varint")]
         write_varint!(u128, write_u128_varint_16_be, u128, write_u128_raw_be);
+
+        #[cfg(feature = "varint_size")]
+        #[inline]
+        fn write_usize_varint(&mut self, num: usize) -> Result<usize> {
+            write.write_u128_varint(num as usize)
+        }
     };
 }
 
@@ -203,6 +230,12 @@ macro_rules! define_write_signed {
         write_signed!(i128, write_i128_varint_16_le, write_u128_varint_16_le);
         #[cfg(feature = "long_signed")]
         write_signed!(i128, write_i128_varint_16_be, write_u128_varint_16_be);
+
+        #[cfg(feature = "varint_size")]
+        #[inline]
+        fn write_isize_varint(&mut self, num: isize) -> Result<usize> {
+            self.write_i128_varint(num as i128)
+        }
     };
 }
 
@@ -224,18 +257,18 @@ pub trait VariableWriter: VariableWritable {
     #[cfg(feature = "signed")]
     define_write_signed!();
 
-    // #[cfg(feature = "vec_u8")]
-    // #[inline]
-    // fn write_u8_vec(&mut self, message: &[u8]) -> std::io::Result<usize> {
-    //     self.write_u128_varint(message.len() as u128)?;
-    //     self.write_more(message)
-    // }
-    //
-    // #[cfg(feature = "string")]
-    // #[inline]
-    // fn write_string(&mut self, message: &str) -> std::io::Result<usize> {
-    //     self.write_u8_vec(message.as_bytes())
-    // }
+    #[cfg(feature = "vec_u8")]
+    #[inline]
+    fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
+        self.write_usize_varint(message.len())?;
+        self.write_more(&mut WriteBuf::new(message))
+    }
+
+    #[cfg(feature = "string")]
+    #[inline]
+    fn write_string(&mut self, message: &str) -> Result<usize> {
+        self.write_u8_vec(message.as_bytes())
+    }
 }
 
 impl<W: VariableWritable> VariableWriter for W {
