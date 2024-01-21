@@ -34,25 +34,33 @@ impl<'a> ReadBuf<'a> {
         self.filled
     }
 
-    pub fn remaining(&self) -> usize {
+    pub fn left(&self) -> usize {
         self.buf.len() - self.filled
     }
 
-    pub fn put(&mut self, val: u8) {
+    pub fn set(&mut self, val: u8) {
         assert!(
-            self.remaining() >= 1,
-            "remaining() must large than 1"
+            self.left() >= 1,
+            "left() must large than 1"
         );
         self.buf[self.filled] = val;
+    }
+
+    pub fn put(&mut self, val: u8) {
+        self.set(val);
         self.filled += 1;
     }
 
-    pub fn put_slice(&mut self, slice: &[u8]) {
+    pub fn set_slice(&mut self, slice: &[u8]) {
         assert!(
-            self.remaining() >= slice.len(),
+            self.left() >= slice.len(),
             "buf.len() must fit in remaining()"
         );
         self.buf[self.filled..self.filled + slice.len()].copy_from_slice(slice);
+    }
+
+    pub fn put_slice(&mut self, slice: &[u8]) {
+        self.set_slice(slice);
         self.filled += slice.len();
     }
 }
@@ -60,7 +68,7 @@ impl<'a> ReadBuf<'a> {
 #[cfg(feature = "bytes")]
 unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     fn remaining_mut(&self) -> usize {
-        self.remaining()
+        self.left()
     }
 
     unsafe fn advance_mut(&mut self, cnt: usize) {
@@ -102,24 +110,36 @@ impl<'a> WriteBuf<'a> {
         self.read
     }
 
-    pub fn remaining(&self) -> usize {
+    pub fn left(&self) -> usize {
         self.buf.len() - self.read
     }
 
-    pub fn get(&mut self) -> u8 {
+    pub fn get(&self) -> u8 {
         assert!(
-            self.remaining() >= 1,
-            "remaining() must large than 1"
+            self.left() >= 1,
+            "left() must large than 1"
         );
-        let val = self.buf[self.read];
+        self.buf[self.read]
+    }
+
+    pub fn take(&mut self) -> u8 {
+        let val = self.get();
         self.read += 1;
         val
     }
 
-    pub fn get_slice(&mut self, len: usize) -> &[u8] {
+    pub fn get_slice(&self, len: usize) -> &[u8] {
         assert!(
-            self.remaining() >= len,
-            "remaining() must large than len"
+            self.left() >= len,
+            "left() must large than len"
+        );
+        &self.buf[self.read..self.read + len]
+    }
+
+    pub fn take_slice(&mut self, len: usize) -> &[u8] {
+        assert!(
+            self.left() >= len,
+            "left() must large than len"
         );
         let slice = &self.buf[self.read..self.read + len];
         self.read += len;
@@ -130,7 +150,7 @@ impl<'a> WriteBuf<'a> {
 #[cfg(feature = "bytes")]
 impl<'a> bytes::Buf for WriteBuf<'a> {
     fn remaining(&self) -> usize {
-        self.remaining()
+        self.left()
     }
 
     fn chunk(&self) -> &[u8] {

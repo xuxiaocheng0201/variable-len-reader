@@ -1,140 +1,80 @@
 #![doc = include_str!("../README.md")]
 
-use std::io::{Error, ErrorKind, Read, Result, Write};
-#[cfg(feature = "signed")]
-use crate::zigzag::Zigzag;
+use std::io::Result;
+use crate::bufs::{ReadBuf, WriteBuf};
+// #[cfg(feature = "signed")]
+// use crate::zigzag::Zigzag;
 
 extern crate pin_project_lite;
 extern crate tokio;
 
-#[cfg(feature = "bools")]
-mod bools;
-#[cfg(feature = "raw")]
-mod raw;
-#[cfg(feature = "varint")]
-mod varint;
-#[cfg(feature = "signed")]
-mod signed;
+pub mod bufs;
+// #[cfg(feature = "raw")]
+// mod raw;
+// #[cfg(feature = "bools")]
+// mod bools;
+// #[cfg(feature = "varint")]
+// mod varint;
+// #[cfg(feature = "signed")]
+// mod signed;
 #[cfg(any(feature = "signed", feature = "async_signed"))]
 pub mod zigzag;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
+mod reader;
+pub use reader::*;
+
+mod writer;
+pub use writer::*;
+
+#[cfg(test)]
+mod tests;
+
 pub trait VariableReadable {
     fn read_single(&mut self) -> Result<u8>;
 
-    #[inline]
-    fn read_bool(&mut self) -> Result<bool> {
-        match self.read_single()? {
-            0 => Ok(false),
-            1 => Ok(true),
-            i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
-        }
-    }
-
-    #[cfg(feature = "bools")]
-    bools::define_bools_read!();
-
-    fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
-        for i in 0..buf.len() {
-            buf[i] = self.read_single()?;
+    fn read_more(&mut self, buf: &mut ReadBuf<'_>) -> Result<()> {
+        while buf.left() > 0 {
+            buf.put(self.read_single()?);
         }
         Ok(())
-    }
-
-    #[cfg(feature = "raw")]
-    raw::define_raw_read!();
-
-    #[cfg(feature = "varint")]
-    varint::define_varint_read!();
-
-    #[cfg(feature = "signed")]
-    signed::define_signed_read!();
-
-    #[cfg(feature = "vec_u8")]
-    #[inline]
-    fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
-        let length = self.read_u128_varint()? as usize;
-        let mut bytes = vec![0; length];
-        self.read_more(&mut bytes)?;
-        Ok(bytes)
-    }
-
-    #[cfg(feature = "string")]
-    #[inline]
-    fn read_string(&mut self) -> Result<String> {
-        match String::from_utf8(self.read_u8_vec()?) {
-            Ok(s) => Ok(s),
-            Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-        }
     }
 }
 
 pub trait VariableWritable {
     fn write_single(&mut self, byte: u8) -> Result<usize>;
 
-    #[inline]
-    fn write_bool(&mut self, b: bool) -> Result<usize> {
-        self.write_single(if b { 1 } else { 0 })
-    }
-
-    #[cfg(feature = "bools")]
-    bools::define_bools_write!();
-
-    fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
-        for i in 0..bytes.len() {
-            self.write_single(bytes[i])?;
+    fn write_more(&mut self, buf: &mut WriteBuf<'_>) -> Result<usize> {
+        while buf.left() > 0 {
+            self.write_single(buf.get())?;
+            buf.skip(1);
         }
-        Ok(bytes.len())
-    }
-
-    #[cfg(feature = "raw")]
-    raw::define_raw_write!();
-
-    #[cfg(feature = "varint")]
-    varint::define_varint_write!();
-
-    #[cfg(feature = "signed")]
-    signed::define_signed_write!();
-
-    #[cfg(feature = "vec_u8")]
-    #[inline]
-    fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
-        self.write_u128_varint(message.len() as u128)?;
-        self.write_more(message)
-    }
-
-    #[cfg(feature = "string")]
-    #[inline]
-    fn write_string(&mut self, message: &str) -> Result<usize> {
-        self.write_u8_vec(message.as_bytes())
+        Ok(buf.buf().len())
     }
 }
 
-impl<R: Read> VariableReadable for R {
-    #[inline]
-    fn read_single(&mut self) -> Result<u8> {
-        let mut buf = [0];
-        self.read_exact(&mut buf)?;
-        Ok(buf[0])
+#[cfg(test)]
+pub(crate) mod channel {
+    use std::io::Result;
+    use std::sync::mpsc::{Receiver, Sender};
+    use crate::{VariableReadable, VariableWritable};
+
+    pub(crate) struct SenderWriter<T>(pub Sender<T>);
+    pub(crate) struct ReceiverReader<T>(pub Receiver<T>);
+
+    impl VariableWritable for SenderWriter<u8> {
+        fn write_single(&mut self, byte: u8) -> Result<usize> {
+            self.0.send(byte)
+                .map(|_| 1)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+        }
     }
 
-    #[inline]
-    fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
-        self.read_exact(buf)
-    }
-}
-
-impl<W: Write> VariableWritable for W {
-    #[inline]
-    fn write_single(&mut self, byte: u8) -> Result<usize> {
-        self.write_all(&[byte])?;
-        Ok(1)
-    }
-
-    #[inline]
-    fn write_more(&mut self, bytes: &[u8]) -> Result<usize> {
-        self.write_all(bytes)?;
-        Ok(bytes.len())
+    impl VariableReadable for ReceiverReader<u8> {
+        fn read_single(&mut self) -> Result<u8> {
+            self.0.recv()
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, e))
+        }
     }
 }
