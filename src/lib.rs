@@ -3,7 +3,9 @@
 use std::io::Result;
 use crate::util::bufs::{ReadBuf, WriteBuf};
 
+#[cfg(feature = "async")]
 extern crate pin_project_lite;
+#[cfg(feature = "async")]
 extern crate tokio;
 
 pub mod util;

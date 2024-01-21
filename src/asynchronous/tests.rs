@@ -14,7 +14,7 @@ macro_rules! test_func {
     };
 }
 
-#[cfg(feature = "raw")]
+#[cfg(feature = "async_raw")]
 mod raw {
     use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
 
@@ -36,4 +36,38 @@ mod raw {
     // test_func!(u128_be, u128, read_u128_raw_be, write_u128_raw_be);
     // test_func!(i128_le, i128, read_i128_raw_le, write_i128_raw_le);
     // test_func!(i128_be, i128, read_i128_raw_be, write_i128_raw_be);
+}
+
+#[cfg(feature = "async_bools")]
+mod bools {
+    use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
+
+    macro_rules! test_func {
+        ($tester: ident, $reader: ident, $writer: ident, $n: literal) => {
+            #[tokio::test]
+            async fn $tester() {
+                let mut cursor = std::io::Cursor::new(Vec::new());
+                const MAX: u8 = ((1 << ($n - 1)) - 1 << 1) + 1; // (1 << $n) - 1
+                for n in 0..MAX {
+                    let mut p = [false; $n];
+                    for i in 0..$n {
+                        p[i] = n & (1 << i) != 0;
+                    }
+                    cursor.set_position(0);
+                    cursor.$writer(p).await.expect(&format!("Failed to write {:?} at {}.", p, stringify!($tester)));
+                    cursor.set_position(0);
+                    let q = cursor.$reader().await.expect(&format!("Failed to read {:?} at {}.", p, stringify!($tester)));
+                    assert_eq!(p, q, "Not same: {:?} != {:?} at {}. bytes: {:?}", p, q, stringify!($tester), cursor.into_inner());
+                }
+            }
+        };
+    }
+
+    test_func!(bools_2, read_bools_2, write_bools_2, 2);
+    test_func!(bools_3, read_bools_3, write_bools_3, 3);
+    test_func!(bools_4, read_bools_4, write_bools_4, 4);
+    test_func!(bools_5, read_bools_5, write_bools_5, 5);
+    test_func!(bools_6, read_bools_6, write_bools_6, 6);
+    test_func!(bools_7, read_bools_7, write_bools_7, 7);
+    test_func!(bools_8, read_bools_8, write_bools_8, 8);
 }

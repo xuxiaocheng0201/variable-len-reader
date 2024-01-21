@@ -90,6 +90,7 @@ unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     impl_buf_mut!();
 }
 
+#[cfg(feature = "async")] // Tokio dep
 impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
     fn from(value: &'b mut ReadBuf<'a>) -> Self {
         let mut buf = Self::new(value.buf);
