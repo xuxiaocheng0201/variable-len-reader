@@ -302,7 +302,7 @@ macro_rules! write_varint_future {
                         if (*me.value == 0) {
                             return std::task::Poll::Ready(Ok(*me.size));
                         }
-                        (*me.inner_buf) = $buf::new(<$internal>::$to(((*me.value) & (NUM_BITS as $primitive)) as $internal));
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((*me.value) as $internal));
                         *me.value = 0;
                     }
                 }
@@ -320,6 +320,64 @@ macro_rules! write_varint_func {
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
             let (value, buf) = if num >= SIGN_BIT as $primitive {
                 (num >> POS_OFFSET, $buf::new(<$internal>::$to(((num & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)))
+            } else {
+                (0, $buf::new(<$internal>::$to(num as $internal)))
+            };
+            $future { writer: self, value, size: 0, inner_buf: buf }
+        }
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! write_varint_size_future {
+    ($future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: ?Sized> {
+                #[pin]
+                writer: &'a mut W,
+                value: u128,
+                size: usize,
+                inner_buf: $buf,
+            }
+        }
+        impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin> std::future::Future for $future<'a, W> {
+            type Output = std::io::Result<usize>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                const NUM_BITS: $internal = <$internal>::MAX >> 1;
+                const SIGN_BIT: $internal = NUM_BITS + 1;
+                const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+                let mut me = self.project();
+                loop {
+                    (*me.size) += ready!(W::poll_write_more(Pin::new(&mut *me.writer), cx, &mut me.inner_buf.into()))?;
+                    if (*me.value) >= SIGN_BIT as u128 {
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((((*me.value) & (NUM_BITS as u128)) as $internal) | SIGN_BIT));
+                        (*me.value) >>= POS_OFFSET;
+                    } else {
+                        if (*me.value == 0) {
+                            return std::task::Poll::Ready(Ok(*me.size));
+                        }
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((*me.value) as $internal));
+                        *me.value = 0;
+                    }
+                }
+            }
+        }
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! write_varint_size_func {
+    ($func: ident, $future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        #[inline]
+        fn $func(&mut self, num: usize) -> $future<Self> where Self: Unpin {
+            let num = num as u128;
+            const NUM_BITS: $internal = <$internal>::MAX >> 1;
+            const SIGN_BIT: $internal = NUM_BITS + 1;
+            const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+            let (value, buf) = if num >= SIGN_BIT as u128 {
+                (num >> POS_OFFSET, $buf::new(<$internal>::$to(((num & (NUM_BITS as u128)) as $internal) | SIGN_BIT)))
             } else {
                 (0, $buf::new(<$internal>::$to(num as $internal)))
             };
@@ -380,6 +438,25 @@ macro_rules! define_write_varint_futures {
         write_varint_future!(u128, WriteU128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
         #[cfg(feature = "async_long_varint")]
         write_varint_future!(u128, WriteU128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_varint_size")]
+        write_varint_size_future!(WriteUsizeVarint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint16Le, u128, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint16Be, u128, to_be_bytes, OwnedWriteBuf128);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -435,6 +512,25 @@ macro_rules! define_write_varint_func {
         write_varint_func!(u128, write_u128_varint_16_le, WriteU128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
         #[cfg(feature = "async_long_varint")]
         write_varint_func!(u128, write_u128_varint_16_be, WriteU128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_varint_size")]
+        write_varint_size_func!(write_usize_varint, WriteUsizeVarint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_2_le, WriteUsizeVarint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_2_be, WriteUsizeVarint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_4_le, WriteUsizeVarint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_4_be, WriteUsizeVarint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_8_le, WriteUsizeVarint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_8_be, WriteUsizeVarint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_16_le, WriteUsizeVarint16Le, usize, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_16_be, WriteUsizeVarint16Be, usize, to_be_bytes, OwnedWriteBuf128);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -472,7 +568,7 @@ macro_rules! write_signed_future {
                         if (*me.value == 0) {
                             return std::task::Poll::Ready(Ok(*me.size));
                         }
-                        (*me.inner_buf) = $buf::new(<$internal>::$to(((*me.value) & (NUM_BITS as $primitive)) as $internal));
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((*me.value) as $internal));
                         *me.value = 0;
                     }
                 }
@@ -492,6 +588,65 @@ macro_rules! write_signed_func {
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
             let (value, buf) = if num >= SIGN_BIT as $primitive {
                 (num >> POS_OFFSET, $buf::new(<$internal>::$to(((num & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)))
+            } else {
+                (0, $buf::new(<$internal>::$to(num as $internal)))
+            };
+            $future { writer: self, value, size: 0, inner_buf: buf }
+        }
+    };
+}
+#[cfg(all(feature = "async_signed", feature = "async_varint_size"))]
+macro_rules! write_signed_size_future {
+    ($future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: ?Sized> {
+                #[pin]
+                writer: &'a mut W,
+                value: u128,
+                size: usize,
+                inner_buf: $buf,
+            }
+        }
+        impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin> std::future::Future for $future<'a, W> {
+            type Output = std::io::Result<usize>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                const NUM_BITS: $internal = <$internal>::MAX >> 1;
+                const SIGN_BIT: $internal = NUM_BITS + 1;
+                const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+                let mut me = self.project();
+                loop {
+                    (*me.size) += ready!(W::poll_write_more(Pin::new(&mut *me.writer), cx, &mut me.inner_buf.into()))?;
+                    if (*me.value) >= SIGN_BIT as u128 {
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((((*me.value) & (NUM_BITS as u128)) as $internal) | SIGN_BIT));
+                        (*me.value) >>= POS_OFFSET;
+                    } else {
+                        if (*me.value == 0) {
+                            return std::task::Poll::Ready(Ok(*me.size));
+                        }
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((*me.value) as $internal));
+                        *me.value = 0;
+                    }
+                }
+            }
+        }
+    };
+}
+#[cfg(all(feature = "async_signed", feature = "async_varint_size"))]
+macro_rules! write_signed_size_func {
+    ($func: ident, $future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        #[inline]
+        fn $func(&mut self, num: isize) -> $future<Self> where Self: Unpin {
+            use $crate::util::zigzag::Zigzag;
+            let num = (num as i128).zigzag();
+            const NUM_BITS: $internal = <$internal>::MAX >> 1;
+            const SIGN_BIT: $internal = NUM_BITS + 1;
+            const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+            let (value, buf) = if num >= SIGN_BIT as u128 {
+                (num >> POS_OFFSET, $buf::new(<$internal>::$to(((num & (NUM_BITS as u128)) as $internal) | SIGN_BIT)))
             } else {
                 (0, $buf::new(<$internal>::$to(num as $internal)))
             };
@@ -552,6 +707,25 @@ macro_rules! define_write_signed_futures {
         write_signed_future!(u128, WriteI128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
         #[cfg(feature = "async_long_signed")]
         write_signed_future!(u128, WriteI128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_varint_size")]
+        write_signed_size_future!(WriteIsizeVarint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint16Le, u128, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_future!(WriteIsizeVarint16Be, u128, to_be_bytes, OwnedWriteBuf128);
     };
 }
 #[cfg(feature = "async_signed")]
@@ -607,6 +781,25 @@ macro_rules! define_write_signed_func {
         write_signed_func!(i128, u128, write_i128_varint_16_le, WriteI128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
         #[cfg(feature = "async_long_signed")]
         write_signed_func!(i128, u128, write_i128_varint_16_be, WriteI128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+
+        #[cfg(feature = "async_varint_size")]
+        write_signed_size_func!(write_isize_varint, WriteIsizeVarint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_2_le, WriteIsizeVarint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_2_be, WriteIsizeVarint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_4_le, WriteIsizeVarint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_4_be, WriteIsizeVarint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_8_le, WriteIsizeVarint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_8_be, WriteIsizeVarint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_16_le, WriteIsizeVarint16Le, u128, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        write_signed_size_func!(write_isize_varint_16_be, WriteIsizeVarint16Be, u128, to_be_bytes, OwnedWriteBuf128);
     };
 }
 #[cfg(feature = "async_signed")]

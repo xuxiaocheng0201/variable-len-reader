@@ -11,6 +11,15 @@ macro_rules! write_raw {
         }
     };
 }
+#[cfg(feature = "raw_size")]
+macro_rules! write_raw_size {
+    ($primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
+        #[inline]
+        fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
+            self.$write_internal(num as $internal)
+        }
+    };
+}
 #[cfg(feature = "raw")]
 macro_rules! define_write_raw {
     () => {
@@ -38,25 +47,13 @@ macro_rules! define_write_raw {
         write_raw!(i128, write_i128_raw_be, to_be_bytes);
 
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn write_usize_raw_le(&mut self) -> Result<usize> {
-            self.write_u128_raw_le().map(|v| v as usize)
-        }
+        write_raw_size!(usize, write_usize_raw_le, u128, write_u128_raw_le);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn write_usize_raw_be(&mut self) -> Result<usize> {
-            self.write_u128_raw_be().map(|v| v as usize)
-        }
+        write_raw_size!(usize, write_usize_raw_be, u128, write_u128_raw_be);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn write_isize_raw_le(&mut self) -> Result<isize> {
-            self.write_i128_raw_le().map(|v| v as isize)
-        }
+        write_raw_size!(isize, write_isize_raw_le, i128, write_i128_raw_le);
         #[cfg(feature = "raw_size")]
-        #[inline]
-        fn write_isize_raw_be(&mut self) -> Result<isize> {
-            self.write_i128_raw_be().map(|v| v as isize)
-        }
+        write_raw_size!(isize, write_isize_raw_be, i128, write_i128_raw_be);
     };
 }
 
@@ -103,6 +100,15 @@ macro_rules! write_varint {
             }
             size += self.$write_internal(value as $internal)?;
             Ok(size)
+        }
+    };
+}
+#[cfg(feature = "varint_size")]
+macro_rules! write_varint_size {
+    ($func: ident, $write_internal: ident) => {
+        #[inline]
+        fn $func(&mut self, num: usize) -> std::io::Result<usize> {
+            self.$write_internal(num as u128)
         }
     };
 }
@@ -161,10 +167,23 @@ macro_rules! define_write_varint {
         write_varint!(u128, write_u128_varint_16_be, u128, write_u128_raw_be);
 
         #[cfg(feature = "varint_size")]
-        #[inline]
-        fn write_usize_varint(&mut self, num: usize) -> Result<usize> {
-            self.write_u128_varint(num as u128)
-        }
+        write_varint_size!(write_usize_varint, write_u128_varint);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_2_le, write_u128_varint_2_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_2_be, write_u128_varint_2_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_4_le, write_u128_varint_4_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_4_be, write_u128_varint_4_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_8_le, write_u128_varint_8_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_8_be, write_u128_varint_8_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_16_le, write_u128_varint_16_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        write_varint_size!(write_usize_varint_16_be, write_u128_varint_16_be);
     };
 }
 
@@ -174,6 +193,15 @@ macro_rules! write_signed {
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
             use $crate::util::zigzag::Zigzag;
             self.$write_internal(num.zigzag())
+        }
+    };
+}
+#[cfg(all(feature = "signed", feature = "varint_size"))]
+macro_rules! write_signed_size {
+    ($func: ident, $write_internal: ident) => {
+        #[inline]
+        fn $func(&mut self, num: isize) -> std::io::Result<usize> {
+            self.$write_internal(num as i128)
         }
     };
 }
@@ -232,10 +260,23 @@ macro_rules! define_write_signed {
         write_signed!(i128, write_i128_varint_16_be, write_u128_varint_16_be);
 
         #[cfg(feature = "varint_size")]
-        #[inline]
-        fn write_isize_varint(&mut self, num: isize) -> Result<usize> {
-            self.write_i128_varint(num as i128)
-        }
+        write_signed_size!(write_isize_varint, write_i128_varint);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_2_le, write_i128_varint_2_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_2_be, write_i128_varint_2_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_4_le, write_i128_varint_4_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_4_be, write_i128_varint_4_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_8_le, write_i128_varint_8_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_8_be, write_i128_varint_8_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_16_le, write_i128_varint_16_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        write_signed_size!(write_isize_varint_16_be, write_i128_varint_16_be);
     };
 }
 

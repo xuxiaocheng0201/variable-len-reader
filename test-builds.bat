@@ -20,3 +20,6 @@ cargo test --no-default-features --features "async_signed" --lib
 cargo test --no-default-features --features "async_long_signed" --lib
 cargo test --no-default-features --features "async_vec_u8" --lib
 cargo test --no-default-features --features "async_string" --lib
+
+cargo test --no-default-features --features "full" --lib
+cargo test --features "async_default" --doc

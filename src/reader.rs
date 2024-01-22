@@ -16,10 +16,10 @@ macro_rules! read_raw {
 }
 #[cfg(feature = "raw_size")]
 macro_rules! read_raw_size {
-    ($primitive: ty, $func: ident, $from: ident) => {
+    ($primitive: ty, $func: ident, $read_internal: ident) => {
         #[inline]
         fn $func(&mut self) -> Result<$primitive> {
-            self.$from().map(|v| v as $primitive)
+            self.$read_internal().map(|v| v as $primitive)
         }
     };
 }
@@ -50,13 +50,13 @@ macro_rules! define_read_raw {
         read_raw!(i128, read_i128_raw_be, from_be_bytes);
 
         #[cfg(feature = "raw_size")]
-        read_raw_size!(usize, read_usize_raw_le, from_le_bytes);
+        read_raw_size!(usize, read_usize_raw_le, read_u128_raw_le);
         #[cfg(feature = "raw_size")]
-        read_raw_size!(usize, read_usize_raw_be, from_be_bytes);
+        read_raw_size!(usize, read_usize_raw_be, read_u128_raw_be);
         #[cfg(feature = "raw_size")]
-        read_raw_size!(isize, read_isize_raw_le, from_le_bytes);
+        read_raw_size!(isize, read_isize_raw_le, read_i128_raw_le);
         #[cfg(feature = "raw_size")]
-        read_raw_size!(isize, read_isize_raw_be, from_be_bytes);
+        read_raw_size!(isize, read_isize_raw_be, read_i128_raw_be);
     }
 }
 
@@ -116,6 +116,15 @@ macro_rules! read_varint {
         }
     };
 }
+#[cfg(feature = "varint_size")]
+macro_rules! read_varint_size {
+    ($func: ident, $read_internal: ident) => {
+        #[inline]
+        fn $func(&mut self) -> std::io::Result<usize> {
+            self.$read_internal().map(|v| v as usize)
+        }
+    };
+}
 #[cfg(feature = "varint")]
 macro_rules! define_read_varint {
     () => {
@@ -171,10 +180,23 @@ macro_rules! define_read_varint {
         read_varint!(u128, read_u128_varint_16_be, u128, read_u128_raw_be);
 
         #[cfg(feature = "varint_size")]
-        #[inline]
-        fn read_usize_varint(&mut self) -> Result<usize> {
-            self.read_u128_varint().map(|v| v as usize)
-        }
+        read_varint_size!(read_usize_varint, read_u128_varint);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_2_le, read_u128_varint_2_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_2_be, read_u128_varint_2_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_4_le, read_u128_varint_4_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_4_be, read_u128_varint_4_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_8_le, read_u128_varint_8_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_8_be, read_u128_varint_8_be);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_16_le, read_u128_varint_16_le);
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        read_varint_size!(read_usize_varint_16_be, read_u128_varint_16_be);
     };
 }
 
@@ -184,6 +206,15 @@ macro_rules! read_signed {
         fn $func(&mut self) -> Result<$primitive> {
             use $crate::util::zigzag::Zigzag;
             self.$read_internal().map(|v| v.zigzag())
+        }
+    };
+}
+#[cfg(all(feature = "signed", feature = "varint_size"))]
+macro_rules! read_signed_size {
+    ($func: ident, $read_internal: ident) => {
+        #[inline]
+        fn $func(&mut self) -> std::io::Result<isize> {
+            self.$read_internal().map(|v| v as isize)
         }
     };
 }
@@ -242,10 +273,23 @@ macro_rules! define_read_signed {
         read_signed!(i128, read_i128_varint_16_be, read_u128_varint_16_be);
 
         #[cfg(feature = "varint_size")]
-        #[inline]
-        fn read_isize_varint(&mut self) -> Result<isize> {
-            self.read_i128_varint().map(|v| v as isize)
-        }
+        read_signed_size!(read_isize_varint, read_i128_varint);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_2_le, read_i128_varint_2_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_2_be, read_i128_varint_2_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_4_le, read_i128_varint_4_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_4_be, read_i128_varint_4_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_8_le, read_i128_varint_8_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_8_be, read_i128_varint_8_be);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_16_le, read_i128_varint_16_le);
+        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        read_signed_size!(read_isize_varint_16_be, read_i128_varint_16_be);
     };
 }
 
