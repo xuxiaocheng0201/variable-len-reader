@@ -75,7 +75,7 @@ Async mode with [tokio](https://crates.io/crates/tokio) crate:
 
 ```rust
 use tokio::net::{TcpListener, TcpStream};
-use variable_len_reader::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
+use variable_len_reader::{AsyncVariableReader, AsyncVariableWriter};
 
 #[tokio::main]
 async fn main() {

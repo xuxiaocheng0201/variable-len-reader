@@ -10,7 +10,9 @@ extern crate tokio;
 
 pub mod util;
 #[cfg(feature = "async")]
-pub mod asynchronous;
+mod asynchronous;
+#[cfg(feature = "async")]
+pub use asynchronous::*;
 
 mod reader;
 pub use reader::*;
