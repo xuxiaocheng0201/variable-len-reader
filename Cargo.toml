@@ -16,7 +16,7 @@ exclude = ["test-builds.bat"]
 #serde = { version = "^1", optional = true }
 pin-project-lite = { version = "~0.2", optional = true }
 tokio = { version = "^1", optional = true, default-features = false }
-bytes = { version = "^1", optional = true } # Support crate::bufs::*
+bytes = { version = "^1", optional = true } # Support crate::util::bufs::*
 
 [dev-dependencies]
 anyhow = "^1.0"
@@ -43,11 +43,11 @@ async_raw = ["async"]
 async_raw_size = ["async_raw"]
 async_bools = ["async"]
 async_varint = ["async"]
+async_varint_size = ["async_varint"]
 async_long_varint = ["async_varint"]
-async_signed = ["async_varint"]
-async_long_signed = ["async_signed", "async_long_varint"]
-async_size = ["async_varint"]
-async_vec_u8 = ["async_size"]
+async_signed = ["async_varint"] # But only need `async` feature.
+async_long_signed = ["async_signed", "async_long_varint"] # But only need `async_signed` feature.
+async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
 #async_serde = ["async", "dep:serde"]
 

@@ -3,9 +3,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use crate::util::bufs::{ReadBuf, WriteBuf};
 
-// #[cfg(feature = "async_signed")]
-// mod signed;
-
 mod reader;
 pub use reader::*;
 

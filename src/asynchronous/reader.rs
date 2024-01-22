@@ -437,6 +437,171 @@ macro_rules! define_read_varint_func {
 #[cfg(feature = "async_varint")]
 define_read_varint_futures!();
 
+#[cfg(feature = "async_signed")]
+macro_rules! read_signed_future {
+    ($target: ty, $primitive: ty, $future: ident, $func: ident, $internal: ty, $from: ident, $buf: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, R: ?Sized> {
+                #[pin]
+                reader: &'a mut R,
+                value: $primitive,
+                position: usize,
+                inner_buf: $buf,
+            }
+        }
+        impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin> std::future::Future for $future<'a, R> {
+            type Output = std::io::Result<$target>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                use $crate::util::zigzag::Zigzag;
+                const SIZE: usize = std::mem::size_of::<$primitive>() << 3; // * 8
+                const NUM_BITS: $internal = <$internal>::MAX >> 1;
+                const SIGN_BIT: $internal = NUM_BITS + 1;
+                const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+                let mut me = self.project();
+                loop {
+                    ready!(R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut me.inner_buf.into()))?;
+                    let current = <$internal>::$from((*me.inner_buf).into_inner());
+                    me.inner_buf.clear();
+                    (*me.value) |= ((current & NUM_BITS) as $primitive) << (*me.position);
+                    if current & SIGN_BIT == 0 {
+                        return Poll::Ready(Ok((*me.value).zigzag()));
+                    }
+                    (*me.position) += POS_OFFSET;
+                    if (*me.position) >= SIZE {
+                        return Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Varint {} in stream is too long.", stringify!($func)))));
+                    }
+                }
+            }
+        }
+    };
+}
+#[cfg(feature = "async_signed")]
+macro_rules! read_signed_func {
+    ($func: ident, $future: ident, $buf: ident) => {
+        #[inline]
+        fn $func(&mut self) -> $future<Self> where Self: Unpin {
+            $future { reader: self, value: 0, position: 0, inner_buf: $buf::new() }
+        }
+    };
+} // Completely same to `read_varint_func`.
+#[cfg(feature = "async_signed")]
+macro_rules! define_read_signed_futures {
+    () => {
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i8, u8, ReadI8Varint, read_i8_varint, u8, from_ne_bytes, OwnedReadBuf8);
+
+        read_signed_future!(i16, u16, ReadI16Varint, read_i16_varint, u8, from_ne_bytes, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i16, u16, ReadI16Varint2Le, read_i16_varint_2_le, u16, from_le_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i16, u16, ReadI16Varint2Be, read_i16_varint_2_be, u16, from_be_bytes, OwnedReadBuf16);
+
+        read_signed_future!(i32, u32, ReadI32Varint, read_i32_varint, u8, from_ne_bytes, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i32, u32, ReadI32Varint2Le, read_i32_varint_2_le, u16, from_le_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i32, u32, ReadI32Varint2Be, read_i32_varint_2_be, u16, from_be_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i32, u32, ReadI32Varint4Le, read_i32_varint_4_le, u32, from_le_bytes, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i32, u32, ReadI32Varint4Be, read_i32_varint_4_be, u32, from_be_bytes, OwnedReadBuf32);
+
+        read_signed_future!(i64, u64, ReadI64Varint, read_i64_varint, u8, from_ne_bytes, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint2Le, read_i64_varint_2_le, u16, from_le_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint2Be, read_i64_varint_2_be, u16, from_be_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint4Le, read_i64_varint_4_le, u32, from_le_bytes, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint4Be, read_i64_varint_4_be, u32, from_be_bytes, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint8Le, read_i64_varint_8_le, u64, from_le_bytes, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i64, u64, ReadI64Varint8Be, read_i64_varint_8_be, u64, from_be_bytes, OwnedReadBuf64);
+
+        read_signed_future!(i128, u128, ReadI128Varint, read_i128_varint, u8, from_ne_bytes, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint2Le, read_i128_varint_2_le, u16, from_le_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint2Be, read_i128_varint_2_be, u16, from_be_bytes, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint4Le, read_i128_varint_4_le, u32, from_le_bytes, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint4Be, read_i128_varint_4_be, u32, from_be_bytes, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint8Le, read_i128_varint_8_le, u64, from_le_bytes, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint8Be, read_i128_varint_8_be, u64, from_be_bytes, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint16Le, read_i128_varint_16_le, u128, from_le_bytes, OwnedReadBuf128);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_future!(i128, u128, ReadI128Varint16Be, read_i128_varint_16_be, u128, from_be_bytes, OwnedReadBuf128);
+
+    };
+}
+#[cfg(feature = "async_signed")]
+macro_rules! define_read_signed_func {
+    () => {
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i8_varint, ReadI8Varint, OwnedReadBuf8);
+
+        read_signed_func!(read_i16_varint, ReadI16Varint, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i16_varint_2_le, ReadI16Varint2Le, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i16_varint_2_be, ReadI16Varint2Be, OwnedReadBuf16);
+
+        read_signed_func!(read_i32_varint, ReadI32Varint, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i32_varint_2_le, ReadI32Varint2Le, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i32_varint_2_be, ReadI32Varint2Be, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i32_varint_4_le, ReadI32Varint4Le, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i32_varint_4_be, ReadI32Varint4Be, OwnedReadBuf32);
+
+        read_signed_func!(read_i64_varint, ReadI64Varint, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_2_le, ReadI64Varint2Le, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_2_be, ReadI64Varint2Be, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_4_le, ReadI64Varint4Le, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_4_be, ReadI64Varint4Be, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_8_le, ReadI64Varint8Le, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i64_varint_8_be, ReadI64Varint8Be, OwnedReadBuf64);
+
+        read_signed_func!(read_i128_varint, ReadI128Varint, OwnedReadBuf8);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_2_le, ReadI128Varint2Le, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_2_be, ReadI128Varint2Be, OwnedReadBuf16);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_4_le, ReadI128Varint4Le, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_4_be, ReadI128Varint4Be, OwnedReadBuf32);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_8_le, ReadI128Varint8Le, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_8_be, ReadI128Varint8Be, OwnedReadBuf64);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_16_le, ReadI128Varint16Le, OwnedReadBuf128);
+        #[cfg(feature = "async_long_signed")]
+        read_signed_func!(read_i128_varint_16_be, ReadI128Varint16Be, OwnedReadBuf128);
+    };
+}
+#[cfg(feature = "async_signed")]
+define_read_signed_futures!();
+
 pub trait AsyncVariableReader: AsyncVariableReadable {
     #[inline]
     fn read_single(&mut self) -> ReadSingle<Self> where Self: Unpin {
@@ -462,9 +627,9 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "async_varint")]
     define_read_varint_func!();
 
-    // #[cfg(feature = "async_signed")]
-    // signed::define_signed_read!();
-    //
+    #[cfg(feature = "async_signed")]
+    define_read_signed_func!();
+
     // #[cfg(feature = "async_vec_u8")]
     // #[inline]
     // async fn read_u8_vec(&mut self) -> Result<Vec<u8>> where Self: Unpin {

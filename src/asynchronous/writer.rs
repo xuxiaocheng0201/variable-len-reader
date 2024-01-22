@@ -440,6 +440,178 @@ macro_rules! define_write_varint_func {
 #[cfg(feature = "async_varint")]
 define_write_varint_futures!();
 
+#[cfg(feature = "async_signed")]
+macro_rules! write_signed_future {
+    ($primitive: ty, $future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: ?Sized> {
+                #[pin]
+                writer: &'a mut W,
+                value: $primitive,
+                size: usize,
+                inner_buf: $buf,
+            }
+        }
+        impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin> std::future::Future for $future<'a, W> {
+            type Output = std::io::Result<usize>;
+
+            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+                const NUM_BITS: $internal = <$internal>::MAX >> 1;
+                const SIGN_BIT: $internal = NUM_BITS + 1;
+                const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+                let mut me = self.project();
+                loop {
+                    (*me.size) += ready!(W::poll_write_more(Pin::new(&mut *me.writer), cx, &mut me.inner_buf.into()))?;
+                    if (*me.value) >= SIGN_BIT as $primitive {
+                        (*me.inner_buf) = $buf::new(<$internal>::$to((((*me.value) & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT));
+                        (*me.value) >>= POS_OFFSET;
+                    } else {
+                        if (*me.value == 0) {
+                            return std::task::Poll::Ready(Ok(*me.size));
+                        }
+                        (*me.inner_buf) = $buf::new(<$internal>::$to(((*me.value) & (NUM_BITS as $primitive)) as $internal));
+                        *me.value = 0;
+                    }
+                }
+            }
+        }
+    };
+} // Completely same to `write_varint_future`.
+#[cfg(feature = "async_signed")]
+macro_rules! write_signed_func {
+    ($source: ty, $primitive: ty, $func: ident, $future: ident, $internal: ty, $to: ident, $buf: ident) => {
+        #[inline]
+        fn $func(&mut self, num: $source) -> $future<Self> where Self: Unpin {
+            use $crate::util::zigzag::Zigzag;
+            let num = num.zigzag();
+            const NUM_BITS: $internal = <$internal>::MAX >> 1;
+            const SIGN_BIT: $internal = NUM_BITS + 1;
+            const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
+            let (value, buf) = if num >= SIGN_BIT as $primitive {
+                (num >> POS_OFFSET, $buf::new(<$internal>::$to(((num & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)))
+            } else {
+                (0, $buf::new(<$internal>::$to(num as $internal)))
+            };
+            $future { writer: self, value, size: 0, inner_buf: buf }
+        }
+    };
+}
+#[cfg(feature = "async_signed")]
+macro_rules! define_write_signed_futures {
+    () => {
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u8, WriteI8Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+
+        write_signed_future!(u16, WriteI16Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u16, WriteI16Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u16, WriteI16Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+
+        write_signed_future!(u32, WriteI32Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u32, WriteI32Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u32, WriteI32Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u32, WriteI32Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u32, WriteI32Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+
+        write_signed_future!(u64, WriteI64Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u64, WriteI64Varint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+
+        write_signed_future!(u128, WriteI128Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_future!(u128, WriteI128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+    };
+}
+#[cfg(feature = "async_signed")]
+macro_rules! define_write_signed_func {
+    () => {
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i8, u8, write_i8_varint, WriteI8Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+
+        write_signed_func!(i16, u16, write_i16_varint, WriteI16Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i16, u16, write_i16_varint_2_le, WriteI16Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i16, u16, write_i16_varint_2_be, WriteI16Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+
+        write_signed_func!(i32, u32, write_i32_varint, WriteI32Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i32, u32, write_i32_varint_2_le, WriteI32Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i32, u32, write_i32_varint_2_be, WriteI32Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i32, u32, write_i32_varint_4_le, WriteI32Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i32, u32, write_i32_varint_4_be, WriteI32Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+
+        write_signed_func!(i64, u64, write_i64_varint, WriteI64Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_2_le, WriteI64Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_2_be, WriteI64Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_4_le, WriteI64Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_4_be, WriteI64Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_8_le, WriteI64Varint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i64, u64, write_i64_varint_8_be, WriteI64Varint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+
+        write_signed_func!(i128, u128, write_i128_varint, WriteI128Varint, u8, to_ne_bytes, OwnedWriteBuf8);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_2_le, WriteI128Varint2Le, u16, to_le_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_2_be, WriteI128Varint2Be, u16, to_be_bytes, OwnedWriteBuf16);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_4_le, WriteI128Varint4Le, u32, to_le_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_4_be, WriteI128Varint4Be, u32, to_be_bytes, OwnedWriteBuf32);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_8_le, WriteI128Varint8Le, u64, to_le_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_8_be, WriteI128Varint8Be, u64, to_be_bytes, OwnedWriteBuf64);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_16_le, WriteI128Varint16Le, u128, to_le_bytes, OwnedWriteBuf128);
+        #[cfg(feature = "async_long_signed")]
+        write_signed_func!(i128, u128, write_i128_varint_16_be, WriteI128Varint16Be, u128, to_be_bytes, OwnedWriteBuf128);
+    };
+}
+#[cfg(feature = "async_signed")]
+define_write_signed_futures!();
+
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]
     fn write_single(&mut self, byte: u8) -> WriteSingle<Self> where Self: Unpin {
@@ -465,9 +637,9 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg(feature = "async_varint")]
     define_write_varint_func!();
 
-//     #[cfg(feature = "async_signed")]
-//     signed::define_signed_write!();
-//
+    #[cfg(feature = "async_signed")]
+    define_write_signed_func!();
+
 //     #[cfg(feature = "async_vec_u8")]
 //     #[inline]
 //     async fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
