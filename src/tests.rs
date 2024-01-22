@@ -1,3 +1,4 @@
+#[cfg(any(feature = "raw", feature = "varint", feature = "signed"))]
 macro_rules! test_func {
     ($tester: ident, $primitive: ty, $reader: ident, $writer: ident) => {
         #[test]

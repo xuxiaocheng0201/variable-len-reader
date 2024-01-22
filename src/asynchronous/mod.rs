@@ -3,12 +3,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use crate::util::bufs::{ReadBuf, WriteBuf};
 
-// #[cfg(feature = "async_bools")]
-// mod bools;
-// #[cfg(feature = "async_raw")]
-// mod raw;
-// #[cfg(feature = "async_varint")]
-// mod varint;
 // #[cfg(feature = "async_signed")]
 // mod signed;
 

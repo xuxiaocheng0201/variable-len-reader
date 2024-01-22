@@ -101,7 +101,7 @@ macro_rules! write_varint {
                 size += self.$write_internal(((value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)?;
                 value >>= POS_OFFSET;
             }
-            size += self.$write_internal((value & (NUM_BITS as $primitive)) as $internal)?;
+            size += self.$write_internal(value as $internal)?;
             Ok(size)
         }
     };

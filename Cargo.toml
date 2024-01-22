@@ -23,7 +23,7 @@ anyhow = "^1.0"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
 
 [features]
-default = ["raw", "varint", "signed", "vec_u8", "string", "async_default"]
+default = ["varint", "signed", "vec_u8", "string", "async_default"]
 
 raw = []
 raw_size = ["raw"]
@@ -38,11 +38,11 @@ string = ["vec_u8"]
 #serde = ["dep:serde"]
 
 async = ["dep:pin-project-lite", "dep:tokio"]
-async_default = ["async_raw", "async_varint", "async_signed", "async_vec_u8", "async_string"]
+async_default = ["async_varint", "async_signed", "async_vec_u8", "async_string"]
 async_raw = ["async"]
 async_raw_size = ["async_raw"]
 async_bools = ["async"]
-async_varint = ["async_raw"]
+async_varint = ["async"]
 async_long_varint = ["async_varint"]
 async_signed = ["async_varint"]
 async_long_signed = ["async_signed", "async_long_varint"]

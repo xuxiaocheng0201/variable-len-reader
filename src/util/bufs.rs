@@ -25,6 +25,10 @@ macro_rules! impl_read_buf {
             self.buf.len() - self.filled
         }
 
+        pub fn clear(&mut self) {
+            self.filled = 0;
+        }
+
         pub fn set(&mut self, val: u8) {
             assert!(
                 self.left() >= 1,
@@ -121,6 +125,10 @@ macro_rules! impl_write_buf {
 
         pub fn left(&self) -> usize {
             self.buf.len() - self.read
+        }
+
+        pub fn reset(&mut self) {
+            self.read = 0;
         }
 
         pub fn get(&self) -> u8 {

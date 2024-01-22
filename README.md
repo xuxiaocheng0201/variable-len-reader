@@ -29,7 +29,7 @@ Directly use in tcp stream:
 
 ```rust
 use std::net::{TcpListener, TcpStream};
-use variable_len_reader::{VariableReadable, VariableWritable};
+use variable_len_reader::{VariableReader, VariableWriter};
 
 fn main() {
     let addr = "localhost:25564";
@@ -50,7 +50,7 @@ Use with [bytes](https://crates.io/crates/bytes) crate:
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
-use variable_len_reader::{VariableReadable, VariableWritable};
+use variable_len_reader::{VariableReader, VariableWriter};
 
 fn main() {
     let message = "Hello world!";
@@ -75,7 +75,7 @@ Async mode with [tokio](https://crates.io/crates/tokio) crate:
 
 ```rust
 use tokio::net::{TcpListener, TcpStream};
-use variable_len_reader::asynchronous::{AsyncVariableReadable, AsyncVariableWritable};
+use variable_len_reader::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
 
 #[tokio::main]
 async fn main() {
