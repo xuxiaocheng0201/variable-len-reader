@@ -29,6 +29,14 @@ macro_rules! impl_read_buf {
             self.filled = 0;
         }
 
+        pub fn set_filled(&mut self, filled: usize) {
+            assert!(
+                self.buf.len() >= filled,
+                "filled must not become larger than buf.len()"
+            );
+            self.filled = filled;
+        }
+
         pub fn set(&mut self, val: u8) {
             assert!(
                 self.left() >= 1,
@@ -129,6 +137,14 @@ macro_rules! impl_write_buf {
 
         pub fn reset(&mut self) {
             self.read = 0;
+        }
+
+        pub fn set_read(&mut self, read: usize) {
+            assert!(
+                self.buf.len() >= read,
+                "read must not become larger than buf.len()"
+            );
+            self.read = read;
         }
 
         pub fn get(&self) -> u8 {
