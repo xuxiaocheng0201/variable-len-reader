@@ -50,14 +50,14 @@ macro_rules! test_func {
             }
         }
     };
-    ($tester: ident, $reader: ident, $writer: ident, [$($n: expr,)*]) => {
+    ($tester: ident, $reader: ident, $writer: ident, [$($n: expr,)+]) => {
         #[tokio::test]
         async fn $tester() {
             let mut cursor = std::io::Cursor::new(Vec::new());
             $({
                  let n = $n;
                  test_func!(cursor, n, $tester, $reader, $writer);
-            })*
+            })+
         }
     };
 }
@@ -95,62 +95,62 @@ mod raw {
     test_func!(isize_be, read_isize_raw_be, write_isize_raw_be, [0, 1, 2, -1, -2, isize::MIN, isize::MAX,]);
 }
 
-// #[cfg(feature = "async_varint")]
-// mod varint {
-//     use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
-//
-//     #[cfg(feature = "async_long_varint")]
-//     test_func!(u8_ne, u8, read_u8_varint, write_u8_varint);
-//
-//     test_func!(u16_ne, u16, read_u16_varint, write_u16_varint);
-//     #[cfg(feature = "async_long_varint")]
-//     test_func!(u16_2_le, u16, read_u16_varint_2_le, write_u16_varint_2_le);
-//     #[cfg(feature = "async_long_varint")]
-//     test_func!(u16_2_be, u16, read_u16_varint_2_be, write_u16_varint_2_be);
-//
-//     // test_func!(u32_ne, u32, read_u32_varint, write_u32_varint);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u32_2_le, u32, read_u32_varint_2_le, write_u32_varint_2_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u32_2_be, u32, read_u32_varint_2_be, write_u32_varint_2_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u32_4_le, u32, read_u32_varint_4_le, write_u32_varint_4_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u32_4_be, u32, read_u32_varint_4_be, write_u32_varint_4_be);
-//     //
-//     // test_func!(u64_ne, u64, read_u64_varint, write_u64_varint);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_2_le, u64, read_u64_varint_2_le, write_u64_varint_2_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_2_be, u64, read_u64_varint_2_be, write_u64_varint_2_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_4_le, u64, read_u64_varint_4_le, write_u64_varint_4_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_4_be, u64, read_u64_varint_4_be, write_u64_varint_4_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_8_le, u64, read_u64_varint_8_le, write_u64_varint_8_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u64_8_be, u64, read_u64_varint_8_be, write_u64_varint_8_be);
-//     //
-//     // test_func!(u128_ne, u128, read_u128_varint, write_u128_varint);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_2_le, u128, read_u128_varint_2_le, write_u128_varint_2_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_2_be, u128, read_u128_varint_2_be, write_u128_varint_2_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_4_le, u128, read_u128_varint_4_le, write_u128_varint_4_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_4_be, u128, read_u128_varint_4_be, write_u128_varint_4_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_8_le, u128, read_u128_varint_8_le, write_u128_varint_8_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_8_be, u128, read_u128_varint_8_be, write_u128_varint_8_be);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_16_le, u128, read_u128_varint_16_le, write_u128_varint_16_le);
-//     // #[cfg(feature = "async_long_varint")]
-//     // test_func!(u128_16_be, u128, read_u128_varint_16_be, write_u128_varint_16_be);
-// }
-//
+#[cfg(feature = "async_varint")]
+mod varint {
+    use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};
+
+    #[cfg(feature = "async_long_varint")]
+    test_func!(u8_ne, u8, read_u8_varint, write_u8_varint);
+
+    test_func!(u16_ne, u16, read_u16_varint, write_u16_varint);
+    #[cfg(feature = "async_long_varint")]
+    test_func!(u16_2_le, u16, read_u16_varint_2_le, write_u16_varint_2_le);
+    #[cfg(feature = "async_long_varint")]
+    test_func!(u16_2_be, u16, read_u16_varint_2_be, write_u16_varint_2_be);
+
+    // test_func!(u32_ne, u32, read_u32_varint, write_u32_varint);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u32_2_le, u32, read_u32_varint_2_le, write_u32_varint_2_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u32_2_be, u32, read_u32_varint_2_be, write_u32_varint_2_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u32_4_le, u32, read_u32_varint_4_le, write_u32_varint_4_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u32_4_be, u32, read_u32_varint_4_be, write_u32_varint_4_be);
+    //
+    // test_func!(u64_ne, u64, read_u64_varint, write_u64_varint);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_2_le, u64, read_u64_varint_2_le, write_u64_varint_2_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_2_be, u64, read_u64_varint_2_be, write_u64_varint_2_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_4_le, u64, read_u64_varint_4_le, write_u64_varint_4_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_4_be, u64, read_u64_varint_4_be, write_u64_varint_4_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_8_le, u64, read_u64_varint_8_le, write_u64_varint_8_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u64_8_be, u64, read_u64_varint_8_be, write_u64_varint_8_be);
+    //
+    // test_func!(u128_ne, u128, read_u128_varint, write_u128_varint);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_2_le, u128, read_u128_varint_2_le, write_u128_varint_2_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_2_be, u128, read_u128_varint_2_be, write_u128_varint_2_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_4_le, u128, read_u128_varint_4_le, write_u128_varint_4_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_4_be, u128, read_u128_varint_4_be, write_u128_varint_4_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_8_le, u128, read_u128_varint_8_le, write_u128_varint_8_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_8_be, u128, read_u128_varint_8_be, write_u128_varint_8_be);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_16_le, u128, read_u128_varint_16_le, write_u128_varint_16_le);
+    // #[cfg(feature = "async_long_varint")]
+    // test_func!(u128_16_be, u128, read_u128_varint_16_be, write_u128_varint_16_be);
+}
+
 // #[cfg(feature = "async_signed")]
 // mod signed {
 //     use crate::asynchronous::{AsyncVariableReader, AsyncVariableWriter};

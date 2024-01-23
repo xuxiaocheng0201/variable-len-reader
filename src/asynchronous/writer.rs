@@ -69,6 +69,9 @@ include!("writer_bools.rs");
 #[cfg(feature = "async_raw")]
 include!("writer_raw.rs");
 
+#[cfg(feature = "async_varint")]
+include!("writer_varint.rs");
+
 trait InternalAsyncVariableWriter: AsyncVariableWriter {
     fn poll_write_bool(self: Pin<&mut Self>, cx: &mut Context<'_>, b: bool) -> Poll<Result<usize>> {
         self.poll_write_single(cx, if b { 1 } else { 0 })
@@ -76,6 +79,9 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
 
     #[cfg(feature = "async_raw")]
     define_write_raw_poll!();
+
+    #[cfg(feature = "async_varint")]
+    define_write_varint_poll!();
 }
 
 impl<R: AsyncVariableWriter + ?Sized> InternalAsyncVariableWriter for R {
@@ -104,9 +110,9 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg(feature = "async_raw")]
     define_write_raw_func!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_write_varint_func!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_write_varint_func!();
+
     // #[cfg(feature = "async_signed")]
     // define_write_signed_func!();
 

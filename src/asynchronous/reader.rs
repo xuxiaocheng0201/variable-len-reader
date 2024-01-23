@@ -67,6 +67,9 @@ include!("reader_bools.rs");
 #[cfg(feature = "async_raw")]
 include!("reader_raw.rs");
 
+#[cfg(feature = "async_varint")]
+include!("reader_varint.rs");
+
 trait InternalAsyncVariableReader: AsyncVariableReader {
     fn poll_read_bool(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool>> {
         Poll::Ready(match ready!(Self::poll_read_single(self, cx))? {
@@ -79,6 +82,8 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
     #[cfg(feature = "async_raw")]
     define_read_raw_poll!();
 
+    #[cfg(feature = "async_varint")]
+    define_read_varint_poll!();
 }
 
 impl<R: AsyncVariableReader + ?Sized> InternalAsyncVariableReader for R {
@@ -107,9 +112,9 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "async_raw")]
     define_read_raw_func!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_read_varint_func!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_read_varint_func!();
+
     // #[cfg(feature = "async_signed")]
     // define_read_signed_func!();
 

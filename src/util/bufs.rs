@@ -1,5 +1,6 @@
 macro_rules! impl_read_buf {
     () => {
+        #[inline]
         pub fn advance(&mut self, cnt: usize) {
             let new = self.filled.checked_add(cnt).expect("filled overflow");
             assert!(
@@ -9,26 +10,32 @@ macro_rules! impl_read_buf {
             self.filled = new;
         }
 
+        #[inline]
         pub fn buf(&self) -> &[u8] {
             &self.buf
         }
 
+        #[inline]
         pub fn buf_mut(&mut self) -> &mut [u8] {
             &mut self.buf
         }
 
+        #[inline]
         pub fn filled(&self) -> usize {
             self.filled
         }
 
+        #[inline]
         pub fn left(&self) -> usize {
             self.buf.len() - self.filled
         }
 
+        #[inline]
         pub fn clear(&mut self) {
             self.filled = 0;
         }
 
+        #[inline]
         pub fn set_filled(&mut self, filled: usize) {
             assert!(
                 self.buf.len() >= filled,
@@ -37,6 +44,7 @@ macro_rules! impl_read_buf {
             self.filled = filled;
         }
 
+        #[inline]
         pub fn set(&mut self, val: u8) {
             assert!(
                 self.left() >= 1,
@@ -45,11 +53,13 @@ macro_rules! impl_read_buf {
             self.buf[self.filled] = val;
         }
 
+        #[inline]
         pub fn put(&mut self, val: u8) {
             self.set(val);
             self.filled += 1;
         }
 
+        #[inline]
         pub fn set_slice(&mut self, slice: &[u8]) {
             assert!(
                 self.left() >= slice.len(),
@@ -58,6 +68,7 @@ macro_rules! impl_read_buf {
             self.buf[self.filled..self.filled + slice.len()].copy_from_slice(slice);
         }
 
+        #[inline]
         pub fn put_slice(&mut self, slice: &[u8]) {
             self.set_slice(slice);
             self.filled += slice.len();
@@ -67,14 +78,17 @@ macro_rules! impl_read_buf {
 #[cfg(feature = "bytes")]
 macro_rules! impl_buf_mut {
     () => {
+        #[inline]
         fn remaining_mut(&self) -> usize {
             self.left()
         }
 
+        #[inline]
         unsafe fn advance_mut(&mut self, cnt: usize) {
             self.advance(cnt)
         }
 
+        #[inline]
         fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
             bytes::buf::UninitSlice::new(self.buf_mut())
         }
@@ -104,9 +118,10 @@ unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
 
 #[cfg(feature = "async")] // Tokio dep
 impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
+    #[inline]
     fn from(value: &'b mut ReadBuf<'a>) -> Self {
         let mut buf = Self::new(value.buf);
-        buf.advance(value.filled);
+        buf.set_filled(value.filled);
         buf
     }
 }
@@ -114,6 +129,7 @@ impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
 
 macro_rules! impl_write_buf {
     () => {
+        #[inline]
         pub fn skip(&mut self, cnt: usize) {
             let new = self.read.checked_add(cnt).expect("read overflow");
             assert!(
@@ -123,22 +139,27 @@ macro_rules! impl_write_buf {
             self.read = new;
         }
 
+        #[inline]
         pub fn buf(&self) -> &[u8] {
             &self.buf
         }
 
+        #[inline]
         pub fn read(&self) -> usize {
             self.read
         }
 
+        #[inline]
         pub fn left(&self) -> usize {
             self.buf.len() - self.read
         }
 
+        #[inline]
         pub fn reset(&mut self) {
             self.read = 0;
         }
 
+        #[inline]
         pub fn set_read(&mut self, read: usize) {
             assert!(
                 self.buf.len() >= read,
@@ -147,6 +168,7 @@ macro_rules! impl_write_buf {
             self.read = read;
         }
 
+        #[inline]
         pub fn get(&self) -> u8 {
             assert!(
                 self.left() >= 1,
@@ -155,12 +177,14 @@ macro_rules! impl_write_buf {
             self.buf[self.read]
         }
 
+        #[inline]
         pub fn take(&mut self) -> u8 {
             let val = self.get();
             self.read += 1;
             val
         }
 
+        #[inline]
         pub fn get_slice(&self, len: usize) -> &[u8] {
             assert!(
                 self.left() >= len,
@@ -169,6 +193,7 @@ macro_rules! impl_write_buf {
             &self.buf[self.read..self.read + len]
         }
 
+        #[inline]
         pub fn take_slice(&mut self, len: usize) -> &[u8] {
             assert!(
                 self.left() >= len,
@@ -183,14 +208,17 @@ macro_rules! impl_write_buf {
 #[cfg(feature = "bytes")]
 macro_rules! impl_buf {
     () => {
+        #[inline]
         fn remaining(&self) -> usize {
             self.left()
         }
 
+        #[inline]
         fn chunk(&self) -> &[u8] {
             self.buf
         }
 
+        #[inline]
         fn advance(&mut self, cnt: usize) {
             self.skip(cnt)
         }
@@ -228,12 +256,14 @@ macro_rules! define_read_buf {
             filled: usize,
         }
         impl $name {
+            #[inline]
             pub fn new() -> $name {
                 $name {
                     buf: [0; $n],
                     filled: 0,
                 }
             }
+            #[inline]
             pub fn into_inner(&self) -> [u8; $n] {
                 self.buf
             }
@@ -244,6 +274,7 @@ macro_rules! define_read_buf {
             impl_buf_mut!();
         }
         impl<'a> From<&'a mut $name> for ReadBuf<'a> {
+            #[inline]
             fn from(value: &'a mut $name) -> Self {
                 Self {
                     buf: &mut value.buf,
@@ -270,17 +301,24 @@ macro_rules! define_write_buf {
             read: usize,
         }
         impl $name {
+            #[inline]
             pub fn new(buf: [u8; $n]) -> $name {
                 $name {
                     buf,
                     read: 0,
                 }
             }
+            #[inline]
             pub fn into_inner(&self) -> [u8; $n] {
                 self.buf
             }
+            #[inline]
             pub fn buf_mut(&mut self) -> &mut [u8] {
                 &mut self.buf
+            }
+            #[inline]
+            pub fn set_buf(&mut self, buf: [u8; $n]) {
+                self.buf = buf;
             }
             impl_write_buf!();
         }
@@ -289,6 +327,7 @@ macro_rules! define_write_buf {
             impl_buf!();
         }
         impl<'a> From<&'a mut $name> for WriteBuf<'a> {
+            #[inline]
             fn from(value: &'a mut $name) -> Self {
                 Self {
                     buf: &value.buf,
