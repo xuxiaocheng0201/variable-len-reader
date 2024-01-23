@@ -61,13 +61,8 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
     }
 }
 
-#[cfg(feature = "async_bools")]
 include!("reader_bools.rs");
-
-#[cfg(feature = "async_raw")]
 include!("reader_raw.rs");
-
-#[cfg(feature = "async_varint")]
 include!("reader_varint.rs");
 
 trait InternalAsyncVariableReader: AsyncVariableReader {

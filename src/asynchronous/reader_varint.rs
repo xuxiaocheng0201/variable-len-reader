@@ -1,6 +1,9 @@
 #[cfg(feature = "async_varint")]
 macro_rules! read_varint_future {
     ($primitive: ty, $future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+        read_varint_future!($primitive, $primitive, $future, $poll_func, $buf, $internal_struct);
+    };
+    ($primitive: ty, $target: ty, $future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
         #[derive(Debug)]
         struct $internal_struct {
             value: $primitive,
@@ -23,7 +26,7 @@ macro_rules! read_varint_future {
             }
         }
         impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin> std::future::Future for $future<'a, R> {
-            type Output = std::io::Result<$primitive>;
+            type Output = std::io::Result<$target>;
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
@@ -35,8 +38,11 @@ macro_rules! read_varint_future {
 #[cfg(feature = "async_varint")]
 macro_rules! read_varint_poll {
     ($primitive: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
+        read_varint_poll!($primitive, $primitive, $func, $internal, $poll_func, $poll_internal, $internal_struct);
+    };
+    ($primitive: ty, $target: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
         #[inline]
-        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, internal: &mut $internal_struct) -> std::task::Poll<std::io::Result<$primitive>> {
+        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, internal: &mut $internal_struct) -> std::task::Poll<std::io::Result<$target>> {
             const SIZE: usize = std::mem::size_of::<$primitive>() << 3; // * 8
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
@@ -46,7 +52,7 @@ macro_rules! read_varint_poll {
                 internal.inner_buf.clear();
                 internal.value |= ((current & NUM_BITS) as $primitive) << internal.position;
                 if current & SIGN_BIT == 0 {
-                    return Poll::Ready(Ok(internal.value));
+                    return Poll::Ready(Ok(internal.value as $target));
                 }
                 internal.position += POS_OFFSET;
                 if internal.position >= SIZE {
@@ -63,6 +69,24 @@ macro_rules! read_varint_func {
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
             $future { reader: self, internal: $internal_struct::new() }
         }
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! read_varint_size_future {
+    ($future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+        read_varint_future!(u128, usize, $future, $poll_func, $buf, $internal_struct);
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! read_varint_size_poll {
+    ($func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
+        read_varint_poll!(u128, usize, $func, $internal, $poll_func, $poll_internal, $internal_struct);
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! read_varint_size_func {
+    ($func: ident, $future: ident, $internal_struct: ident) => {
+        read_varint_func!($func, $future, $internal_struct);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -118,6 +142,25 @@ macro_rules! define_read_varint_futures {
         read_varint_future!(u128, ReadU128Varint16Le, poll_read_u128_varint_16_le, OwnedReadBuf128, InternalReadU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         read_varint_future!(u128, ReadU128Varint16Be, poll_read_u128_varint_16_be, OwnedReadBuf128, InternalReadU128Varint16Be);
+        
+        #[cfg(feature = "async_varint_size")]
+        read_varint_size_future!(ReadUsizeVarint, poll_read_usize_varint, OwnedReadBuf8, InternalReadUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint2Le, poll_read_usize_varint_2_le, OwnedReadBuf16, InternalReadUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint2Be, poll_read_usize_varint_2_be, OwnedReadBuf16, InternalReadUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint4Le, poll_read_usize_varint_4_le, OwnedReadBuf32, InternalReadUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint4Be, poll_read_usize_varint_4_be, OwnedReadBuf32, InternalReadUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint8Le, poll_read_usize_varint_8_le, OwnedReadBuf64, InternalReadUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint8Be, poll_read_usize_varint_8_be, OwnedReadBuf64, InternalReadUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint16Le, poll_read_usize_varint_16_le, OwnedReadBuf128, InternalReadUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_future!(ReadUsizeVarint16Be, poll_read_usize_varint_16_be, OwnedReadBuf128, InternalReadUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -173,6 +216,25 @@ macro_rules! define_read_varint_poll {
         read_varint_poll!(u128, read_u128_varint_16_le, u128, poll_read_u128_varint_16_le, poll_read_u128_raw_le, InternalReadU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         read_varint_poll!(u128, read_u128_varint_16_be, u128, poll_read_u128_varint_16_be, poll_read_u128_raw_be, InternalReadU128Varint16Be);
+        
+        #[cfg(feature = "async_varint_size")]
+        read_varint_size_poll!(read_usize_varint, u8, poll_read_usize_varint, poll_read_u8_raw, InternalReadUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_2_le, u16, poll_read_usize_varint_2_le, poll_read_u16_raw_le, InternalReadUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_2_be, u16, poll_read_usize_varint_2_be, poll_read_u16_raw_be, InternalReadUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_4_le, u32, poll_read_usize_varint_4_le, poll_read_u32_raw_le, InternalReadUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_4_be, u32, poll_read_usize_varint_4_be, poll_read_u32_raw_be, InternalReadUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_8_le, u64, poll_read_usize_varint_8_le, poll_read_u64_raw_le, InternalReadUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_8_be, u64, poll_read_usize_varint_8_be, poll_read_u64_raw_be, InternalReadUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_16_le, u128, poll_read_usize_varint_16_le, poll_read_u128_raw_le, InternalReadUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_poll!(read_usize_varint_16_be, u128, poll_read_usize_varint_16_be, poll_read_u128_raw_be, InternalReadUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -228,6 +290,25 @@ macro_rules! define_read_varint_func {
         read_varint_func!(read_u128_varint_16_le, ReadU128Varint16Le, InternalReadU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         read_varint_func!(read_u128_varint_16_be, ReadU128Varint16Be, InternalReadU128Varint16Be);
+
+        #[cfg(feature = "async_varint_size")]
+        read_varint_size_func!(read_usize_varint, ReadUsizeVarint, InternalReadUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_2_le, ReadUsizeVarint2Le, InternalReadUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_2_be, ReadUsizeVarint2Be, InternalReadUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_4_le, ReadUsizeVarint4Le, InternalReadUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_4_be, ReadUsizeVarint4Be, InternalReadUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_8_le, ReadUsizeVarint8Le, InternalReadUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_8_be, ReadUsizeVarint8Be, InternalReadUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_16_le, ReadUsizeVarint16Le, InternalReadUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        read_varint_size_func!(read_usize_varint_16_be, ReadUsizeVarint16Be, InternalReadUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]

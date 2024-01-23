@@ -63,13 +63,8 @@ impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteBool<'a, W> {
     }
 }
 
-#[cfg(feature = "async_bools")]
 include!("writer_bools.rs");
-
-#[cfg(feature = "async_raw")]
 include!("writer_raw.rs");
-
-#[cfg(feature = "async_varint")]
 include!("writer_varint.rs");
 
 trait InternalAsyncVariableWriter: AsyncVariableWriter {

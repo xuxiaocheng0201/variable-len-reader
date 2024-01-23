@@ -1,6 +1,9 @@
 #[cfg(feature = "async_varint")]
 macro_rules! write_varint_future {
     ($primitive: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+        write_varint_future!($primitive, $primitive, $future, $internal, $to, $poll_func, $buf, $internal_struct);
+    };
+    ($primitive: ty, $source: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
         #[derive(Debug)]
         struct $internal_struct {
             value: $primitive,
@@ -8,7 +11,8 @@ macro_rules! write_varint_future {
             inner_buf: $buf,
         }
         impl $internal_struct {
-            fn new(num: $primitive) -> Self {
+            fn new(num: $source) -> Self {
+                let num = num as $primitive;
                 const NUM_BITS: $internal = <$internal>::MAX >> 1;
                 const SIGN_BIT: $internal = NUM_BITS + 1;
                 const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
@@ -75,6 +79,24 @@ macro_rules! write_varint_func {
         }
     };
 }
+#[cfg(feature = "async_varint_size")]
+macro_rules! write_varint_size_future {
+    ($future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+        write_varint_future!(u128, usize, $future, $internal, $to, $poll_func, $buf, $internal_struct);
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! write_varint_size_poll {
+    ($poll_func: ident, $internal: ty, $to: ident, $poll_internal: ident, $internal_struct: ident) => {
+        write_varint_poll!(u128, $poll_func, $internal, $to, $poll_internal, $internal_struct);
+    };
+}
+#[cfg(feature = "async_varint_size")]
+macro_rules! write_varint_size_func {
+    ($func: ident, $future: ident, $internal_struct: ident) => {
+        write_varint_func!(usize, $func, $future, $internal_struct);
+    };
+}
 #[cfg(feature = "async_varint")]
 macro_rules! define_write_varint_futures {
     () => {
@@ -128,6 +150,25 @@ macro_rules! define_write_varint_futures {
         write_varint_future!(u128, WriteU128Varint16Le, u128, to_le_bytes, poll_write_u128_varint_16_le, OwnedWriteBuf128, InternalWriteU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         write_varint_future!(u128, WriteU128Varint16Be, u128, to_be_bytes, poll_write_u128_varint_16_be, OwnedWriteBuf128, InternalWriteU128Varint16Be);
+        
+        #[cfg(feature = "async_varint_size")]
+        write_varint_size_future!(WriteUsizeVarint, u8, to_ne_bytes, poll_write_usize_varint, OwnedWriteBuf8, InternalWriteUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint2Le, u16, to_le_bytes, poll_write_usize_varint_2_le, OwnedWriteBuf16, InternalWriteUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint2Be, u16, to_be_bytes, poll_write_usize_varint_2_be, OwnedWriteBuf16, InternalWriteUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint4Le, u32, to_le_bytes, poll_write_usize_varint_4_le, OwnedWriteBuf32, InternalWriteUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint4Be, u32, to_be_bytes, poll_write_usize_varint_4_be, OwnedWriteBuf32, InternalWriteUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint8Le, u64, to_le_bytes, poll_write_usize_varint_8_le, OwnedWriteBuf64, InternalWriteUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint8Be, u64, to_be_bytes, poll_write_usize_varint_8_be, OwnedWriteBuf64, InternalWriteUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint16Le, u128, to_le_bytes, poll_write_usize_varint_16_le, OwnedWriteBuf128, InternalWriteUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_future!(WriteUsizeVarint16Be, u128, to_be_bytes, poll_write_usize_varint_16_be, OwnedWriteBuf128, InternalWriteUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -183,6 +224,25 @@ macro_rules! define_write_varint_poll {
         write_varint_poll!(u128, poll_write_u128_varint_16_le, u128, to_le_bytes, poll_write_u128_raw_le, InternalWriteU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         write_varint_poll!(u128, poll_write_u128_varint_16_be, u128, to_be_bytes, poll_write_u128_raw_be, InternalWriteU128Varint16Be);
+
+        #[cfg(feature = "async_varint_size")]
+        write_varint_size_poll!(poll_write_usize_varint, u8, to_ne_bytes, poll_write_u8_raw, InternalWriteUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_2_le, u16, to_le_bytes, poll_write_u16_raw_le, InternalWriteUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_2_be, u16, to_be_bytes, poll_write_u16_raw_be, InternalWriteUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_4_le, u32, to_le_bytes, poll_write_u32_raw_le, InternalWriteUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_4_be, u32, to_be_bytes, poll_write_u32_raw_be, InternalWriteUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_8_le, u64, to_le_bytes, poll_write_u64_raw_le, InternalWriteUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_8_be, u64, to_be_bytes, poll_write_u64_raw_be, InternalWriteUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_16_le, u128, to_le_bytes, poll_write_u128_raw_le, InternalWriteUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_poll!(poll_write_usize_varint_16_be, u128, to_be_bytes, poll_write_u128_raw_be, InternalWriteUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]
@@ -238,6 +298,25 @@ macro_rules! define_write_varint_func {
         write_varint_func!(u128, write_u128_varint_16_le, WriteU128Varint16Le, InternalWriteU128Varint16Le);
         #[cfg(feature = "async_long_varint")]
         write_varint_func!(u128, write_u128_varint_16_be, WriteU128Varint16Be, InternalWriteU128Varint16Be);
+        
+        #[cfg(feature = "async_varint_size")]
+        write_varint_size_func!(write_usize_varint, WriteUsizeVarint, InternalWriteUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_2_le, WriteUsizeVarint2Le, InternalWriteUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_2_be, WriteUsizeVarint2Be, InternalWriteUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_4_le, WriteUsizeVarint4Le, InternalWriteUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_4_be, WriteUsizeVarint4Be, InternalWriteUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_8_le, WriteUsizeVarint8Le, InternalWriteUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_8_be, WriteUsizeVarint8Be, InternalWriteUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_16_le, WriteUsizeVarint16Le, InternalWriteUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_varint"))]
+        write_varint_size_func!(write_usize_varint_16_be, WriteUsizeVarint16Be, InternalWriteUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_varint")]
