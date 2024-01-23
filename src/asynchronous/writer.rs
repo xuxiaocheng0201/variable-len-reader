@@ -63,6 +63,9 @@ impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteBool<'a, W> {
     }
 }
 
+#[cfg(feature = "async_bools")]
+include!("writer_bools.rs");
+
 #[cfg(feature = "async_raw")]
 include!("writer_raw.rs");
 
@@ -74,8 +77,10 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
     #[cfg(feature = "async_raw")]
     define_write_raw_poll!();
 }
+
 impl<R: AsyncVariableWriter + ?Sized> InternalAsyncVariableWriter for R {
 }
+
 
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]
@@ -93,12 +98,12 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
         WriteBool { writer: self, b }
     }
 
+    #[cfg(feature = "async_bools")]
+    define_write_bools_func!();
+
     #[cfg(feature = "async_raw")]
     define_write_raw_func!();
 
-    // #[cfg(feature = "async_bools")]
-    // define_write_bools_func!();
-    //
     // #[cfg(feature = "async_varint")]
     // define_write_varint_func!();
     //

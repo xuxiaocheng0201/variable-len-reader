@@ -61,6 +61,9 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
     }
 }
 
+#[cfg(feature = "async_bools")]
+include!("reader_bools.rs");
+
 #[cfg(feature = "async_raw")]
 include!("reader_raw.rs");
 
@@ -72,11 +75,15 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
             i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
         })
     }
+
     #[cfg(feature = "async_raw")]
     define_read_raw_poll!();
+
 }
+
 impl<R: AsyncVariableReader + ?Sized> InternalAsyncVariableReader for R {
 }
+
 
 pub trait AsyncVariableReader: AsyncVariableReadable {
     #[inline]
@@ -94,12 +101,12 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadBool { reader: self }
     }
 
+    #[cfg(feature = "async_bools")]
+    define_read_bools_func!();
+
     #[cfg(feature = "async_raw")]
     define_read_raw_func!();
 
-    // #[cfg(feature = "async_bools")]
-    // define_read_bools_func!();
-    //
     // #[cfg(feature = "async_varint")]
     // define_read_varint_func!();
     //

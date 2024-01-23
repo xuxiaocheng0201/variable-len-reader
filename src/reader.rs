@@ -2,6 +2,37 @@ use std::io::{Error, ErrorKind, Read, Result};
 use crate::util::bufs::ReadBuf;
 use crate::VariableReadable;
 
+#[cfg(feature = "bools")]
+macro_rules! read_bools {
+    ($func: ident, $n: literal) => {
+        #[inline]
+        fn $func(&mut self) -> Result<[bool; $n]> {
+            const MAX: u8 = ((1 << ($n - 1)) - 1 << 1) + 1; // (1 << $n) - 1 (Prevent `this arithmetic operation will overflow`)
+            let b = self.read_single()?;
+            if b > MAX {
+                return Err(Error::new(ErrorKind::InvalidData, format!("Invalid bools at {}.", stringify!($func))));
+            }
+            let mut bools = [false; $n];
+            for i in 0..$n {
+                bools[i] = b & (1 << i) != 0;
+            }
+            Ok(bools)
+        }
+    };
+}
+#[cfg(feature = "bools")]
+macro_rules! define_read_bools {
+    () => {
+        read_bools!(read_bools_2, 2);
+        read_bools!(read_bools_3, 3);
+        read_bools!(read_bools_4, 4);
+        read_bools!(read_bools_5, 5);
+        read_bools!(read_bools_6, 6);
+        read_bools!(read_bools_7, 7);
+        read_bools!(read_bools_8, 8);
+    };
+}
+
 #[cfg(feature = "raw")]
 macro_rules! read_raw {
     ($primitive: ty, $func: ident, $from: ident) => {
@@ -58,37 +89,6 @@ macro_rules! define_read_raw {
         #[cfg(feature = "raw_size")]
         read_raw_size!(isize, read_isize_raw_be, read_i128_raw_be);
     }
-}
-
-#[cfg(feature = "bools")]
-macro_rules! read_bools {
-    ($func: ident, $n: literal) => {
-        #[inline]
-        fn $func(&mut self) -> Result<[bool; $n]> {
-            const MAX: u8 = ((1 << ($n - 1)) - 1 << 1) + 1; // (1 << $n) - 1 (Prevent `this arithmetic operation will overflow`)
-            let b = self.read_single()?;
-            if b > MAX {
-                return Err(Error::new(ErrorKind::InvalidData, format!("Invalid bools at {}.", stringify!($func))));
-            }
-            let mut bools = [false; $n];
-            for i in 0..$n {
-                bools[i] = b & (1 << i) != 0;
-            }
-            Ok(bools)
-        }
-    };
-}
-#[cfg(feature = "bools")]
-macro_rules! define_read_bools {
-    () => {
-        read_bools!(read_bools_2, 2);
-        read_bools!(read_bools_3, 3);
-        read_bools!(read_bools_4, 4);
-        read_bools!(read_bools_5, 5);
-        read_bools!(read_bools_6, 6);
-        read_bools!(read_bools_7, 7);
-        read_bools!(read_bools_8, 8);
-    };
 }
 
 #[cfg(feature = "varint")]
@@ -303,11 +303,11 @@ pub trait VariableReader: VariableReadable {
         }
     }
 
-    #[cfg(feature = "raw")]
-    define_read_raw!();
-
     #[cfg(feature = "bools")]
     define_read_bools!();
+
+    #[cfg(feature = "raw")]
+    define_read_raw!();
 
     #[cfg(feature = "varint")]
     define_read_varint!();

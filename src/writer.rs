@@ -2,6 +2,34 @@ use std::io::{Error, ErrorKind, Result, Write};
 use crate::util::bufs::WriteBuf;
 use crate::VariableWritable;
 
+#[cfg(feature = "bools")]
+macro_rules! write_bools {
+    ($func: ident, $n: literal) => {
+        #[inline]
+        fn $func(&mut self, bools: [bool; $n]) -> Result<usize> {
+            let mut b = 0;
+            for i in 0..$n {
+                if bools[i] {
+                    b |= 1 << i;
+                }
+            }
+            self.write_single(b)
+        }
+    };
+}
+#[cfg(feature = "bools")]
+macro_rules! define_write_bools {
+    () => {
+        write_bools!(write_bools_2, 2);
+        write_bools!(write_bools_3, 3);
+        write_bools!(write_bools_4, 4);
+        write_bools!(write_bools_5, 5);
+        write_bools!(write_bools_6, 6);
+        write_bools!(write_bools_7, 7);
+        write_bools!(write_bools_8, 8);
+    };
+}
+
 #[cfg(feature = "raw")]
 macro_rules! write_raw {
     ($primitive: ty, $func: ident, $to: ident) => {
@@ -54,34 +82,6 @@ macro_rules! define_write_raw {
         write_raw_size!(isize, write_isize_raw_le, i128, write_i128_raw_le);
         #[cfg(feature = "raw_size")]
         write_raw_size!(isize, write_isize_raw_be, i128, write_i128_raw_be);
-    };
-}
-
-#[cfg(feature = "bools")]
-macro_rules! write_bools {
-    ($func: ident, $n: literal) => {
-        #[inline]
-        fn $func(&mut self, bools: [bool; $n]) -> Result<usize> {
-            let mut b = 0;
-            for i in 0..$n {
-                if bools[i] {
-                    b |= 1 << i;
-                }
-            }
-            self.write_single(b)
-        }
-    };
-}
-#[cfg(feature = "bools")]
-macro_rules! define_write_bools {
-    () => {
-        write_bools!(write_bools_2, 2);
-        write_bools!(write_bools_3, 3);
-        write_bools!(write_bools_4, 4);
-        write_bools!(write_bools_5, 5);
-        write_bools!(write_bools_6, 6);
-        write_bools!(write_bools_7, 7);
-        write_bools!(write_bools_8, 8);
     };
 }
 
@@ -286,11 +286,11 @@ pub trait VariableWriter: VariableWritable {
         self.write_single(if b { 1 } else { 0 })
     }
 
-    #[cfg(feature = "raw")]
-    define_write_raw!();
-
     #[cfg(feature = "bools")]
     define_write_bools!();
+
+    #[cfg(feature = "raw")]
+    define_write_raw!();
 
     #[cfg(feature = "varint")]
     define_write_varint!();
