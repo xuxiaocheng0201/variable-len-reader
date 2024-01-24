@@ -18,7 +18,7 @@ macro_rules! read_bools_future {
                 let mut me = self.project();
                 let b = ready!(R::poll_read_single(Pin::new(&mut *me.reader), cx))?;
                 if b > MAX {
-                    return  Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Invalid bools at {}.", stringify!($func)))));
+                    return Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Invalid bools at {}.", stringify!($func)))));
                 }
                 let mut bools = [false; $n];
                 for i in 0..$n {

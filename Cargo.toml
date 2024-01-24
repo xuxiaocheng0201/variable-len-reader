@@ -23,7 +23,7 @@ anyhow = "^1.0"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
 
 [features]
-default = ["varint", "signed", "string", "async_default", "async_long_signed"]
+default = ["varint", "signed", "string", "async_default", "async_raw_size"]
 full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "vec_u8", "string",
     "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_vec_u8", "async_string"]
 
