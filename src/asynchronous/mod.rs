@@ -1,3 +1,5 @@
+#![allow(dead_code)] // Internal struct: 'reset'
+
 use std::io::Result;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
