@@ -10,7 +10,7 @@
 
 # 描述
 
-一个类似于 VarInt 的可变长数据读写器。
+一个基于 VarInt 的可变长数据读写器。
 
 
 # 用法
@@ -19,7 +19,7 @@
 
 ```toml
 [dependencies]
-variable-len-reader = "1"
+variable-len-reader = "2"
 ```
 
 

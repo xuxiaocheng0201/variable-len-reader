@@ -273,6 +273,7 @@ macro_rules! define_write_signed_func {
         #[cfg(feature = "async_long_signed")]
         write_signed_func!(i128, write_i128_varint_16_be, WriteI128Varint16Be, InternalWriteI128Varint16Be);
 
+        #[cfg(feature = "async_varint_size")]
         write_signed_size_func!(write_isize_varint, WriteIsizeVarint, InternalWriteIsizeVarint);
         #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
         write_signed_size_func!(write_isize_varint_2_le, WriteIsizeVarint2Le, InternalWriteIsizeVarint2Le);
