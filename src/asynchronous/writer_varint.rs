@@ -1,16 +1,16 @@
 #[cfg(feature = "async_varint")]
 macro_rules! write_varint_future {
-    ($primitive: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
-        write_varint_future!($primitive, $primitive, $future, $internal, $to, $poll_func, $buf, $internal_struct);
+    ($primitive: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
+        write_varint_future!($primitive, $primitive, $future, $internal, $to, $poll_func, $buf, $struct_buf);
     };
-    ($primitive: ty, $source: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+    ($primitive: ty, $source: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
         #[derive(Debug)]
-        struct $internal_struct {
+        struct $struct_buf {
             value: $primitive,
             size: usize,
             inner_buf: $buf,
         }
-        impl $internal_struct {
+        impl $struct_buf {
             fn new(num: $source) -> Self {
                 let num = num as $primitive;
                 const NUM_BITS: $internal = <$internal>::MAX >> 1;
@@ -31,7 +31,7 @@ macro_rules! write_varint_future {
             pub struct $future<'a, W: ?Sized> {
                 #[pin]
                 writer: &'a mut W,
-                internal: $internal_struct,
+                inner: $struct_buf,
             }
         }
         impl<'a, W: $crate::asynchronous::AsyncVariableWritable + Unpin> std::future::Future for $future<'a, W> {
@@ -39,32 +39,32 @@ macro_rules! write_varint_future {
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
-                W::$poll_func(Pin::new(&mut *me.writer), cx, me.internal)
+                W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
         }
     };
 }
 #[cfg(feature = "async_varint")]
 macro_rules! write_varint_poll {
-    ($primitive: ty, $poll_func: ident, $internal: ty, $to: ident, $poll_internal: ident, $internal_struct: ident) => {
+    ($primitive: ty, $poll_func: ident, $internal: ty, $to: ident, $poll_internal: ident, $struct_buf: ident) => {
         #[inline]
-        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, internal: &mut $internal_struct) -> std::task::Poll<std::io::Result<usize>> {
+        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
             loop {
-                internal.size += ready!(self.as_mut().$poll_internal(cx, &mut internal.inner_buf))?;
-                if internal.value >= SIGN_BIT as $primitive {
-                    internal.inner_buf.reset();
-                    internal.inner_buf.set_buf(<$internal>::$to(((internal.value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT));
-                    internal.value >>= POS_OFFSET;
+                inner.size += ready!(self.as_mut().$poll_internal(cx, &mut inner.inner_buf))?;
+                if inner.value >= SIGN_BIT as $primitive {
+                    inner.inner_buf.reset();
+                    inner.inner_buf.set_buf(<$internal>::$to(((inner.value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT));
+                    inner.value >>= POS_OFFSET;
                 } else {
-                    if (internal.value == 0) {
-                        return std::task::Poll::Ready(Ok(internal.size));
+                    if (inner.value == 0) {
+                        return std::task::Poll::Ready(Ok(inner.size));
                     }
-                    internal.inner_buf.reset();
-                    internal.inner_buf.set_buf(<$internal>::$to(internal.value as $internal));
-                    internal.value = 0;
+                    inner.inner_buf.reset();
+                    inner.inner_buf.set_buf(<$internal>::$to(inner.value as $internal));
+                    inner.value = 0;
                 }
             }
         }
@@ -72,29 +72,29 @@ macro_rules! write_varint_poll {
 }
 #[cfg(feature = "async_varint")]
 macro_rules! write_varint_func {
-    ($primitive: ty, $func: ident, $future: ident, $internal_struct: ident) => {
+    ($primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
         #[inline]
         fn $func(&mut self, num: $primitive) -> $future<Self> where Self: Unpin {
-            $future { writer: self, internal: $internal_struct::new(num) }
+            $future { writer: self, inner: $struct_buf::new(num) }
         }
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! write_varint_size_future {
-    ($future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
-        write_varint_future!(u128, usize, $future, $internal, $to, $poll_func, $buf, $internal_struct);
+    ($future: ident, $internal: ident, $to: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
+        write_varint_future!(u128, usize, $future, $internal, $to, $poll_func, $buf, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! write_varint_size_poll {
-    ($poll_func: ident, $internal: ty, $to: ident, $poll_internal: ident, $internal_struct: ident) => {
-        write_varint_poll!(u128, $poll_func, $internal, $to, $poll_internal, $internal_struct);
+    ($poll_func: ident, $internal: ty, $to: ident, $poll_internal: ident, $struct_buf: ident) => {
+        write_varint_poll!(u128, $poll_func, $internal, $to, $poll_internal, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! write_varint_size_func {
-    ($func: ident, $future: ident, $internal_struct: ident) => {
-        write_varint_func!(usize, $func, $future, $internal_struct);
+    ($func: ident, $future: ident, $struct_buf: ident) => {
+        write_varint_func!(usize, $func, $future, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint")]

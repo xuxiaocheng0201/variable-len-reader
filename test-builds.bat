@@ -1,25 +1,29 @@
-cargo test --no-default-features --features "default" --lib
-cargo test --no-default-features --features "raw" --lib
-cargo test --no-default-features --features "raw_size" --lib
-cargo test --no-default-features --features "bools" --lib
-cargo test --no-default-features --features "varint" --lib
-cargo test --no-default-features --features "long_varint" --lib
-cargo test --no-default-features --features "signed" --lib
-cargo test --no-default-features --features "long_signed" --lib
-cargo test --no-default-features --features "vec_u8" --lib
-cargo test --no-default-features --features "string" --lib
+cargo build --no-default-features --features "default"
+cargo build --no-default-features --features "raw"
+cargo build --no-default-features --features "raw_size"
+cargo build --no-default-features --features "bools"
+cargo build --no-default-features --features "varint"
+cargo build --no-default-features --features "varint_size"
+cargo build --no-default-features --features "long_varint"
+cargo build --no-default-features --features "varint_size,long_varint"
+cargo build --no-default-features --features "signed"
+cargo build --no-default-features --features "long_signed"
+cargo build --no-default-features --features "vec_u8"
+cargo build --no-default-features --features "string"
 
-cargo test --no-default-features --features "async" --lib
-cargo test --no-default-features --features "async_default" --lib
-cargo test --no-default-features --features "async_raw" --lib
-cargo test --no-default-features --features "async_raw_size" --lib
-cargo test --no-default-features --features "async_bools" --lib
-cargo test --no-default-features --features "async_varint" --lib
-cargo test --no-default-features --features "async_long_varint" --lib
-cargo test --no-default-features --features "async_signed" --lib
-cargo test --no-default-features --features "async_long_signed" --lib
-cargo test --no-default-features --features "async_vec_u8" --lib
-cargo test --no-default-features --features "async_string" --lib
+cargo build --no-default-features --features "async"
+cargo build --no-default-features --features "async_default"
+cargo build --no-default-features --features "async_raw"
+cargo build --no-default-features --features "async_raw_size"
+cargo build --no-default-features --features "async_bools"
+cargo build --no-default-features --features "async_varint"
+cargo build --no-default-features --features "async_varint_size"
+cargo build --no-default-features --features "async_long_varint"
+cargo build --no-default-features --features "async_varint_size,async_long_varint"
+cargo build --no-default-features --features "async_signed"
+cargo build --no-default-features --features "async_long_signed"
+cargo build --no-default-features --features "async_vec_u8"
+cargo build --no-default-features --features "async_string"
 
 cargo test --no-default-features --features "full" --lib
 cargo test --features "async_default" --doc

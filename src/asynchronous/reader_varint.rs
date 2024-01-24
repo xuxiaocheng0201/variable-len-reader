@@ -1,16 +1,16 @@
 #[cfg(feature = "async_varint")]
 macro_rules! read_varint_future {
-    ($primitive: ty, $future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
-        read_varint_future!($primitive, $primitive, $future, $poll_func, $buf, $internal_struct);
+    ($primitive: ty, $future: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
+        read_varint_future!($primitive, $primitive, $future, $poll_func, $buf, $struct_buf);
     };
-    ($primitive: ty, $target: ty, $future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
+    ($primitive: ty, $target: ty, $future: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
         #[derive(Debug)]
-        struct $internal_struct {
+        struct $struct_buf {
             value: $primitive,
             position: usize,
             inner_buf: $buf,
         }
-        impl $internal_struct {
+        impl $struct_buf {
             fn new() -> Self {
                 Self { value: 0, position: 0, inner_buf: $buf::new() }
             }
@@ -22,7 +22,7 @@ macro_rules! read_varint_future {
             pub struct $future<'a, R: ?Sized> {
                 #[pin]
                 reader: &'a mut R,
-                internal: $internal_struct,
+                inner: $struct_buf,
             }
         }
         impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin> std::future::Future for $future<'a, R> {
@@ -30,63 +30,63 @@ macro_rules! read_varint_future {
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
                 let mut me = self.project();
-                R::$poll_func(Pin::new(&mut *me.reader), cx, me.internal)
+                R::$poll_func(Pin::new(&mut *me.reader), cx, me.inner)
             }
         }
     };
 }
 #[cfg(feature = "async_varint")]
 macro_rules! read_varint_poll {
-    ($primitive: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
-        read_varint_poll!($primitive, $primitive, $func, $internal, $poll_func, $poll_internal, $internal_struct);
+    ($primitive: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
+        read_varint_poll!($primitive, $primitive, $func, $internal, $poll_func, $poll_internal, $struct_buf);
     };
-    ($primitive: ty, $target: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
+    ($primitive: ty, $target: ty, $func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
         #[inline]
-        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, internal: &mut $internal_struct) -> std::task::Poll<std::io::Result<$target>> {
+        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<$target>> {
             const SIZE: usize = std::mem::size_of::<$primitive>() << 3; // * 8
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
             loop {
-                let current = ready!(self.as_mut().$poll_internal(cx, &mut internal.inner_buf))?;
-                internal.inner_buf.clear();
-                internal.value |= ((current & NUM_BITS) as $primitive) << internal.position;
+                let current = ready!(self.as_mut().$poll_internal(cx, &mut inner.inner_buf))?;
+                inner.value |= ((current & NUM_BITS) as $primitive) << inner.position;
                 if current & SIGN_BIT == 0 {
-                    return Poll::Ready(Ok(internal.value as $target));
+                    return Poll::Ready(Ok(inner.value as $target));
                 }
-                internal.position += POS_OFFSET;
-                if internal.position >= SIZE {
+                inner.position += POS_OFFSET;
+                if inner.position >= SIZE {
                     return Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Varint {} in stream is too long.", stringify!($func)))));
                 }
+                inner.inner_buf.clear();
             }
         }
     };
 }
 #[cfg(feature = "async_varint")]
 macro_rules! read_varint_func {
-    ($func: ident, $future: ident, $internal_struct: ident) => {
+    ($func: ident, $future: ident, $struct_buf: ident) => {
         #[inline]
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
-            $future { reader: self, internal: $internal_struct::new() }
+            $future { reader: self, inner: $struct_buf::new() }
         }
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! read_varint_size_future {
-    ($future: ident, $poll_func: ident, $buf: ident, $internal_struct: ident) => {
-        read_varint_future!(u128, usize, $future, $poll_func, $buf, $internal_struct);
+    ($future: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
+        read_varint_future!(u128, usize, $future, $poll_func, $buf, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! read_varint_size_poll {
-    ($func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $internal_struct: ident) => {
-        read_varint_poll!(u128, usize, $func, $internal, $poll_func, $poll_internal, $internal_struct);
+    ($func: ident, $internal: ty, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
+        read_varint_poll!(u128, usize, $func, $internal, $poll_func, $poll_internal, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint_size")]
 macro_rules! read_varint_size_func {
-    ($func: ident, $future: ident, $internal_struct: ident) => {
-        read_varint_func!($func, $future, $internal_struct);
+    ($func: ident, $future: ident, $struct_buf: ident) => {
+        read_varint_func!($func, $future, $struct_buf);
     };
 }
 #[cfg(feature = "async_varint")]
