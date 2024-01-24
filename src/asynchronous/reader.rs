@@ -63,7 +63,7 @@ impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
 
 include!("reader_bools.rs");
 include!("reader_raw.rs");
-// include!("reader_varint.rs");
+include!("reader_varint.rs");
 // include!("reader_signed.rs");
 
 trait InternalAsyncVariableReader: AsyncVariableReader {
@@ -78,9 +78,9 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
     #[cfg(feature = "async_raw")]
     define_read_raw_poll!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_read_varint_poll!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_read_varint_poll!();
+
     // #[cfg(feature = "async_signed")]
     // define_read_signed_poll!();
 }
@@ -111,9 +111,9 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "async_raw")]
     define_read_raw_func!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_read_varint_func!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_read_varint_func!();
+
     // #[cfg(feature = "async_signed")]
     // define_read_signed_func!();
 

@@ -65,7 +65,7 @@ impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteBool<'a, W> {
 
 include!("writer_bools.rs");
 include!("writer_raw.rs");
-// include!("writer_varint.rs");
+include!("writer_varint.rs");
 // include!("writer_signed.rs");
 
 trait InternalAsyncVariableWriter: AsyncVariableWriter {
@@ -76,9 +76,9 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
     #[cfg(feature = "async_raw")]
     define_write_raw_poll!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_write_varint_poll!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_write_varint_poll!();
+
     // #[cfg(feature = "async_signed")]
     // define_write_signed_poll!();
 }
@@ -109,9 +109,9 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg(feature = "async_raw")]
     define_write_raw_func!();
 
-    // #[cfg(feature = "async_varint")]
-    // define_write_varint_func!();
-    //
+    #[cfg(feature = "async_varint")]
+    define_write_varint_func!();
+
     // #[cfg(feature = "async_signed")]
     // define_write_signed_func!();
 
