@@ -75,7 +75,7 @@ impl Zigzag<i128> for u128 {
 impl Zigzag<usize> for isize {
     #[inline]
     fn zigzag(self) -> usize {
-        ((self << 1) ^ (self >> (std::mem::size_of::<usize>() - 1))) as usize
+        ((self << 1) ^ (self >> (usize::BITS - 1))) as usize
     }
 }
 
