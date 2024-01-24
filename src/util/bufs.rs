@@ -102,8 +102,8 @@ pub struct ReadBuf<'a> {
 }
 
 impl<'a> ReadBuf<'a> {
-    pub fn new(buf: &'a mut [u8]) -> ReadBuf<'a> {
-        ReadBuf {
+    pub fn new(buf: &'a mut [u8]) -> Self {
+        Self {
             buf,
             filled: 0,
         }
@@ -232,8 +232,8 @@ pub struct WriteBuf<'a> {
 }
 
 impl<'a> WriteBuf<'a> {
-    pub fn new(buf: &'a [u8]) -> WriteBuf<'a> {
-        WriteBuf {
+    pub fn new(buf: &'a [u8]) -> Self {
+        Self {
             buf,
             read: 0,
         }
@@ -257,8 +257,8 @@ macro_rules! define_read_buf {
         }
         impl $name {
             #[inline]
-            pub fn new() -> $name {
-                $name {
+            pub fn new() -> Self {
+                Self {
                     buf: [0; $n],
                     filled: 0,
                 }
@@ -302,8 +302,8 @@ macro_rules! define_write_buf {
         }
         impl $name {
             #[inline]
-            pub fn new(buf: [u8; $n]) -> $name {
-                $name {
+            pub fn new(buf: [u8; $n]) -> Self {
+                Self {
                     buf,
                     read: 0,
                 }
@@ -326,9 +326,9 @@ macro_rules! define_write_buf {
         impl bytes::Buf for $name {
             impl_buf!();
         }
-        impl<'a> From<&'a mut $name> for WriteBuf<'a> {
+        impl<'a> From<&'a $name> for WriteBuf<'a> {
             #[inline]
-            fn from(value: &'a mut $name) -> Self {
+            fn from(value: &'a $name) -> Self {
                 Self {
                     buf: &value.buf,
                     read: value.read,

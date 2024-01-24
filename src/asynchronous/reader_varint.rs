@@ -30,7 +30,7 @@ macro_rules! read_varint_future {
                 inner: $struct_buf,
             }
         }
-        impl<'a, R: $crate::asynchronous::AsyncVariableReadable + Unpin> std::future::Future for $future<'a, R> {
+        impl<'a, R: $crate::AsyncVariableReadable + Unpin + ?Sized> std::future::Future for $future<'a, R> {
             type Output = std::io::Result<$target>;
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {

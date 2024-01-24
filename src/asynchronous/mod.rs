@@ -41,7 +41,7 @@ mod channel {
     use std::task::{Context, Poll};
     use tokio::sync::mpsc::{Receiver, Sender};
     use tokio::sync::mpsc::error::{TryRecvError, TrySendError};
-    use crate::asynchronous::{AsyncVariableReadable, AsyncVariableWritable};
+    use crate::{AsyncVariableReadable, AsyncVariableWritable};
 
     pub(crate) struct SenderWriter<T>(pub Sender<T>);
     pub(crate) struct ReceiverReader<T>(pub Receiver<T>);

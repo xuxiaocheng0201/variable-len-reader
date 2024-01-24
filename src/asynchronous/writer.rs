@@ -16,7 +16,7 @@ pin_project! {
         byte: u8,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteSingle<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteSingle<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -35,7 +35,7 @@ pin_project! {
         buf: WriteBuf<'a>,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteMore<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteMore<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -54,7 +54,7 @@ pin_project! {
         b: bool,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin> Future for WriteBool<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteBool<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -115,19 +115,23 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg(feature = "async_signed")]
     define_write_signed_func!();
 
-//     #[cfg(feature = "async_vec_u8")]
-//     #[inline]
-//     async fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
-//         let mut size = self.write_u128_varint(message.len() as u128).await?;
-//         size += self.write_more(message).await?;
-//         Ok(size)
-//     }
-//
-//     #[cfg(feature = "async_string")]
-//     #[inline]
-//     async fn write_string(&mut self, message: &str) -> Result<usize> {
-//         self.write_u8_vec(message.as_bytes()).await
-//     }
+    #[cfg(feature = "async_vec_u8")]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn write_u8_vec<'a>(&'a mut self, message: &'a [u8]) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+        Box::pin(async move {
+            let mut size = self.write_usize_varint(message.len()).await?;
+            size += self.write_more(message).await?;
+            Ok(size)
+        })
+    }
+
+    #[cfg(feature = "async_string")]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn write_string<'a>(&'a mut self, message: &'a str) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+        self.write_u8_vec(message.as_bytes())
+    }
 }
 
 impl<W: AsyncVariableWritable + ?Sized> AsyncVariableWriter for W {

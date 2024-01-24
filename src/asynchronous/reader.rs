@@ -15,7 +15,7 @@ pin_project! {
         reader: &'a mut R,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadSingle<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin+ ?Sized> Future for ReadSingle<'a, R> {
     type Output = Result<u8>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -34,7 +34,7 @@ pin_project! {
         buf: ReadBuf<'a>,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadMore<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin+ ?Sized> Future for ReadMore<'a, R> {
     type Output = Result<()>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -52,7 +52,7 @@ pin_project! {
         reader: &'a mut R,
     }
 }
-impl<'a, R: AsyncVariableReadable + Unpin> Future for ReadBool<'a, R> {
+impl<'a, R: AsyncVariableReadable + Unpin+ ?Sized> Future for ReadBool<'a, R> {
     type Output = Result<bool>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -68,7 +68,7 @@ include!("reader_signed.rs");
 
 trait InternalAsyncVariableReader: AsyncVariableReader {
     fn poll_read_bool(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool>> {
-        Poll::Ready(match ready!(Self::poll_read_single(self, cx))? {
+        Poll::Ready(match ready!(self.poll_read_single(cx))? {
             0 => Ok(false),
             1 => Ok(true),
             i => Err(Error::new(ErrorKind::InvalidData, format!("Invalid boolean value: {}", i))),
@@ -117,23 +117,29 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "async_signed")]
     define_read_signed_func!();
 
-    // #[cfg(feature = "async_vec_u8")]
-    // #[inline]
-    // async fn read_u8_vec(&mut self) -> Result<Vec<u8>> where Self: Unpin {
-    //     let length = self.read_u128_varint().await? as usize;
-    //     let mut bytes = vec![0; length];
-    //     self.read_more(&mut bytes).await?;
-    //     Ok(bytes)
-    // }
-    //
-    // #[cfg(feature = "async_string")]
-    // #[inline]
-    // async fn read_string(&mut self) -> Result<String> where Self: Unpin {
-    //     match String::from_utf8(self.read_u8_vec().await?) {
-    //         Ok(s) => Ok(s),
-    //         Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
-    //     }
-    // }
+    #[cfg(feature = "async_vec_u8")]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn read_u8_vec(&mut self) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>> where Self: Unpin + Send {
+        Box::pin(async move {
+            let length = self.read_usize_varint().await?;
+            let mut bytes = vec![0; length];
+            self.read_more(&mut bytes).await?;
+            Ok(bytes)
+        })
+    }
+
+    #[cfg(feature = "async_string")]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn read_string(&mut self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>> where Self: Unpin + Send {
+        Box::pin(async move {
+            match String::from_utf8(self.read_u8_vec().await?) {
+                Ok(s) => Ok(s),
+                Err(e) => Err(Error::new(ErrorKind::InvalidData, e.to_string())),
+            }
+        })
+    }
 }
 
 impl<R: AsyncVariableReadable + ?Sized> AsyncVariableReader for R {

@@ -1,5 +1,3 @@
-use crate::util::zigzag::Zigzag;
-
 #[cfg(feature = "async_bools")]
 mod bools {
     use crate::{AsyncVariableReader, AsyncVariableWriter};
