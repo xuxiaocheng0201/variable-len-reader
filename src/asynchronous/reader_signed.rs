@@ -9,6 +9,9 @@ macro_rules! read_signed_future {
             fn new() -> Self {
                 Self { internal: $internal_struct::new() }
             }
+            fn reset(&mut self) {
+                self.internal.reset();
+            }
         }
         $crate::pin_project_lite::pin_project! {
             #[derive(Debug)]
@@ -37,7 +40,7 @@ macro_rules! read_signed_poll {
         fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<$primitive>> {
             use $crate::util::zigzag::Zigzag;
             let varint = ready!(self.$poll_internal(cx, &mut inner.internal))?;
-            Poll::Ready(Ok(varint.zigzag()))
+            Poll::Ready(Ok(varint.zigzag() as $primitive))
         }
     };
 }
@@ -48,6 +51,24 @@ macro_rules! read_signed_func {
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
             $future { reader: self, inner: $struct_buf::new() }
         }
+    };
+}
+#[cfg(all(feature = "async_varint_size", feature = "async_signed"))]
+macro_rules! read_signed_size_future {
+    ($future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
+        read_signed_future!(isize, $future, $poll_func, $struct_buf, $internal_struct);
+    };
+}
+#[cfg(all(feature = "async_varint_size", feature = "async_signed"))]
+macro_rules! read_signed_size_poll {
+    ($poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
+        read_signed_poll!(isize, $poll_func, $poll_internal, $struct_buf);
+    };
+}
+#[cfg(all(feature = "async_varint_size", feature = "async_signed"))]
+macro_rules! read_signed_size_func {
+    ($func: ident, $future: ident, $struct_buf: ident) => {
+        read_signed_func!($func, $future, $struct_buf);
     };
 }
 #[cfg(feature = "async_signed")]
@@ -104,24 +125,24 @@ macro_rules! define_read_signed_futures {
         #[cfg(feature = "async_long_signed")]
         read_signed_future!(i128, ReadI128Varint16Be, poll_read_i128_varint_16_be, InternalReadI128Varint16Be, InternalReadU128Varint16Be);
 
-        // #[cfg(feature = "async_varint_size")]
-        // read_varint_size_future!(ReadUsizeVarint, poll_read_usize_varint, OwnedReadBuf8, InternalReadIsizeVarint, InternalReadUsizeVarint);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint2Le, poll_read_usize_varint_2_le, OwnedReadBuf16, InternalReadIsizeVarint2Le, InternalReadUsizeVarint2Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint2Be, poll_read_usize_varint_2_be, OwnedReadBuf16, InternalReadIsizeVarint2Be, InternalReadUsizeVarint2Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint4Le, poll_read_usize_varint_4_le, OwnedReadBuf32, InternalReadIsizeVarint4Le, InternalReadUsizeVarint4Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint4Be, poll_read_usize_varint_4_be, OwnedReadBuf32, InternalReadIsizeVarint4Be, InternalReadUsizeVarint4Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint8Le, poll_read_usize_varint_8_le, OwnedReadBuf64, InternalReadIsizeVarint8Le, InternalReadUsizeVarint8Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint8Be, poll_read_usize_varint_8_be, OwnedReadBuf64, InternalReadIsizeVarint8Be, InternalReadUsizeVarint8Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint16Le, poll_read_usize_varint_16_le, OwnedReadBuf128, InternalReadIsizeVarint16Le, InternalReadUsizeVarint16Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_future!(ReadUsizeVarint16Be, poll_read_usize_varint_16_be, OwnedReadBuf128, InternalReadIsizeVarint16Be, InternalReadUsizeVarint16Be);
+        #[cfg(feature = "async_varint_size")]
+        read_signed_size_future!(ReadIsizeVarint, poll_read_isize_varint, InternalReadIsizeVarint, InternalReadUsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint2Le, poll_read_isize_varint_2_le, InternalReadIsizeVarint2Le, InternalReadUsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint2Be, poll_read_isize_varint_2_be, InternalReadIsizeVarint2Be, InternalReadUsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint4Le, poll_read_isize_varint_4_le, InternalReadIsizeVarint4Le, InternalReadUsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint4Be, poll_read_isize_varint_4_be, InternalReadIsizeVarint4Be, InternalReadUsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint8Le, poll_read_isize_varint_8_le, InternalReadIsizeVarint8Le, InternalReadUsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint8Be, poll_read_isize_varint_8_be, InternalReadIsizeVarint8Be, InternalReadUsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint16Le, poll_read_isize_varint_16_le, InternalReadIsizeVarint16Le, InternalReadUsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_future!(ReadIsizeVarint16Be, poll_read_isize_varint_16_be, InternalReadIsizeVarint16Be, InternalReadUsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_signed")]
@@ -178,24 +199,24 @@ macro_rules! define_read_signed_poll {
         #[cfg(feature = "async_long_signed")]
         read_signed_poll!(i128, poll_read_i128_varint_16_be, poll_read_u128_varint_16_be, InternalReadI128Varint16Be);
 
-        // #[cfg(feature = "async_varint_size")]
-        // read_varint_size_poll!(read_usize_varint, u8, poll_read_usize_varint, poll_read_u8_raw, InternalReadIsizeVarint);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_2_le, u16, poll_read_usize_varint_2_le, poll_read_u16_raw_le, InternalReadIsizeVarint2Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_2_be, u16, poll_read_usize_varint_2_be, poll_read_u16_raw_be, InternalReadIsizeVarint2Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_4_le, u32, poll_read_usize_varint_4_le, poll_read_u32_raw_le, InternalReadIsizeVarint4Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_4_be, u32, poll_read_usize_varint_4_be, poll_read_u32_raw_be, InternalReadIsizeVarint4Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_8_le, u64, poll_read_usize_varint_8_le, poll_read_u64_raw_le, InternalReadIsizeVarint8Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_8_be, u64, poll_read_usize_varint_8_be, poll_read_u64_raw_be, InternalReadIsizeVarint8Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_16_le, u128, poll_read_usize_varint_16_le, poll_read_u128_raw_le, InternalReadIsizeVarint16Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_poll!(read_usize_varint_16_be, u128, poll_read_usize_varint_16_be, poll_read_u128_raw_be, InternalReadIsizeVarint16Be);
+        #[cfg(feature = "async_varint_size")]
+        read_signed_size_poll!(poll_read_isize_varint, poll_read_usize_varint, InternalReadIsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_2_le, poll_read_usize_varint_2_le, InternalReadIsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_2_be, poll_read_usize_varint_2_be, InternalReadIsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_4_le, poll_read_usize_varint_4_le, InternalReadIsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_4_be, poll_read_usize_varint_4_be, InternalReadIsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_8_le, poll_read_usize_varint_8_le, InternalReadIsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_8_be, poll_read_usize_varint_8_be, InternalReadIsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_16_le, poll_read_usize_varint_16_le, InternalReadIsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_poll!(poll_read_isize_varint_16_be, poll_read_usize_varint_16_be, InternalReadIsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_signed")]
@@ -252,24 +273,24 @@ macro_rules! define_read_signed_func {
         #[cfg(feature = "async_long_signed")]
         read_signed_func!(read_i128_varint_16_be, ReadI128Varint16Be, InternalReadI128Varint16Be);
 
-        // #[cfg(feature = "async_varint_size")]
-        // read_varint_size_func!(read_usize_varint, ReadUsizeVarint, InternalReadIsizeVarint);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_2_le, ReadUsizeVarint2Le, InternalReadIsizeVarint2Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_2_be, ReadUsizeVarint2Be, InternalReadIsizeVarint2Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_4_le, ReadUsizeVarint4Le, InternalReadIsizeVarint4Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_4_be, ReadUsizeVarint4Be, InternalReadIsizeVarint4Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_8_le, ReadUsizeVarint8Le, InternalReadIsizeVarint8Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_8_be, ReadUsizeVarint8Be, InternalReadIsizeVarint8Be);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_16_le, ReadUsizeVarint16Le, InternalReadUsizeVarint16Le);
-        // #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
-        // read_varint_size_func!(read_usize_varint_16_be, ReadUsizeVarint16Be, InternalReadUsizeVarint16Be);
+        #[cfg(feature = "async_varint_size")]
+        read_signed_size_func!(read_isize_varint, ReadIsizeVarint, InternalReadIsizeVarint);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_2_le, ReadIsizeVarint2Le, InternalReadIsizeVarint2Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_2_be, ReadIsizeVarint2Be, InternalReadIsizeVarint2Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_4_le, ReadIsizeVarint4Le, InternalReadIsizeVarint4Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_4_be, ReadIsizeVarint4Be, InternalReadIsizeVarint4Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_8_le, ReadIsizeVarint8Le, InternalReadIsizeVarint8Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_8_be, ReadIsizeVarint8Be, InternalReadIsizeVarint8Be);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_16_le, ReadIsizeVarint16Le, InternalReadIsizeVarint16Le);
+        #[cfg(all(feature = "async_varint_size", feature = "async_long_signed"))]
+        read_signed_size_func!(read_isize_varint_16_be, ReadIsizeVarint16Be, InternalReadIsizeVarint16Be);
     };
 }
 #[cfg(feature = "async_signed")]
