@@ -85,6 +85,7 @@ impl<R: AsyncVariableReader + ?Sized> InternalAsyncVariableReader for R {
 }
 
 
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableReader: AsyncVariableReadable {
     #[inline]
     fn read_single(&mut self) -> ReadSingle<Self> where Self: Unpin {

@@ -16,8 +16,8 @@ macro_rules! read_bools_future {
             }
         }
         #[cfg(feature = "async_bools")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
         $crate::pin_project_lite::pin_project! {
-            #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
             #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]

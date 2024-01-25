@@ -14,6 +14,7 @@ pub use writer::*;
 #[cfg(test)]
 mod tests;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableReadable {
     fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>>;
 
@@ -25,6 +26,7 @@ pub trait AsyncVariableReadable {
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableWritable {
     fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize>>;
 

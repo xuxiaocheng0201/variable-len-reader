@@ -83,6 +83,7 @@ impl<R: AsyncVariableWriter + ?Sized> InternalAsyncVariableWriter for R {
 }
 
 
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]
     fn write_single(&mut self, byte: u8) -> WriteSingle<Self> where Self: Unpin {
