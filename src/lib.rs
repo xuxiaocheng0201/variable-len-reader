@@ -1,17 +1,21 @@
 #![doc = include_str!("../README.md")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::io::Result;
-use crate::util::bufs::{ReadBuf, WriteBuf};
 
 #[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 extern crate pin_project_lite;
 #[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 extern crate tokio;
 
 pub mod util;
 #[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 mod asynchronous;
 #[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub use asynchronous::*;
 
 mod reader;
@@ -26,9 +30,24 @@ mod tests;
 pub trait VariableReadable {
     fn read_single(&mut self) -> Result<u8>;
 
-    fn read_more(&mut self, buf: &mut ReadBuf<'_>) -> Result<()> {
-        while buf.left() > 0 {
-            buf.put(self.read_single()?);
+    fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
+        for i in 0..buf.len() {
+            buf[i] = self.read_single()?;
+        }
+        Ok(())
+    }
+
+    #[cfg(feature = "bytes")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    fn read_more_buf<B: bytes::BufMut>(&mut self, buf: &mut B) -> Result<()> {
+        while buf.has_remaining_mut() {
+            let chunk = buf.chunk_mut();
+            let len = chunk.len();
+            let mut t = vec![0; len];
+            self.read_more(&mut t)?;
+            chunk.copy_from_slice(&t);
+            // SAFETY: already copied from slice.
+            unsafe { bytes::BufMut::advance_mut(buf, len); }
         }
         Ok(())
     }
@@ -37,12 +56,23 @@ pub trait VariableReadable {
 pub trait VariableWritable {
     fn write_single(&mut self, byte: u8) -> Result<usize>;
 
-    fn write_more(&mut self, buf: &mut WriteBuf<'_>) -> Result<usize> {
-        while buf.left() > 0 {
-            self.write_single(buf.get())?;
-            buf.skip(1);
+    fn write_more(&mut self, buf: &[u8]) -> Result<usize> {
+        for i in 0..buf.len() {
+            self.write_single(buf[i])?;
         }
-        Ok(buf.buf().len())
+        Ok(buf.len())
+    }
+
+    #[cfg(feature = "bytes")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    fn write_more_buf<B: bytes::Buf>(&mut self, buf: &mut B) -> Result<usize> {
+        let mut len = 0;
+        while buf.has_remaining() {
+            let written = self.write_more(buf.chunk())?;
+            buf.advance(written);
+            len += written;
+        }
+        Ok(len)
     }
 }
 

@@ -76,6 +76,7 @@ macro_rules! impl_read_buf {
     };
 }
 #[cfg(feature = "bytes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 macro_rules! impl_buf_mut {
     () => {
         #[inline]
@@ -112,11 +113,13 @@ impl<'a> ReadBuf<'a> {
 }
 
 #[cfg(feature = "bytes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     impl_buf_mut!();
 }
 
-#[cfg(feature = "async")] // Tokio dep
+#[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
     #[inline]
     fn from(value: &'b mut ReadBuf<'a>) -> Self {
@@ -206,6 +209,7 @@ macro_rules! impl_write_buf {
     };
 }
 #[cfg(feature = "bytes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 macro_rules! impl_buf {
     () => {
         #[inline]
@@ -242,6 +246,7 @@ impl<'a> WriteBuf<'a> {
 }
 
 #[cfg(feature = "bytes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 impl<'a> bytes::Buf for WriteBuf<'a> {
     impl_buf!();
 }
@@ -270,6 +275,7 @@ macro_rules! define_read_buf {
             impl_read_buf!();
         }
         #[cfg(feature = "bytes")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
         unsafe impl bytes::BufMut for $name {
             impl_buf_mut!();
         }
@@ -323,6 +329,7 @@ macro_rules! define_write_buf {
             impl_write_buf!();
         }
         #[cfg(feature = "bytes")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
         impl bytes::Buf for $name {
             impl_buf!();
         }

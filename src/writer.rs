@@ -3,6 +3,7 @@ use crate::util::bufs::WriteBuf;
 use crate::VariableWritable;
 
 #[cfg(feature = "bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! write_bools {
     ($func: ident, $n: literal) => {
         #[inline]
@@ -18,6 +19,7 @@ macro_rules! write_bools {
     };
 }
 #[cfg(feature = "bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! define_write_bools {
     () => {
         write_bools!(write_bools_2, 2);
@@ -31,6 +33,7 @@ macro_rules! define_write_bools {
 }
 
 #[cfg(feature = "raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
 macro_rules! write_raw {
     ($primitive: ty, $func: ident, $to: ident) => {
         #[inline]
@@ -40,6 +43,7 @@ macro_rules! write_raw {
     };
 }
 #[cfg(feature = "raw_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
 macro_rules! write_raw_size {
     ($primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
         #[inline]
@@ -49,6 +53,7 @@ macro_rules! write_raw_size {
     };
 }
 #[cfg(feature = "raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
 macro_rules! define_write_raw {
     () => {
         write_raw!(u8, write_u8_raw, to_ne_bytes);
@@ -75,17 +80,22 @@ macro_rules! define_write_raw {
         write_raw!(i128, write_i128_raw_be, to_be_bytes);
 
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         write_raw_size!(usize, write_usize_raw_le, u128, write_u128_raw_le);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         write_raw_size!(usize, write_usize_raw_be, u128, write_u128_raw_be);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         write_raw_size!(isize, write_isize_raw_le, i128, write_i128_raw_le);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         write_raw_size!(isize, write_isize_raw_be, i128, write_i128_raw_be);
     };
 }
 
 #[cfg(feature = "varint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! write_varint {
     ($primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
@@ -104,6 +114,7 @@ macro_rules! write_varint {
     };
 }
 #[cfg(feature = "varint_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
 macro_rules! write_varint_size {
     ($func: ident, $write_internal: ident) => {
         #[inline]
@@ -113,81 +124,113 @@ macro_rules! write_varint_size {
     };
 }
 #[cfg(feature = "varint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! define_write_varint {
     () => {
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u8, write_u8_varint, u8, write_u8_raw);
 
         write_varint!(u16, write_u16_varint, u8, write_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u16, write_u16_varint_2_le, u16, write_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u16, write_u16_varint_2_be, u16, write_u16_raw_be);
 
         write_varint!(u32, write_u32_varint, u8, write_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u32, write_u32_varint_2_le, u16, write_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u32, write_u32_varint_2_be, u16, write_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u32, write_u32_varint_4_le, u32, write_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u32, write_u32_varint_4_be, u32, write_u32_raw_be);
 
         write_varint!(u64, write_u64_varint, u8, write_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_2_le, u16, write_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_2_be, u16, write_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_4_le, u32, write_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_4_be, u32, write_u32_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_8_le, u64, write_u64_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u64, write_u64_varint_8_be, u64, write_u64_raw_be);
 
         write_varint!(u128, write_u128_varint, u8, write_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_2_le, u16, write_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_2_be, u16, write_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_4_le, u32, write_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_4_be, u32, write_u32_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_8_le, u64, write_u64_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_8_be, u64, write_u64_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_16_le, u128, write_u128_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         write_varint!(u128, write_u128_varint_16_be, u128, write_u128_raw_be);
 
         #[cfg(feature = "varint_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
         write_varint_size!(write_usize_varint, write_u128_varint);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_2_le, write_u128_varint_2_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_2_be, write_u128_varint_2_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_4_le, write_u128_varint_4_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_4_be, write_u128_varint_4_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_8_le, write_u128_varint_8_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_8_be, write_u128_varint_8_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_16_le, write_u128_varint_16_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         write_varint_size!(write_usize_varint_16_be, write_u128_varint_16_be);
     };
 }
 
 #[cfg(feature = "signed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
 macro_rules! write_signed {
     ($primitive: ty, $func: ident, $write_internal: ident) => {
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
@@ -197,6 +240,7 @@ macro_rules! write_signed {
     };
 }
 #[cfg(all(feature = "signed", feature = "varint_size"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "signed", feature = "varint_size"))))]
 macro_rules! write_signed_size {
     ($func: ident, $write_internal: ident) => {
         #[inline]
@@ -206,76 +250,107 @@ macro_rules! write_signed_size {
     };
 }
 #[cfg(feature = "signed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
 macro_rules! define_write_signed {
     () => {
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i8, write_i8_varint, write_u8_varint);
 
         write_signed!(i16, write_i16_varint, write_u16_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i16, write_i16_varint_2_le, write_u16_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i16, write_i16_varint_2_be, write_u16_varint_2_be);
 
         write_signed!(i32, write_i32_varint, write_u32_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i32, write_i32_varint_2_le, write_u32_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i32, write_i32_varint_2_be, write_u32_varint_2_be);
         #[cfg(feature = "long_signed")]
-        write_signed!(i32, write_i32_varint_4_le, write_u32_varint_4_le);
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
+                write_signed!(i32, write_i32_varint_4_le, write_u32_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i32, write_i32_varint_4_be, write_u32_varint_4_be);
 
         write_signed!(i64, write_i64_varint, write_u64_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_2_le, write_u64_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_2_be, write_u64_varint_2_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_4_le, write_u64_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_4_be, write_u64_varint_4_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_8_le, write_u64_varint_8_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i64, write_i64_varint_8_be, write_u64_varint_8_be);
 
         write_signed!(i128, write_i128_varint, write_u128_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_2_le, write_u128_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_2_be, write_u128_varint_2_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_4_le, write_u128_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_4_be, write_u128_varint_4_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_8_le, write_u128_varint_8_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_8_be, write_u128_varint_8_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_16_le, write_u128_varint_16_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         write_signed!(i128, write_i128_varint_16_be, write_u128_varint_16_be);
 
         #[cfg(feature = "varint_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
         write_signed_size!(write_isize_varint, write_i128_varint);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_2_le, write_i128_varint_2_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_2_be, write_i128_varint_2_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_4_le, write_i128_varint_4_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_4_be, write_i128_varint_4_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_8_le, write_i128_varint_8_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_8_be, write_i128_varint_8_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_16_le, write_i128_varint_16_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         write_signed_size!(write_isize_varint_16_be, write_i128_varint_16_be);
     };
 }
@@ -287,25 +362,31 @@ pub trait VariableWriter: VariableWritable {
     }
 
     #[cfg(feature = "bools")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
     define_write_bools!();
 
     #[cfg(feature = "raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
     define_write_raw!();
 
     #[cfg(feature = "varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
     define_write_varint!();
 
     #[cfg(feature = "signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
     define_write_signed!();
 
     #[cfg(feature = "vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]
     #[inline]
     fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
         self.write_usize_varint(message.len())?;
-        self.write_more(&mut WriteBuf::new(message))
+        self.write_more(message)
     }
 
     #[cfg(feature = "string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "string")))]
     #[inline]
     fn write_string(&mut self, message: &str) -> Result<usize> {
         self.write_u8_vec(message.as_bytes())

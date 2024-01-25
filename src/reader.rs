@@ -3,6 +3,7 @@ use crate::util::bufs::ReadBuf;
 use crate::VariableReadable;
 
 #[cfg(feature = "bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! read_bools {
     ($func: ident, $n: literal) => {
         #[inline]
@@ -21,6 +22,7 @@ macro_rules! read_bools {
     };
 }
 #[cfg(feature = "bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! define_read_bools {
     () => {
         read_bools!(read_bools_2, 2);
@@ -34,6 +36,7 @@ macro_rules! define_read_bools {
 }
 
 #[cfg(feature = "raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
 macro_rules! read_raw {
     ($primitive: ty, $func: ident, $from: ident) => {
         #[inline]
@@ -46,6 +49,7 @@ macro_rules! read_raw {
     };
 }
 #[cfg(feature = "raw_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
 macro_rules! read_raw_size {
     ($primitive: ty, $func: ident, $read_internal: ident) => {
         #[inline]
@@ -55,6 +59,7 @@ macro_rules! read_raw_size {
     };
 }
 #[cfg(feature = "raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
 macro_rules! define_read_raw {
     () => {
         read_raw!(u8, read_u8_raw, from_ne_bytes);
@@ -81,17 +86,22 @@ macro_rules! define_read_raw {
         read_raw!(i128, read_i128_raw_be, from_be_bytes);
 
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         read_raw_size!(usize, read_usize_raw_le, read_u128_raw_le);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         read_raw_size!(usize, read_usize_raw_be, read_u128_raw_be);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         read_raw_size!(isize, read_isize_raw_le, read_i128_raw_le);
         #[cfg(feature = "raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
         read_raw_size!(isize, read_isize_raw_be, read_i128_raw_be);
     }
 }
 
 #[cfg(feature = "varint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! read_varint {
     ($primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
         fn $func(&mut self) -> std::io::Result<$primitive> {
@@ -117,6 +127,7 @@ macro_rules! read_varint {
     };
 }
 #[cfg(feature = "varint_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
 macro_rules! read_varint_size {
     ($func: ident, $read_internal: ident) => {
         #[inline]
@@ -126,81 +137,113 @@ macro_rules! read_varint_size {
     };
 }
 #[cfg(feature = "varint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! define_read_varint {
     () => {
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u8, read_u8_varint, u8, read_u8_raw);
 
         read_varint!(u16, read_u16_varint, u8, read_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u16, read_u16_varint_2_le, u16, read_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u16, read_u16_varint_2_be, u16, read_u16_raw_be);
 
         read_varint!(u32, read_u32_varint, u8, read_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u32, read_u32_varint_2_le, u16, read_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u32, read_u32_varint_2_be, u16, read_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u32, read_u32_varint_4_le, u32, read_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u32, read_u32_varint_4_be, u32, read_u32_raw_be);
 
         read_varint!(u64, read_u64_varint, u8, read_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_2_le, u16, read_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_2_be, u16, read_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_4_le, u32, read_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_4_be, u32, read_u32_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_8_le, u64, read_u64_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u64, read_u64_varint_8_be, u64, read_u64_raw_be);
 
         read_varint!(u128, read_u128_varint, u8, read_u8_raw);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_2_le, u16, read_u16_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_2_be, u16, read_u16_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_4_le, u32, read_u32_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_4_be, u32, read_u32_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_8_le, u64, read_u64_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_8_be, u64, read_u64_raw_be);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_16_le, u128, read_u128_raw_le);
         #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
         read_varint!(u128, read_u128_varint_16_be, u128, read_u128_raw_be);
 
         #[cfg(feature = "varint_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
         read_varint_size!(read_usize_varint, read_u128_varint);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_2_le, read_u128_varint_2_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_2_be, read_u128_varint_2_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_4_le, read_u128_varint_4_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_4_be, read_u128_varint_4_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_8_le, read_u128_varint_8_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_8_be, read_u128_varint_8_be);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_16_le, read_u128_varint_16_le);
         #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
         read_varint_size!(read_usize_varint_16_be, read_u128_varint_16_be);
     };
 }
 
 #[cfg(feature = "signed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
 macro_rules! read_signed {
     ($primitive: ty, $func: ident, $read_internal: ident) => {
         fn $func(&mut self) -> Result<$primitive> {
@@ -210,6 +253,7 @@ macro_rules! read_signed {
     };
 }
 #[cfg(all(feature = "signed", feature = "varint_size"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "signed", feature = "varint_size"))))]
 macro_rules! read_signed_size {
     ($func: ident, $read_internal: ident) => {
         #[inline]
@@ -219,76 +263,107 @@ macro_rules! read_signed_size {
     };
 }
 #[cfg(feature = "signed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
 macro_rules! define_read_signed {
     () => {
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i8, read_i8_varint, read_u8_varint);
 
         read_signed!(i16, read_i16_varint, read_u16_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i16, read_i16_varint_2_le, read_u16_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i16, read_i16_varint_2_be, read_u16_varint_2_be);
 
         read_signed!(i32, read_i32_varint, read_u32_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i32, read_i32_varint_2_le, read_u32_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i32, read_i32_varint_2_be, read_u32_varint_2_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i32, read_i32_varint_4_le, read_u32_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i32, read_i32_varint_4_be, read_u32_varint_4_be);
 
         read_signed!(i64, read_i64_varint, read_u64_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_2_le, read_u64_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_2_be, read_u64_varint_2_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_4_le, read_u64_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_4_be, read_u64_varint_4_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_8_le, read_u64_varint_8_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i64, read_i64_varint_8_be, read_u64_varint_8_be);
 
         read_signed!(i128, read_i128_varint, read_u128_varint);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_2_le, read_u128_varint_2_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_2_be, read_u128_varint_2_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_4_le, read_u128_varint_4_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_4_be, read_u128_varint_4_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_8_le, read_u128_varint_8_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_8_be, read_u128_varint_8_be);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_16_le, read_u128_varint_16_le);
         #[cfg(feature = "long_signed")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
         read_signed!(i128, read_i128_varint_16_be, read_u128_varint_16_be);
 
         #[cfg(feature = "varint_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
         read_signed_size!(read_isize_varint, read_i128_varint);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_2_le, read_i128_varint_2_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_2_be, read_i128_varint_2_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_4_le, read_i128_varint_4_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_4_be, read_i128_varint_4_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_8_le, read_i128_varint_8_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_8_be, read_i128_varint_8_be);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_16_le, read_i128_varint_16_le);
         #[cfg(all(feature = "varint_size", feature = "long_signed"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
         read_signed_size!(read_isize_varint_16_be, read_i128_varint_16_be);
     };
 }
@@ -304,27 +379,33 @@ pub trait VariableReader: VariableReadable {
     }
 
     #[cfg(feature = "bools")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
     define_read_bools!();
 
     #[cfg(feature = "raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
     define_read_raw!();
 
     #[cfg(feature = "varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
     define_read_varint!();
 
     #[cfg(feature = "signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
     define_read_signed!();
 
     #[cfg(feature = "vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]
     #[inline]
     fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
         let length = self.read_usize_varint()?;
         let mut bytes = vec![0; length];
-        self.read_more(&mut ReadBuf::new(&mut bytes))?;
+        self.read_more(&mut bytes)?;
         Ok(bytes)
     }
 
     #[cfg(feature = "string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "string")))]
     #[inline]
     fn read_string(&mut self) -> Result<String> {
         match String::from_utf8(self.read_u8_vec()?) {

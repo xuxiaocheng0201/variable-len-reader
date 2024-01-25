@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "2.0.1"
+version = "2.1.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data. Support AsyncRead/AsyncWrite in tokio."
@@ -9,14 +9,13 @@ license = "MIT"
 repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 documentation = "https://docs.rs/variable-len-reader/"
 categories = ["encoding", "parser-implementations"]
-keywords = ["varint", "zigzag", "io", "async"]
+keywords = ["varint", "zigzag", "io", "async", "futures"]
 exclude = ["test-builds.bat"]
 
 [dependencies]
 pin-project-lite = { version = "~0.2", optional = true }
 tokio = { version = "^1", optional = true, default-features = false }
-bytes = { version = "^1", optional = true } # Support crate::util::bufs::*
-#serde = { version = "^1", optional = true }
+bytes = { version = "^1", optional = true }
 
 [dev-dependencies]
 anyhow = "^1"
@@ -37,7 +36,6 @@ signed = ["varint"]
 long_signed = ["signed", "long_varint"]
 vec_u8 = ["varint_size"]
 string = ["vec_u8"]
-#serde = ["dep:serde"]
 
 async = ["dep:pin-project-lite", "dep:tokio"]
 async_default = ["async_varint", "async_string"]
@@ -51,10 +49,16 @@ async_signed = ["async_varint"]
 async_long_signed = ["async_signed", "async_long_varint"]
 async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
-#async_serde = ["async", "dep:serde"]
 
 [build-dependencies]
 reportme = "~0.2"
 
 [badges]
-maintenance = { status = "actively-developed" }
+maintenance = { status = "passively-maintained" }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[package.metadata.playground]
+features = ["full"]
