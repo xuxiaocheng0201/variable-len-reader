@@ -8,7 +8,7 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 documentation = "https://docs.rs/variable-len-reader/"
-categories = ["encoding", "parser-implementations"]
+categories = ["encoding"]
 keywords = ["varint", "zigzag", "io", "async", "futures"]
 exclude = ["test-builds.bat"]
 
