@@ -35,16 +35,10 @@ pub trait VariableReadable {
 
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
-    fn read_more_buf<B: bytes::BufMut>(&mut self, buf: &mut B) -> Result<()> {
-        while buf.has_remaining_mut() {
-            let chunk = buf.chunk_mut();
-            let len = chunk.len();
-            let mut t = vec![0; len];
-            self.read_more(&mut t)?;
-            chunk.copy_from_slice(&t);
-            // SAFETY: we just filled `slice` with `len` bytes from `t`.
-            unsafe { bytes::BufMut::advance_mut(buf, len); }
-        }
+    fn read_more_buf<B: bytes::BufMut>(&mut self, len: usize, buf: &mut B) -> Result<()> {
+        let mut t = vec![0; len];
+        self.read_more(&mut t)?;
+        buf.put_slice(&t);
         Ok(())
     }
 }

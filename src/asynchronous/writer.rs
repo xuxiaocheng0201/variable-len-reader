@@ -210,7 +210,7 @@ mod tests {
     async fn write_buf() -> Result<()> {
         use bytes::Bytes;
         let mut buf = Vec::with_capacity(2);
-        buf.write_more_buf(&mut Bytes::copy_from_slice(&[1, 2])).await?;
+        buf.write_more_buf(&mut Bytes::from_static(&[1, 2])).await?;
         assert_eq!(&buf, &[1, 2]);
         Ok(())
     }
@@ -219,7 +219,7 @@ mod tests {
     async fn write_buf_slice() -> Result<()> {
         use bytes::{Buf, Bytes};
         let mut buf = Vec::with_capacity(2);
-        buf.write_more_buf(&mut Bytes::copy_from_slice(&[1]).chain(Bytes::copy_from_slice(&[2]))).await?;
+        buf.write_more_buf(&mut Bytes::from_static(&[1]).chain(Bytes::from_static(&[2]))).await?;
         assert_eq!(&buf, &[1, 2]);
         Ok(())
     }

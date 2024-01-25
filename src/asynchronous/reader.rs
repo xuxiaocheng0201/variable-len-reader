@@ -101,17 +101,11 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn read_more_buf<'a, B: bytes::BufMut + Send>(&'a mut self, buf: &'a mut B) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> where Self: Unpin + Send {
+    fn read_more_buf<'a, B: bytes::BufMut + Send>(&'a mut self, len: usize, buf: &'a mut B) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> where Self: Unpin + Send {
         Box::pin(async move {
-            while buf.has_remaining_mut() {
-                let slice = buf.chunk_mut();
-                let len = slice.len();
-                let mut t = vec![0; len];
-                self.read_more(&mut t).await?;
-                slice.copy_from_slice(&t);
-                // SAFETY: we just filled `slice` with `len` bytes from `t`.
-                unsafe { bytes::BufMut::advance_mut(buf, len); }
-            }
+            let mut t = vec![0; len];
+            self.read_more(&mut t).await?;
+            buf.put_slice(&t);
             Ok(())
         })
     }
@@ -238,8 +232,8 @@ mod tests {
     #[cfg(feature = "bytes")]
     async fn read_buf() -> Result<()> {
         use bytes::BytesMut;
-        let mut a = BytesMut::zeroed(2);
-        [1, 2].as_ref().read_more_buf(&mut a).await?;
+        let mut a = BytesMut::with_capacity(2);
+        [1, 2].as_ref().read_more_buf(2, &mut a).await?;
         assert_eq!(&a[0..], &[1, 2]);
         Ok(())
     }
@@ -248,11 +242,9 @@ mod tests {
     #[cfg(feature = "bytes")]
     async fn read_buf_slice() -> Result<()> {
         use bytes::{BufMut, BytesMut};
-        let mut a = BytesMut::zeroed(1).chain_mut(BytesMut::zeroed(1));
-        [1, 2].as_ref().read_more_buf(&mut a).await?;
-        let (a, b) = a.into_inner();
-        assert_eq!(a[0], 1);
-        assert_eq!(b[0], 2);
+        let mut a = BytesMut::with_capacity(1).chain_mut(BytesMut::with_capacity(1));
+        [1, 2].as_ref().read_more_buf(2, &mut a).await?;
+        assert_eq!(&a.into_inner().0[0..], &[1, 2]); // TODO: optimise?
         Ok(())
     }
 }
