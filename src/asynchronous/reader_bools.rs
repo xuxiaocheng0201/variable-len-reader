@@ -32,7 +32,7 @@ macro_rules! read_bools_future {
             type Output = std::io::Result<[bool; $n]>;
 
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-                let me = self.project();
+                let mut me = self.project();
                 R::$poll_func(std::pin::Pin::new(&mut *me.reader), cx, me.inner)
             }
         }
@@ -47,10 +47,10 @@ macro_rules! read_bools_poll {
             let b = match inner.byte {
                 Some(b) => b, None => {
                     let b = ready!(self.poll_read_single(cx))?;
-                    byte.replace(b);
+                    inner.byte.replace(b);
                     b
-                }
-            }
+                },
+            };
             if b > MAX {
                 return std::task::Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid bools at {}.", stringify!($func)))));
             }

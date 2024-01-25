@@ -19,12 +19,12 @@ macro_rules! write_bools_future {
             }
             #[inline]
             fn new(bools: [bool; $n]) -> Self {
-                let b = _handle(bools);
+                let b = $struct_buf::_handle(bools);
                 Self { b: Some(b) }
             }
             #[inline]
-            fn reset(&mut self) {
-                let b = _handle(bools);
+            fn reset(&mut self, bools: [bool; $n]) {
+                let b = $struct_buf::_handle(bools);
                 self.b = Some(b);
             }
         }
@@ -58,13 +58,13 @@ macro_rules! write_bools_poll {
         fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
             let b = match inner.b {
                 Some(b) => b, None => { return std::task::Poll::Ready(Ok(0)); }
-            }
+            };
             self.poll_write_single(cx, b)
         }
     };
 }
 macro_rules! write_bools_func {
-    ($func: ident, $future: ident, $struct_buf: ident) => {
+    ($func: ident, $future: ident, $struct_buf: ident, $n: literal) => {
         #[cfg(feature = "async_bools")]
         #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
         #[inline]
@@ -97,13 +97,13 @@ macro_rules! define_write_bools_poll {
 }
 macro_rules! define_write_bools_func {
     () => {
-        write_bools_func!(write_bools_2, WriteBools2, InternalWriteBools2);
-        write_bools_func!(write_bools_3, WriteBools3, InternalWriteBools3);
-        write_bools_func!(write_bools_4, WriteBools4, InternalWriteBools4);
-        write_bools_func!(write_bools_5, WriteBools5, InternalWriteBools5);
-        write_bools_func!(write_bools_6, WriteBools6, InternalWriteBools6);
-        write_bools_func!(write_bools_7, WriteBools7, InternalWriteBools7);
-        write_bools_func!(write_bools_8, WriteBools8, InternalWriteBools8);
+        write_bools_func!(write_bools_2, WriteBools2, InternalWriteBools2, 2);
+        write_bools_func!(write_bools_3, WriteBools3, InternalWriteBools3, 3);
+        write_bools_func!(write_bools_4, WriteBools4, InternalWriteBools4, 4);
+        write_bools_func!(write_bools_5, WriteBools5, InternalWriteBools5, 5);
+        write_bools_func!(write_bools_6, WriteBools6, InternalWriteBools6, 6);
+        write_bools_func!(write_bools_7, WriteBools7, InternalWriteBools7, 7);
+        write_bools_func!(write_bools_8, WriteBools8, InternalWriteBools8, 8);
     };
 }
 define_write_bools_futures!();
