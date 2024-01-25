@@ -73,6 +73,7 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
         self.poll_write_single(cx, if b { 1 } else { 0 })
     }
 
+    define_write_bools_poll!();
     define_write_raw_poll!();
     define_write_varint_poll!();
     define_write_signed_poll!();
