@@ -101,7 +101,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn read_more_buf<'a, B: bytes::BufMut>(&'a mut self, buf: &'a mut B) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> where Self: Unpin + Send {
+    fn read_more_buf<'a, B: bytes::BufMut + Send>(&'a mut self, buf: &'a mut B) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> where Self: Unpin + Send {
         Box::pin(async move {
             while buf.has_remaining_mut() {
                 let slice = buf.chunk_mut();
@@ -231,6 +231,28 @@ mod tests {
         receiver.read_more(buf.as_mut()).await?;
         assert_eq!(buf, [1, 2]);
         j.await??;
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "bytes")]
+    async fn read_buf() -> Result<()> {
+        use bytes::BytesMut;
+        let mut a = BytesMut::zeroed(2);
+        [1, 2].as_ref().read_more_buf(&mut a).await?;
+        assert_eq!(&a[0..], &[1, 2]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "bytes")]
+    async fn read_buf_slice() -> Result<()> {
+        use bytes::{BufMut, BytesMut};
+        let mut a = BytesMut::zeroed(1).chain_mut(BytesMut::zeroed(1));
+        [1, 2].as_ref().read_more_buf(&mut a).await?;
+        let (a, b) = a.into_inner();
+        assert_eq!(a[0], 1);
+        assert_eq!(b[0], 2);
         Ok(())
     }
 }

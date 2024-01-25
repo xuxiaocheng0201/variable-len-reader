@@ -99,7 +99,7 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn write_more_buf<'a, B: bytes::Buf>(&'a mut self, message: &'a mut B) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+    fn write_more_buf<'a, B: bytes::Buf + Send>(&'a mut self, message: &'a mut B) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
         Box::pin(async move {
             let mut len = 0;
             while message.has_remaining() {
@@ -203,6 +203,24 @@ mod tests {
         });
         sender.write_more(&[1, 2]).await?;
         j.await??;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn write_buf() -> Result<()> {
+        use bytes::Bytes;
+        let mut buf = Vec::with_capacity(2);
+        buf.write_more_buf(&mut Bytes::copy_from_slice(&[1, 2])).await?;
+        assert_eq!(&buf, &[1, 2]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn write_buf_slice() -> Result<()> {
+        use bytes::{Buf, Bytes};
+        let mut buf = Vec::with_capacity(2);
+        buf.write_more_buf(&mut Bytes::copy_from_slice(&[1]).chain(Bytes::copy_from_slice(&[2]))).await?;
+        assert_eq!(&buf, &[1, 2]);
         Ok(())
     }
 }
