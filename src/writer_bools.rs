@@ -1,7 +1,7 @@
-#[cfg(feature = "bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! write_bools {
     ($func: ident, $n: literal) => {
+        #[cfg(feature = "bools")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
         #[inline]
         fn $func(&mut self, bools: [bool; $n]) -> Result<usize> {
             let mut b = 0;
@@ -14,8 +14,6 @@ macro_rules! write_bools {
         }
     };
 }
-#[cfg(feature = "bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
 macro_rules! define_write_bools {
     () => {
         write_bools!(write_bools_2, 2);

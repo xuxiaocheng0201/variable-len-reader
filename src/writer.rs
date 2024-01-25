@@ -12,20 +12,9 @@ pub trait VariableWriter: VariableWritable {
         self.write_single(if b { 1 } else { 0 })
     }
 
-    #[cfg(feature = "bools")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
     define_write_bools!();
-
-    #[cfg(feature = "raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
     define_write_raw!();
-
-    #[cfg(feature = "varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
     define_write_varint!();
-
-    #[cfg(feature = "signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
     define_write_signed!();
 
     #[cfg(feature = "vec_u8")]
@@ -60,4 +49,3 @@ impl<W: Write> VariableWritable for W {
         Ok(buf.len())
     }
 }
-

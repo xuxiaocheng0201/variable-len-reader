@@ -1,6 +1,14 @@
-#[cfg(feature = "varint")]
-#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! read_varint {
+    (varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
+        #[cfg(feature = "varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
+        read_varint!($primitive, $func, $internal, $read_internal);
+    };
+    (long_varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
+        #[cfg(feature = "long_varint")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
+        read_varint!($primitive, $func, $internal, $read_internal);
+    };
     ($primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
         fn $func(&mut self) -> std::io::Result<$primitive> {
             const SIZE: usize = std::mem::size_of::<$primitive>() << 3; // * 8
@@ -24,9 +32,17 @@ macro_rules! read_varint {
         }
     };
 }
-#[cfg(feature = "varint_size")]
-#[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
 macro_rules! read_varint_size {
+    (varint, $func: ident, $read_internal: ident) => {
+        #[cfg(feature = "varint_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
+        read_varint_size!($func, $read_internal);
+    };
+    (long_varint, $func: ident, $read_internal: ident) => {
+        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
+        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
+        read_varint_size!($func, $read_internal);
+    };
     ($func: ident, $read_internal: ident) => {
         #[inline]
         fn $func(&mut self) -> std::io::Result<usize> {
@@ -34,108 +50,46 @@ macro_rules! read_varint_size {
         }
     };
 }
-#[cfg(feature = "varint")]
-#[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
 macro_rules! define_read_varint {
     () => {
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u8, read_u8_varint, u8, read_u8_raw);
+        read_varint!(long_varint, u8, read_u8_varint, u8, read_u8_raw);
 
-        read_varint!(u16, read_u16_varint, u8, read_u8_raw);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u16, read_u16_varint_2_le, u16, read_u16_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u16, read_u16_varint_2_be, u16, read_u16_raw_be);
+        read_varint!(varint, u16, read_u16_varint, u8, read_u8_raw);
+        read_varint!(long_varint, u16, read_u16_varint_2_le, u16, read_u16_raw_le);
+        read_varint!(long_varint, u16, read_u16_varint_2_be, u16, read_u16_raw_be);
 
-        read_varint!(u32, read_u32_varint, u8, read_u8_raw);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u32, read_u32_varint_2_le, u16, read_u16_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u32, read_u32_varint_2_be, u16, read_u16_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u32, read_u32_varint_4_le, u32, read_u32_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u32, read_u32_varint_4_be, u32, read_u32_raw_be);
+        read_varint!(varint, u32, read_u32_varint, u8, read_u8_raw);
+        read_varint!(long_varint, u32, read_u32_varint_2_le, u16, read_u16_raw_le);
+        read_varint!(long_varint, u32, read_u32_varint_2_be, u16, read_u16_raw_be);
+        read_varint!(long_varint, u32, read_u32_varint_4_le, u32, read_u32_raw_le);
+        read_varint!(long_varint, u32, read_u32_varint_4_be, u32, read_u32_raw_be);
 
-        read_varint!(u64, read_u64_varint, u8, read_u8_raw);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_2_le, u16, read_u16_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_2_be, u16, read_u16_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_4_le, u32, read_u32_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_4_be, u32, read_u32_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_8_le, u64, read_u64_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u64, read_u64_varint_8_be, u64, read_u64_raw_be);
+        read_varint!(varint, u64, read_u64_varint, u8, read_u8_raw);
+        read_varint!(long_varint, u64, read_u64_varint_2_le, u16, read_u16_raw_le);
+        read_varint!(long_varint, u64, read_u64_varint_2_be, u16, read_u16_raw_be);
+        read_varint!(long_varint, u64, read_u64_varint_4_le, u32, read_u32_raw_le);
+        read_varint!(long_varint, u64, read_u64_varint_4_be, u32, read_u32_raw_be);
+        read_varint!(long_varint, u64, read_u64_varint_8_le, u64, read_u64_raw_le);
+        read_varint!(long_varint, u64, read_u64_varint_8_be, u64, read_u64_raw_be);
 
-        read_varint!(u128, read_u128_varint, u8, read_u8_raw);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_2_le, u16, read_u16_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_2_be, u16, read_u16_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_4_le, u32, read_u32_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_4_be, u32, read_u32_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_8_le, u64, read_u64_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_8_be, u64, read_u64_raw_be);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_16_le, u128, read_u128_raw_le);
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!(u128, read_u128_varint_16_be, u128, read_u128_raw_be);
+        read_varint!(varint, u128, read_u128_varint, u8, read_u8_raw);
+        read_varint!(long_varint, u128, read_u128_varint_2_le, u16, read_u16_raw_le);
+        read_varint!(long_varint, u128, read_u128_varint_2_be, u16, read_u16_raw_be);
+        read_varint!(long_varint, u128, read_u128_varint_4_le, u32, read_u32_raw_le);
+        read_varint!(long_varint, u128, read_u128_varint_4_be, u32, read_u32_raw_be);
+        read_varint!(long_varint, u128, read_u128_varint_8_le, u64, read_u64_raw_le);
+        read_varint!(long_varint, u128, read_u128_varint_8_be, u64, read_u64_raw_be);
+        read_varint!(long_varint, u128, read_u128_varint_16_le, u128, read_u128_raw_le);
+        read_varint!(long_varint, u128, read_u128_varint_16_be, u128, read_u128_raw_be);
 
-        #[cfg(feature = "varint_size")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
-        read_varint_size!(read_usize_varint, read_u128_varint);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_2_le, read_u128_varint_2_le);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_2_be, read_u128_varint_2_be);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_4_le, read_u128_varint_4_le);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_4_be, read_u128_varint_4_be);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_8_le, read_u128_varint_8_le);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_8_be, read_u128_varint_8_be);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_16_le, read_u128_varint_16_le);
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!(read_usize_varint_16_be, read_u128_varint_16_be);
+        read_varint_size!(varint, read_usize_varint, read_u128_varint);
+        read_varint_size!(long_varint, read_usize_varint_2_le, read_u128_varint_2_le);
+        read_varint_size!(long_varint, read_usize_varint_2_be, read_u128_varint_2_be);
+        read_varint_size!(long_varint, read_usize_varint_4_le, read_u128_varint_4_le);
+        read_varint_size!(long_varint, read_usize_varint_4_be, read_u128_varint_4_be);
+        read_varint_size!(long_varint, read_usize_varint_8_le, read_u128_varint_8_le);
+        read_varint_size!(long_varint, read_usize_varint_8_be, read_u128_varint_8_be);
+        read_varint_size!(long_varint, read_usize_varint_16_le, read_u128_varint_16_le);
+        read_varint_size!(long_varint, read_usize_varint_16_be, read_u128_varint_16_be);
     };
 }

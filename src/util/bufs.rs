@@ -76,7 +76,6 @@ macro_rules! impl_read_buf {
     };
 }
 #[cfg(feature = "bytes")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 macro_rules! impl_buf_mut {
     () => {
         #[inline]
@@ -209,7 +208,6 @@ macro_rules! impl_write_buf {
     };
 }
 #[cfg(feature = "bytes")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 macro_rules! impl_buf {
     () => {
         #[inline]

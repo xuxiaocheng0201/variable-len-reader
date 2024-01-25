@@ -4,18 +4,14 @@
 use std::io::Result;
 
 #[cfg(feature = "async")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 extern crate pin_project_lite;
 #[cfg(feature = "async")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 extern crate tokio;
 
 pub mod util;
 #[cfg(feature = "async")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 mod asynchronous;
 #[cfg(feature = "async")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub use asynchronous::*;
 
 mod reader;

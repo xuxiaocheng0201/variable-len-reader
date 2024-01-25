@@ -16,20 +16,9 @@ pub trait VariableReader: VariableReadable {
         }
     }
 
-    #[cfg(feature = "bools")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
     define_read_bools!();
-
-    #[cfg(feature = "raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
     define_read_raw!();
-
-    #[cfg(feature = "varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
     define_read_varint!();
-
-    #[cfg(feature = "signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
     define_read_signed!();
 
     #[cfg(feature = "vec_u8")]
