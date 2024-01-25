@@ -217,7 +217,7 @@ macro_rules! impl_buf {
 
         #[inline]
         fn chunk(&self) -> &[u8] {
-            self.buf
+            self.buf()
         }
 
         #[inline]
