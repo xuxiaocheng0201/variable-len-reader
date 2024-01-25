@@ -25,6 +25,5 @@ cargo build --no-default-features --features "async_long_signed"
 cargo build --no-default-features --features "async_vec_u8"
 cargo build --no-default-features --features "async_string"
 
-cargo test --no-default-features --features "full" --lib
-cargo test --no-default-features --features "bytes" --lib
+cargo test --no-default-features --features "full,bytes" --lib
 cargo test --features "async_default" --doc
