@@ -1,15 +1,13 @@
 macro_rules! read_signed {
     (varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        #[cfg(feature = "signed")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
-        read_signed!($primitive, $func, $read_internal);
+        read_signed!(cfg(feature = "signed"), $primitive, $func, $read_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        #[cfg(feature = "long_signed")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
-        read_signed!($primitive, $func, $read_internal);
+        read_signed!(cfg(feature = "long_signed"), $primitive, $func, $read_internal);
     };
-    ($primitive: ty, $func: ident, $read_internal: ident) => {
+    ($feature: meta, $primitive: ty, $func: ident, $read_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self) -> Result<$primitive> {
             use $crate::util::zigzag::Zigzag;
@@ -19,16 +17,14 @@ macro_rules! read_signed {
 }
 macro_rules! read_signed_size {
     (varint, $func: ident, $read_internal: ident) => {
-        #[cfg(all(feature = "signed", feature = "varint_size"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "signed", feature = "varint_size"))))]
-        read_signed_size!($func, $read_internal);
+        read_signed_size!(cfg(all(feature = "varint_size", feature = "signed")), $func, $read_internal);
     };
     (long_varint, $func: ident, $read_internal: ident) => {
-        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
-        read_signed_size!($func, $read_internal);
+        read_signed_size!(cfg(all(feature = "varint_size", feature = "long_signed")), $func, $read_internal);
     };
-    ($func: ident, $read_internal: ident) => {
+    ($feature: meta, $func: ident, $read_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self) -> std::io::Result<isize> {
             self.$read_internal().map(|v| v as isize)

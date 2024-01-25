@@ -1,8 +1,8 @@
-#[cfg(feature = "async_bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! write_bools_future {
     ($future: ident) => {
+        #[cfg(feature = "async_bools")]
         $crate::pin_project_lite::pin_project! {
+            #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
             #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]
@@ -12,6 +12,7 @@ macro_rules! write_bools_future {
                 b: u8,
             }
         }
+        #[cfg(feature = "async_bools")]
         impl<'a, W: $crate::AsyncVariableWritable + Unpin+ ?Sized> std::future::Future for $future<'a, W> {
             type Output = std::io::Result<usize>;
 
@@ -22,10 +23,10 @@ macro_rules! write_bools_future {
         }
     };
 }
-#[cfg(feature = "async_bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! write_bools_func {
     ($func: ident, $future: ident, $n: literal) => {
+        #[cfg(feature = "async_bools")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
         #[inline]
         fn $func(&mut self, bools: [bool; $n]) -> $future<Self> where Self: Unpin {
             let mut b = 0;
@@ -38,8 +39,6 @@ macro_rules! write_bools_func {
         }
     };
 }
-#[cfg(feature = "async_bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_write_bools_futures {
     () => {
         write_bools_future!(WriteBools2);
@@ -51,8 +50,6 @@ macro_rules! define_write_bools_futures {
         write_bools_future!(WriteBools8);
     };
 }
-#[cfg(feature = "async_bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_write_bools_func {
     () => {
         write_bools_func!(write_bools_2, WriteBools2, 2);
@@ -64,6 +61,4 @@ macro_rules! define_write_bools_func {
         write_bools_func!(write_bools_8, WriteBools8, 8);
     };
 }
-#[cfg(feature = "async_bools")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 define_write_bools_futures!();

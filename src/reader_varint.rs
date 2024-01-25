@@ -1,15 +1,13 @@
 macro_rules! read_varint {
     (varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
-        #[cfg(feature = "varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
-        read_varint!($primitive, $func, $internal, $read_internal);
+        read_varint!(cfg(feature = "varint"), $primitive, $func, $internal, $read_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        read_varint!($primitive, $func, $internal, $read_internal);
+        read_varint!(cfg(feature = "long_varint"), $primitive, $func, $internal, $read_internal);
     };
-    ($primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
+    ($feature: meta, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         fn $func(&mut self) -> std::io::Result<$primitive> {
             const SIZE: usize = std::mem::size_of::<$primitive>() << 3; // * 8
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
@@ -34,16 +32,14 @@ macro_rules! read_varint {
 }
 macro_rules! read_varint_size {
     (varint, $func: ident, $read_internal: ident) => {
-        #[cfg(feature = "varint_size")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
-        read_varint_size!($func, $read_internal);
+        read_varint_size!(cfg(feature = "varint_size"), $func, $read_internal);
     };
     (long_varint, $func: ident, $read_internal: ident) => {
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        read_varint_size!($func, $read_internal);
+        read_varint_size!(cfg(all(feature = "varint_size", feature = "long_varint")), $func, $read_internal);
     };
-    ($func: ident, $read_internal: ident) => {
+    ($feature: meta, $func: ident, $read_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self) -> std::io::Result<usize> {
             self.$read_internal().map(|v| v as usize)

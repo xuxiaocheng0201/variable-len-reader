@@ -1,15 +1,13 @@
 macro_rules! write_varint {
     (varint, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
-        #[cfg(feature = "varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "varint")))]
-        write_varint!($primitive, $func, $internal, $write_internal);
+        write_varint!(cfg(feature = "varint"), $primitive, $func, $internal, $write_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
-        #[cfg(feature = "long_varint")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_varint")))]
-        write_varint!($primitive, $func, $internal, $write_internal);
+        write_varint!(cfg(feature = "long_varint"), $primitive, $func, $internal, $write_internal);
     };
-    ($primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
+    ($feature: meta, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
@@ -27,16 +25,14 @@ macro_rules! write_varint {
 }
 macro_rules! write_varint_size {
     (varint, $func: ident, $write_internal: ident) => {
-        #[cfg(feature = "varint_size")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "varint_size")))]
-        write_varint_size!($func, $write_internal);
+        write_varint_size!(cfg(feature = "varint_size"), $func, $write_internal);
     };
     (long_varint, $func: ident, $write_internal: ident) => {
-        #[cfg(all(feature = "varint_size", feature = "long_varint"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_varint"))))]
-        write_varint_size!($func, $write_internal);
+        write_varint_size!(cfg(all(feature = "varint_size", feature = "long_varint")), $func, $write_internal);
     };
-    ($func: ident, $write_internal: ident) => {
+    ($feature: meta, $func: ident, $write_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self, num: usize) -> std::io::Result<usize> {
             self.$write_internal(num as u128)

@@ -73,16 +73,8 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
         self.poll_write_single(cx, if b { 1 } else { 0 })
     }
 
-    #[cfg(feature = "async_raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_write_raw_poll!();
-
-    #[cfg(feature = "async_varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_write_varint_poll!();
-
-    #[cfg(feature = "async_signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_write_signed_poll!();
 }
 
@@ -122,20 +114,9 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
         WriteBool { writer: self, b }
     }
 
-    #[cfg(feature = "async_bools")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
     define_write_bools_func!();
-
-    #[cfg(feature = "async_raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_write_raw_func!();
-
-    #[cfg(feature = "async_varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_write_varint_func!();
-
-    #[cfg(feature = "async_signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_write_signed_func!();
 
     #[cfg(feature = "async_vec_u8")]

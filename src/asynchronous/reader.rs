@@ -75,16 +75,9 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
         })
     }
 
-    #[cfg(feature = "async_raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
+    define_read_bools_poll!();
     define_read_raw_poll!();
-
-    #[cfg(feature = "async_varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_read_varint_poll!();
-
-    #[cfg(feature = "async_signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_read_signed_poll!();
 }
 
@@ -127,20 +120,9 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadBool { reader: self }
     }
 
-    #[cfg(feature = "async_bools")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
     define_read_bools_func!();
-
-    #[cfg(feature = "async_raw")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_read_raw_func!();
-
-    #[cfg(feature = "async_varint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_read_varint_func!();
-
-    #[cfg(feature = "async_signed")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_read_signed_func!();
 
     #[cfg(feature = "async_vec_u8")]

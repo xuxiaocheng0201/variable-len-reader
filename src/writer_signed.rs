@@ -1,15 +1,13 @@
 macro_rules! write_signed {
     (varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        #[cfg(feature = "signed")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "signed")))]
-        write_signed!($primitive, $func, $write_internal);
+        write_signed!(cfg(feature = "signed"), $primitive, $func, $write_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        #[cfg(feature = "long_signed")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "long_signed")))]
-        write_signed!($primitive, $func, $write_internal);
+        write_signed!(cfg(feature = "long_signed"), $primitive, $func, $write_internal);
     };
-    ($primitive: ty, $func: ident, $write_internal: ident) => {
+    ($feature: meta, $primitive: ty, $func: ident, $write_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
             use $crate::util::zigzag::Zigzag;
@@ -19,16 +17,14 @@ macro_rules! write_signed {
 }
 macro_rules! write_signed_size {
     (varint, $func: ident, $write_internal: ident) => {
-        #[cfg(all(feature = "signed", feature = "varint_size"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "signed", feature = "varint_size"))))]
-        write_signed_size!($func, $write_internal);
+        write_signed_size!(cfg(all(feature = "varint_size", feature = "signed")), $func, $write_internal);
     };
     (long_varint, $func: ident, $write_internal: ident) => {
-        #[cfg(all(feature = "varint_size", feature = "long_signed"))]
-        #[cfg_attr(docsrs, doc(cfg(all(feature = "varint_size", feature = "long_signed"))))]
-        write_signed_size!($func, $write_internal);
+        write_signed_size!(cfg(all(feature = "varint_size", feature = "long_signed")), $func, $write_internal);
     };
-    ($func: ident, $write_internal: ident) => {
+    ($feature: meta, $func: ident, $write_internal: ident) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self, num: isize) -> std::io::Result<usize> {
             self.$write_internal(num as i128)
