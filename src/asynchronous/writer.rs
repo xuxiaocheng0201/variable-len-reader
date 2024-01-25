@@ -74,12 +74,15 @@ trait InternalAsyncVariableWriter: AsyncVariableWriter {
     }
 
     #[cfg(feature = "async_raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_write_raw_poll!();
 
     #[cfg(feature = "async_varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_write_varint_poll!();
 
     #[cfg(feature = "async_signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_write_signed_poll!();
 }
 
@@ -98,24 +101,45 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
         WriteMore { writer: self, buf: WriteBuf::new(buf) }
     }
 
+    #[cfg(feature = "bytes")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn write_more_buf<'a, B: bytes::Buf>(&'a mut self, message: &'a mut B) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+        Box::pin(async move {
+            let mut len = 0;
+            while message.has_remaining() {
+                let written = self.write_more(message.chunk()).await?;
+                message.advance(written);
+                len += written;
+            }
+            Ok(len)
+        })
+    }
+
     #[inline]
     fn write_bool(&mut self, b: bool) -> WriteBool<Self> where Self: Unpin {
         WriteBool { writer: self, b }
     }
 
     #[cfg(feature = "async_bools")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
     define_write_bools_func!();
 
     #[cfg(feature = "async_raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_write_raw_func!();
 
     #[cfg(feature = "async_varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_write_varint_func!();
 
     #[cfg(feature = "async_signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_write_signed_func!();
 
     #[cfg(feature = "async_vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn write_u8_vec<'a>(&'a mut self, message: &'a [u8]) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
@@ -127,6 +151,7 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     }
 
     #[cfg(feature = "async_string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn write_string<'a>(&'a mut self, message: &'a str) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {

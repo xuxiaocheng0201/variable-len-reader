@@ -1,4 +1,5 @@
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! read_raw_future {
     ($primitive: ty, $future: ident, $poll_func: ident, $buf: ident, $struct_buf: ident) => {
         #[derive(Debug)]
@@ -34,6 +35,7 @@ macro_rules! read_raw_future {
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! read_raw_poll {
     ($primitive: ty, $poll_func: ident, $from: ident, $struct_buf: ident) => {
         read_raw_poll!($primitive, $primitive, $poll_func, $from, $struct_buf);
@@ -51,6 +53,7 @@ macro_rules! read_raw_poll {
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! read_raw_func {
     ($func: ident, $future: ident, $struct_buf: ident) => {
         #[inline]
@@ -60,24 +63,28 @@ macro_rules! read_raw_func {
     };
 }
 #[cfg(feature = "async_raw_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
 macro_rules! read_raw_size_future {
     ($primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident) => {
         read_raw_future!($primitive, $future, $poll_func, OwnedReadBuf128, $struct_buf);
     };
 }
 #[cfg(feature = "async_raw_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
 macro_rules! read_raw_size_poll {
     ($primitive: ty, $poll_func: ident, $internal: ident, $from: ident, $struct_buf: ident) => {
         read_raw_poll!($internal, $primitive, $poll_func, $from, $struct_buf);
     };
 }
 #[cfg(feature = "async_raw_size")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
 macro_rules! read_raw_size_func {
     ($func: ident, $future: ident, $struct_buf: ident) => {
         read_raw_func!($func, $future, $struct_buf);
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! define_read_raw_futures {
     () => {
         read_raw_future!(u8, ReadU8Raw, poll_read_u8_raw, OwnedReadBuf8, InternalReadU8Raw);
@@ -104,16 +111,21 @@ macro_rules! define_read_raw_futures {
         read_raw_future!(i128, ReadI128RawBe, poll_read_i128_raw_be, OwnedReadBuf128, InternalReadI128RawBe);
 
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_future!(usize, ReadUsizeRawLe, poll_read_usize_raw_le, InternalReadUsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_future!(usize, ReadUsizeRawBe, poll_read_usize_raw_be, InternalReadUsizeRawBe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_future!(isize, ReadIsizeRawLe, poll_read_isize_raw_le, InternalReadIsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_future!(isize, ReadIsizeRawBe, poll_read_isize_raw_be, InternalReadIsizeRawBe);
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! define_read_raw_poll {
     () => {
         read_raw_poll!(u8, poll_read_u8_raw, from_ne_bytes, InternalReadU8Raw);
@@ -140,16 +152,21 @@ macro_rules! define_read_raw_poll {
         read_raw_poll!(i128, poll_read_i128_raw_be, from_be_bytes, InternalReadI128RawBe);
 
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_poll!(usize, poll_read_usize_raw_le, u128, from_le_bytes, InternalReadUsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_poll!(usize, poll_read_usize_raw_be, u128, from_be_bytes, InternalReadUsizeRawBe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_poll!(isize, poll_read_isize_raw_le, i128, from_le_bytes, InternalReadIsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_poll!(isize, poll_read_isize_raw_be, i128, from_be_bytes, InternalReadIsizeRawBe);
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 macro_rules! define_read_raw_func {
     () => {
         read_raw_func!(read_u8_raw, ReadU8Raw, InternalReadU8Raw);
@@ -176,14 +193,19 @@ macro_rules! define_read_raw_func {
         read_raw_func!(read_i128_raw_be, ReadI128RawBe, InternalReadI128RawBe);
 
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_func!(read_usize_raw_le, ReadUsizeRawLe, InternalReadUsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_func!(read_usize_raw_be, ReadUsizeRawBe, InternalReadUsizeRawBe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_func!(read_isize_raw_le, ReadIsizeRawLe, InternalReadIsizeRawLe);
         #[cfg(feature = "async_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "async_raw_size")))]
         read_raw_size_func!(read_isize_raw_be, ReadIsizeRawBe, InternalReadIsizeRawBe);
     };
 }
 #[cfg(feature = "async_raw")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
 define_read_raw_futures!();

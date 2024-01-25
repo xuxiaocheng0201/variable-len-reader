@@ -427,15 +427,7 @@ impl<R: Read> VariableReadable for R {
     }
 
     #[inline]
-    fn read_more(&mut self, buf: &mut ReadBuf<'_>) -> Result<()> {
-        while buf.left() > 0 {
-            let filled = buf.filled();
-            let n = R::read(self, &mut buf.buf_mut()[filled..])?;
-            buf.advance(n);
-            if n == 0 {
-                return Err(Error::new(ErrorKind::UnexpectedEof, "unexpected end of file"))
-            }
-        }
-        Ok(())
+    fn read_more(&mut self, buf: &mut [u8]) -> Result<()> {
+        R::read_exact(self, buf)
     }
 }

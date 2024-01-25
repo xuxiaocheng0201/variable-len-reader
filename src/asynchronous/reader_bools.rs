@@ -1,4 +1,5 @@
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! read_bools_future {
     ($future: ident, $n: literal) => {
         $crate::pin_project_lite::pin_project! {
@@ -30,6 +31,7 @@ macro_rules! read_bools_future {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! read_bools_func {
     ($func: ident, $future: ident) => {
         #[inline]
@@ -39,6 +41,7 @@ macro_rules! read_bools_func {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_read_bools_futures {
     () => {
         read_bools_future!(ReadBools2, 2);
@@ -51,6 +54,7 @@ macro_rules! define_read_bools_futures {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_read_bools_func {
     () => {
         read_bools_func!(read_bools_2, ReadBools2);
@@ -63,4 +67,5 @@ macro_rules! define_read_bools_func {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 define_read_bools_futures!();

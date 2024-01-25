@@ -46,7 +46,7 @@ pub trait VariableReadable {
             let mut t = vec![0; len];
             self.read_more(&mut t)?;
             chunk.copy_from_slice(&t);
-            // SAFETY: already copied from slice.
+            // SAFETY: we just filled `slice` with `len` bytes from `t`.
             unsafe { bytes::BufMut::advance_mut(buf, len); }
         }
         Ok(())

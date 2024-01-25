@@ -404,16 +404,9 @@ impl<W: Write> VariableWritable for W {
     }
 
     #[inline]
-    fn write_more(&mut self, buf: &mut WriteBuf<'_>) -> Result<usize> {
-        while buf.left() > 0 {
-            let read = buf.read();
-            let n = W::write(self, &buf.buf()[read..])?;
-            buf.skip(n);
-            if n == 0 {
-                return Err(Error::new(ErrorKind::WriteZero, "failed to write whole buffer"));
-            }
-        }
-        Ok(buf.buf().len())
+    fn write_more(&mut self, buf: &[u8]) -> Result<usize> {
+        W::write_all(self, buf)?;
+        Ok(buf.len())
     }
 }
 

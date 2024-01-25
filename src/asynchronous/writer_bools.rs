@@ -1,4 +1,5 @@
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! write_bools_future {
     ($future: ident) => {
         $crate::pin_project_lite::pin_project! {
@@ -22,6 +23,7 @@ macro_rules! write_bools_future {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! write_bools_func {
     ($func: ident, $future: ident, $n: literal) => {
         #[inline]
@@ -37,6 +39,7 @@ macro_rules! write_bools_func {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_write_bools_futures {
     () => {
         write_bools_future!(WriteBools2);
@@ -49,6 +52,7 @@ macro_rules! define_write_bools_futures {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 macro_rules! define_write_bools_func {
     () => {
         write_bools_func!(write_bools_2, WriteBools2, 2);
@@ -61,4 +65,5 @@ macro_rules! define_write_bools_func {
     };
 }
 #[cfg(feature = "async_bools")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
 define_write_bools_futures!();

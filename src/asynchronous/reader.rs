@@ -76,12 +76,15 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
     }
 
     #[cfg(feature = "async_raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_read_raw_poll!();
 
     #[cfg(feature = "async_varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_read_varint_poll!();
 
     #[cfg(feature = "async_signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_read_signed_poll!();
 }
 
@@ -100,24 +103,48 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadMore { reader: self, buf: ReadBuf::new(buf) }
     }
 
+    #[cfg(feature = "bytes")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    #[inline]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    fn read_more_buf<'a, B: bytes::BufMut>(&'a mut self, buf: &'a mut B) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> where Self: Unpin + Send {
+        Box::pin(async move {
+            while buf.has_remaining_mut() {
+                let slice = buf.chunk_mut();
+                let len = slice.len();
+                let mut t = vec![0; len];
+                self.read_more(&mut t).await?;
+                slice.copy_from_slice(&t);
+                // SAFETY: we just filled `slice` with `len` bytes from `t`.
+                unsafe { bytes::BufMut::advance_mut(buf, len); }
+            }
+            Ok(())
+        })
+    }
+
     #[inline]
     fn read_bool(&mut self) -> ReadBool<Self> where Self: Unpin {
         ReadBool { reader: self }
     }
 
     #[cfg(feature = "async_bools")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
     define_read_bools_func!();
 
     #[cfg(feature = "async_raw")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_raw")))]
     define_read_raw_func!();
 
     #[cfg(feature = "async_varint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_varint")))]
     define_read_varint_func!();
 
     #[cfg(feature = "async_signed")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_signed")))]
     define_read_signed_func!();
 
     #[cfg(feature = "async_vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn read_u8_vec(&mut self) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>> where Self: Unpin + Send {
@@ -130,6 +157,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     }
 
     #[cfg(feature = "async_string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn read_string(&mut self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>> where Self: Unpin + Send {
