@@ -110,6 +110,11 @@ macro_rules! define_write_raw_futures {
         write_raw_future!(raw_size, WriteUsizeRawBe, u128, poll_write_usize_raw_be, to_be_bytes, InternalWriteUsizeRawBe);
         write_raw_future!(raw_size, WriteIsizeRawLe, i128, poll_write_isize_raw_le, to_le_bytes, InternalWriteIsizeRawLe);
         write_raw_future!(raw_size, WriteIsizeRawBe, i128, poll_write_isize_raw_be, to_be_bytes, InternalWriteIsizeRawBe);
+
+        write_raw_future!(raw, f32, WriteF32RawLe, poll_write_f32_raw_le, OwnedWriteBuf32, to_le_bytes, InternalWriteF32RawLe);
+        write_raw_future!(raw, f32, WriteF32RawBe, poll_write_f32_raw_be, OwnedWriteBuf32, to_be_bytes, InternalWriteF32RawBe);
+        write_raw_future!(raw, f64, WriteF64RawLe, poll_write_f64_raw_le, OwnedWriteBuf64, to_le_bytes, InternalWriteF64RawLe);
+        write_raw_future!(raw, f64, WriteF64RawBe, poll_write_f64_raw_be, OwnedWriteBuf64, to_be_bytes, InternalWriteF64RawBe);
     };
 }
 macro_rules! define_write_raw_poll {
@@ -141,6 +146,11 @@ macro_rules! define_write_raw_poll {
         write_raw_poll!(raw_size, poll_write_usize_raw_be, InternalWriteUsizeRawBe);
         write_raw_poll!(raw_size, poll_write_isize_raw_le, InternalWriteIsizeRawLe);
         write_raw_poll!(raw_size, poll_write_isize_raw_be, InternalWriteIsizeRawBe);
+
+        write_raw_poll!(raw, poll_write_f32_raw_le, InternalWriteF32RawLe);
+        write_raw_poll!(raw, poll_write_f32_raw_be, InternalWriteF32RawBe);
+        write_raw_poll!(raw, poll_write_f64_raw_le, InternalWriteF64RawLe);
+        write_raw_poll!(raw, poll_write_f64_raw_be, InternalWriteF64RawBe);
     };
 }
 macro_rules! define_write_raw_func {
@@ -172,6 +182,11 @@ macro_rules! define_write_raw_func {
         write_raw_func!(raw_size, usize, write_usize_raw_be, WriteUsizeRawBe, u128, InternalWriteUsizeRawBe);
         write_raw_func!(raw_size, isize, write_isize_raw_le, WriteIsizeRawLe, i128, InternalWriteIsizeRawLe);
         write_raw_func!(raw_size, isize, write_isize_raw_be, WriteIsizeRawBe, i128, InternalWriteIsizeRawBe);
+
+        write_raw_func!(raw, f32, write_f32_raw_le, WriteF32RawLe, InternalWriteF32RawLe);
+        write_raw_func!(raw, f32, write_f32_raw_be, WriteF32RawBe, InternalWriteF32RawBe);
+        write_raw_func!(raw, f64, write_f64_raw_le, WriteF64RawLe, InternalWriteF64RawLe);
+        write_raw_func!(raw, f64, write_f64_raw_be, WriteF64RawBe, InternalWriteF64RawBe);
     };
 }
 define_write_raw_futures!();

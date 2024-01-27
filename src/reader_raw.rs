@@ -50,5 +50,10 @@ macro_rules! define_read_raw {
         read_raw_size!(usize, read_usize_raw_be, read_u128_raw_be);
         read_raw_size!(isize, read_isize_raw_le, read_i128_raw_le);
         read_raw_size!(isize, read_isize_raw_be, read_i128_raw_be);
+
+        read_raw!(f32, read_f32_raw_le, from_le_bytes);
+        read_raw!(f32, read_f32_raw_be, from_be_bytes);
+        read_raw!(f64, read_f64_raw_le, from_le_bytes);
+        read_raw!(f64, read_f64_raw_be, from_be_bytes);
     }
 }

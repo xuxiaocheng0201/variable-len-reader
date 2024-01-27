@@ -110,6 +110,11 @@ macro_rules! define_read_raw_futures {
         read_raw_future!(raw_size, usize, ReadUsizeRawBe, poll_read_usize_raw_be, InternalReadUsizeRawBe);
         read_raw_future!(raw_size, isize, ReadIsizeRawLe, poll_read_isize_raw_le, InternalReadIsizeRawLe);
         read_raw_future!(raw_size, isize, ReadIsizeRawBe, poll_read_isize_raw_be, InternalReadIsizeRawBe);
+
+        read_raw_future!(raw, f32, ReadF32RawLe, poll_read_f32_raw_le, OwnedReadBuf32, InternalReadF32RawLe);
+        read_raw_future!(raw, f32, ReadF32RawBe, poll_read_f32_raw_be, OwnedReadBuf32, InternalReadF32RawBe);
+        read_raw_future!(raw, f64, ReadF64RawLe, poll_read_f64_raw_le, OwnedReadBuf64, InternalReadF64RawLe);
+        read_raw_future!(raw, f64, ReadF64RawBe, poll_read_f64_raw_be, OwnedReadBuf64, InternalReadF64RawBe);
     };
 }
 macro_rules! define_read_raw_poll {
@@ -141,6 +146,11 @@ macro_rules! define_read_raw_poll {
         read_raw_poll!(raw_size, usize, poll_read_usize_raw_be, u128, from_be_bytes, InternalReadUsizeRawBe);
         read_raw_poll!(raw_size, isize, poll_read_isize_raw_le, i128, from_le_bytes, InternalReadIsizeRawLe);
         read_raw_poll!(raw_size, isize, poll_read_isize_raw_be, i128, from_be_bytes, InternalReadIsizeRawBe);
+
+        read_raw_poll!(raw, f32, poll_read_f32_raw_le, from_le_bytes, InternalReadF32RawLe);
+        read_raw_poll!(raw, f32, poll_read_f32_raw_be, from_be_bytes, InternalReadF32RawBe);
+        read_raw_poll!(raw, f64, poll_read_f64_raw_le, from_le_bytes, InternalReadF64RawLe);
+        read_raw_poll!(raw, f64, poll_read_f64_raw_be, from_be_bytes, InternalReadF64RawBe);
     };
 }
 macro_rules! define_read_raw_func {
@@ -172,6 +182,11 @@ macro_rules! define_read_raw_func {
         read_raw_func!(raw_size, read_usize_raw_be, ReadUsizeRawBe, InternalReadUsizeRawBe);
         read_raw_func!(raw_size, read_isize_raw_le, ReadIsizeRawLe, InternalReadIsizeRawLe);
         read_raw_func!(raw_size, read_isize_raw_be, ReadIsizeRawBe, InternalReadIsizeRawBe);
+
+        read_raw_func!(raw, read_f32_raw_le, ReadF32RawLe, InternalReadF32RawLe);
+        read_raw_func!(raw, read_f32_raw_be, ReadF32RawBe, InternalReadF32RawBe);
+        read_raw_func!(raw, read_f64_raw_le, ReadF64RawLe, InternalReadF64RawLe);
+        read_raw_func!(raw, read_f64_raw_be, ReadF64RawBe, InternalReadF64RawBe);
     };
 }
 define_read_raw_futures!();

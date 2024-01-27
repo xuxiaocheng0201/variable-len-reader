@@ -207,6 +207,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "bytes")]
     async fn write_buf() -> Result<()> {
         use bytes::Bytes;
         let mut buf = Vec::with_capacity(2);
@@ -216,6 +217,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "bytes")]
     async fn write_buf_slice() -> Result<()> {
         use bytes::{Buf, Bytes};
         let mut buf = Vec::with_capacity(2);

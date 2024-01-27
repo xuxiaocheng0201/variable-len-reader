@@ -47,5 +47,10 @@ macro_rules! define_write_raw {
         write_raw_size!(usize, write_usize_raw_be, u128, write_u128_raw_be);
         write_raw_size!(isize, write_isize_raw_le, i128, write_i128_raw_le);
         write_raw_size!(isize, write_isize_raw_be, i128, write_i128_raw_be);
+
+        write_raw!(f32, write_f32_raw_le, to_le_bytes);
+        write_raw!(f32, write_f32_raw_be, to_be_bytes);
+        write_raw!(f64, write_f64_raw_le, to_le_bytes);
+        write_raw!(f64, write_f64_raw_be, to_be_bytes);
     };
 }
