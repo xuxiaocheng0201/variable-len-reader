@@ -19,7 +19,7 @@
 
 ```toml
 [dependencies]
-variable-len-reader = "^2.2"
+variable-len-reader = "^2.3"
 ```
 
 
