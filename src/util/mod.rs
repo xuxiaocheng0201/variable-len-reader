@@ -1,4 +1,4 @@
 pub mod bufs;
-#[cfg(any(feature = "signed", feature = "async_signed"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "signed", feature = "async_signed"))))]
+#[cfg(feature = "zigzag")]
+#[cfg_attr(docsrs, doc(cfg(feature = "zigzag")))]
 pub mod zigzag;
