@@ -61,7 +61,7 @@ macro_rules! read_raw_poll {
             let filled = ref_buf.filled();
             inner.buf.set_filled(filled);
             ready!(res)?;
-            Poll::Ready(Ok(<$primitive>::$from(inner.buf.into_inner()) as $target))
+            std::task::Poll::Ready(Ok(<$primitive>::$from(inner.buf.into_inner()) as $target))
         }
     };
 }

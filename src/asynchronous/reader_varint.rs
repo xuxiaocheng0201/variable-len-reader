@@ -68,11 +68,11 @@ macro_rules! read_varint_poll {
                 let current = ready!(self.as_mut().$poll_internal(cx, &mut inner.internal))?;
                 inner.value |= ((current & NUM_BITS) as $primitive) << inner.position;
                 if current & SIGN_BIT == 0 {
-                    return Poll::Ready(Ok(inner.value as $target));
+                    return std::task::Poll::Ready(Ok(inner.value as $target));
                 }
                 inner.position += POS_OFFSET;
                 if inner.position >= SIZE {
-                    return Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Varint {} in stream is too long.", stringify!($func)))));
+                    return std::task::Poll::Ready(Err(Error::new(ErrorKind::InvalidData, format!("Varint {} in stream is too long.", stringify!($func)))));
                 }
                 inner.internal.reset();
             }

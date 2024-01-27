@@ -5,6 +5,7 @@ include!("reader_bools.rs");
 include!("reader_raw.rs");
 include!("reader_varint.rs");
 include!("reader_signed.rs");
+include!("reader_float.rs");
 
 pub trait VariableReader: VariableReadable {
     #[inline]
@@ -20,6 +21,7 @@ pub trait VariableReader: VariableReadable {
     define_read_raw!();
     define_read_varint!();
     define_read_signed!();
+    define_read_float!();
 
     #[cfg(feature = "vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]

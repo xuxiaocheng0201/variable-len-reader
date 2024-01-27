@@ -58,7 +58,7 @@ macro_rules! read_signed_poll {
         fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<$primitive>> {
             use $crate::util::zigzag::Zigzag;
             let varint = ready!(self.$poll_internal(cx, &mut inner.internal))?;
-            Poll::Ready(Ok(varint.zigzag() as $primitive))
+            std::task::Poll::Ready(Ok(varint.zigzag() as $primitive))
         }
     };
 }

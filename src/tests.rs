@@ -61,6 +61,23 @@ macro_rules! test_func {
     };
 }
 
+#[cfg(any(feature = "raw", feature = "float"))]
+macro_rules! test_nan {
+    ($tester: ident, $reader: ident, $writer: ident, $nan: expr) => {
+        #[test]
+        fn $tester() {
+            let mut cursor = std::io::Cursor::new(Vec::new());
+            let n = $nan;
+            assert!(n.is_nan());
+            cursor.set_position(0);
+            cursor.$writer(n).expect(&format!("Failed to write at {}.", stringify!($tester)));
+            cursor.set_position(0);
+            let q = cursor.$reader().expect(&format!("Failed to read at {}.", stringify!($tester)));
+            assert!(q.is_nan())
+        }
+    };
+}
+
 #[cfg(feature = "raw")]
 mod raw {
     use crate::{VariableReader, VariableWriter};
@@ -102,22 +119,6 @@ mod raw {
     test_func!(f32_raw_be, read_f32_raw_be, write_f32_raw_be, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
     test_func!(f64_raw_le, read_f64_raw_le, write_f64_raw_le, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
     test_func!(f64_raw_be, read_f64_raw_be, write_f64_raw_be, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
-
-    macro_rules! test_nan {
-        ($tester: ident, $reader: ident, $writer: ident, $nan: expr) => {
-            #[test]
-            fn $tester() {
-                let mut cursor = std::io::Cursor::new(Vec::new());
-                let n = $nan;
-                assert!(n.is_nan());
-                cursor.set_position(0);
-                cursor.$writer(n).expect(&format!("Failed to write at {}.", stringify!($tester)));
-                cursor.set_position(0);
-                let q = cursor.$reader().expect(&format!("Failed to read at {}.", stringify!($tester)));
-                assert!(q.is_nan())
-            }
-        };
-    }
 
     test_nan!(f32_raw_le_nan, read_f32_raw_le, write_f32_raw_le, f32::NAN);
     test_nan!(f32_raw_be_nan, read_f32_raw_be, write_f32_raw_be, f32::NAN);
@@ -273,4 +274,57 @@ mod signed {
     test_func!(isize_16_le, read_isize_varint_16_le, write_isize_varint_16_le, [0, 1, 2, -1, -2, isize::MIN, isize::MAX]);
     #[cfg(all(feature = "varint_size", feature = "long_signed"))]
     test_func!(isize_16_be, read_isize_varint_16_be, write_isize_varint_16_be, [0, 1, 2, -1, -2, isize::MIN, isize::MAX]);
+}
+
+#[cfg(feature = "float")]
+mod float {
+    use crate::{VariableReader, VariableWriter};
+
+    test_func!(f32_ne, read_f32_varint, write_f32_varint, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f32_2_le, read_f32_varint_2_le, write_f32_varint_2_le, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f32_2_be, read_f32_varint_2_be, write_f32_varint_2_be, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f32_4_le, read_f32_varint_4_le, write_f32_varint_4_le, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f32_4_be, read_f32_varint_4_be, write_f32_varint_4_be, [f32::MIN, f32::MIN_POSITIVE, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+
+    test_func!(f64_ne, read_f64_varint, write_f64_varint, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_2_le, read_f64_varint_2_le, write_f64_varint_2_le, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_2_be, read_f64_varint_2_be, write_f64_varint_2_be, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_4_le, read_f64_varint_4_le, write_f64_varint_4_le, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_4_be, read_f64_varint_4_be, write_f64_varint_4_be, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_8_le, read_f64_varint_8_le, write_f64_varint_8_le, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+    #[cfg(feature = "long_float")]
+    test_func!(f64_8_be, read_f64_varint_8_be, write_f64_varint_8_be, [f64::MIN, f64::MIN_POSITIVE, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.1, -0.1, 1.0, -1.0]);
+
+    test_nan!(f32_ne_nan, read_f32_varint, write_f32_varint, f32::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f32_2_le_nan, read_f32_varint_2_le, write_f32_varint_2_le, f32::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f32_2_be_nan, read_f32_varint_2_be, write_f32_varint_2_be, f32::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f32_4_le_nan, read_f32_varint_4_le, write_f32_varint_4_le, f32::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f32_4_be_nan, read_f32_varint_4_be, write_f32_varint_4_be, f32::NAN);
+
+    test_nan!(f64_ne_nan, read_f64_varint, write_f64_varint, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_2_le_nan, read_f64_varint_2_le, write_f64_varint_2_le, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_2_be_nan, read_f64_varint_2_be, write_f64_varint_2_be, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_4_le_nan, read_f64_varint_4_le, write_f64_varint_4_le, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_4_be_nan, read_f64_varint_4_be, write_f64_varint_4_be, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_8_le_nan, read_f64_varint_8_le, write_f64_varint_8_le, f64::NAN);
+    #[cfg(feature = "long_float")]
+    test_nan!(f64_8_be_nan, read_f64_varint_8_be, write_f64_varint_8_be, f64::NAN);
 }

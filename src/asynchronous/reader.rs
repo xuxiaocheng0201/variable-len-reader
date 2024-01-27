@@ -65,6 +65,7 @@ include!("reader_bools.rs");
 include!("reader_raw.rs");
 include!("reader_varint.rs");
 include!("reader_signed.rs");
+include!("reader_float.rs");
 
 trait InternalAsyncVariableReader: AsyncVariableReader {
     fn poll_read_bool(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool>> {
@@ -79,6 +80,7 @@ trait InternalAsyncVariableReader: AsyncVariableReader {
     define_read_raw_poll!();
     define_read_varint_poll!();
     define_read_signed_poll!();
+    define_read_float_poll!();
 }
 
 impl<R: AsyncVariableReader + ?Sized> InternalAsyncVariableReader for R {
@@ -119,6 +121,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     define_read_raw_func!();
     define_read_varint_func!();
     define_read_signed_func!();
+    define_read_float_func!();
 
     #[cfg(feature = "async_vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]

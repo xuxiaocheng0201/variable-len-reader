@@ -23,8 +23,8 @@ tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time"
 
 [features]
 default = ["varint", "string"]
-full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "vec_u8", "string",
-    "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_vec_u8", "async_string"]
+full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "float", "long_float", "vec_u8", "string",
+    "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_float", "async_long_float", "async_vec_u8", "async_string"]
 zigzag = []
 
 bools = []
@@ -35,6 +35,8 @@ varint_size = ["varint"]
 long_varint = ["varint"]
 signed = ["varint", "zigzag"]
 long_signed = ["signed", "long_varint"]
+float = ["varint"]
+long_float = ["float", "long_varint"]
 vec_u8 = ["varint_size"]
 string = ["vec_u8"]
 
@@ -48,6 +50,8 @@ async_varint_size = ["async_varint"]
 async_long_varint = ["async_varint"]
 async_signed = ["async_varint", "zigzag"]
 async_long_signed = ["async_signed", "async_long_varint"]
+async_float = ["async_varint"]
+async_long_float = ["async_float", "async_long_varint"]
 async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
 

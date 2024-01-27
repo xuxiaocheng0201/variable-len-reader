@@ -5,6 +5,7 @@ include!("writer_bools.rs");
 include!("writer_raw.rs");
 include!("writer_varint.rs");
 include!("writer_signed.rs");
+include!("writer_float.rs");
 
 pub trait VariableWriter: VariableWritable {
     #[inline]
@@ -16,6 +17,7 @@ pub trait VariableWriter: VariableWritable {
     define_write_raw!();
     define_write_varint!();
     define_write_signed!();
+    define_write_float!();
 
     #[cfg(feature = "vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]
