@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "2.3.0"
+version = "2.4.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data. Support AsyncRead/AsyncWrite in tokio."
@@ -22,11 +22,14 @@ anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
 
 [features]
-default = ["varint", "string"]
-full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "float", "long_float", "vec_u8", "string",
-    "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_float", "async_long_float", "async_vec_u8", "async_string"]
+default = ["varint", "string", "tokio"]
+
 zigzag = []
 tokio = ["dep:tokio"]
+
+full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "float", "long_float", "vec_u8", "string",
+    "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_float", "async_long_float", "async_vec_u8", "async_string",
+    "tokio"]
 
 bools = []
 raw = []

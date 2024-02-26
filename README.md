@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-variable-len-reader = "^2.3"
+variable-len-reader = "^2.4"
 ```
 
 
