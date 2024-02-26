@@ -11,7 +11,7 @@ pub use reader::*;
 mod writer;
 pub use writer::*;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "tokio"))]
 mod tests;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]

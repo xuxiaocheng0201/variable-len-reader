@@ -154,6 +154,8 @@ impl<R: AsyncVariableReadable + ?Sized> AsyncVariableReader for R {
 }
 
 
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<R: tokio::io::AsyncRead + Unpin> AsyncVariableReadable for R {
     fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>> {
         let mut buf = [0];
@@ -182,7 +184,7 @@ impl<R: tokio::io::AsyncRead + Unpin> AsyncVariableReadable for R {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "tokio"))]
 mod tests {
     use std::time::Duration;
     use anyhow::Result;

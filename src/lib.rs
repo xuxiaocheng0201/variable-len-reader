@@ -5,7 +5,7 @@ use std::io::Result;
 
 #[cfg(feature = "async")]
 extern crate pin_project_lite;
-#[cfg(feature = "async")]
+#[cfg(feature = "tokio")]
 extern crate tokio;
 
 pub mod util;

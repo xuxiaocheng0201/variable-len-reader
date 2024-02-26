@@ -117,8 +117,8 @@ unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
     impl_buf_mut!();
 }
 
-#[cfg(feature = "async")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
     #[inline]
     fn from(value: &'b mut ReadBuf<'a>) -> Self {

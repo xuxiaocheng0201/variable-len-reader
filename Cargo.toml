@@ -26,6 +26,7 @@ default = ["varint", "string"]
 full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "float", "long_float", "vec_u8", "string",
     "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_float", "async_long_float", "async_vec_u8", "async_string"]
 zigzag = []
+tokio = ["dep:tokio"]
 
 bools = []
 raw = []
@@ -40,7 +41,7 @@ long_float = ["float", "long_varint"]
 vec_u8 = ["varint_size"]
 string = ["vec_u8"]
 
-async = ["dep:pin-project-lite", "dep:tokio"]
+async = ["dep:pin-project-lite"]
 async_default = ["async_varint", "async_string"]
 async_bools = ["async"]
 async_raw = ["async"]
@@ -64,6 +65,3 @@ maintenance = { status = "passively-maintained" }
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
-[package.metadata.playground]
-features = ["full"]

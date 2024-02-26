@@ -1,5 +1,5 @@
 use std::future::Future;
-use std::io::{Error, ErrorKind, Result};
+use std::io::Result;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use pin_project_lite::pin_project;
@@ -149,6 +149,8 @@ impl<W: AsyncVariableWritable + ?Sized> AsyncVariableWriter for W {
 }
 
 
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
     fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize>> {
         W::poll_write(self, cx, &[byte])
@@ -160,14 +162,14 @@ impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
             let n = ready!(W::poll_write(self.as_mut(), cx, &buf.buf()[read..]))?;
             buf.skip(n);
             if n == 0 {
-                return Poll::Ready(Err(Error::new(ErrorKind::WriteZero, "failed to write whole buffer")));
+                return Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::WriteZero, "failed to write whole buffer")));
             }
         }
         Poll::Ready(Ok(buf.buf().len()))
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "tokio"))]
 mod tests {
     use std::time::Duration;
     use anyhow::Result;
