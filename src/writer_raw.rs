@@ -1,7 +1,7 @@
 macro_rules! write_raw {
     ($primitive: ty, $func: ident, $to: ident) => {
-        #[cfg(feature = "raw")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
+        #[cfg(feature = "sync_raw")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_raw")))]
         #[inline]
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
             self.write_more(&<$primitive>::$to(num))
@@ -10,8 +10,8 @@ macro_rules! write_raw {
 }
 macro_rules! write_raw_size {
     ($primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
-        #[cfg(feature = "raw_size")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
+        #[cfg(feature = "sync_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_raw_size")))]
         #[inline]
         fn $func(&mut self, num: $primitive) -> std::io::Result<usize> {
             self.$write_internal(num as $internal)

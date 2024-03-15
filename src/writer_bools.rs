@@ -1,7 +1,7 @@
 macro_rules! write_bools {
     ($func: ident, $n: literal) => {
-        #[cfg(feature = "bools")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
+        #[cfg(feature = "sync_bools")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_bools")))]
         #[inline]
         fn $func(&mut self, bools: [bool; $n]) -> Result<usize> {
             let mut b = 0;

@@ -1,7 +1,7 @@
 macro_rules! read_bools {
     ($func: ident, $n: literal) => {
-        #[cfg(feature = "bools")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "bools")))]
+        #[cfg(feature = "sync_bools")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_bools")))]
         #[inline]
         fn $func(&mut self) -> Result<[bool; $n]> {
             const MAX: u8 = ((1 << ($n - 1)) - 1 << 1) + 1; // (1 << $n) - 1 (Prevent `this arithmetic operation will overflow`)

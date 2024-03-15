@@ -1,7 +1,7 @@
 macro_rules! read_raw {
     ($primitive: ty, $func: ident, $from: ident) => {
-        #[cfg(feature = "raw")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "raw")))]
+        #[cfg(feature = "sync_raw")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_raw")))]
         #[inline]
         fn $func(&mut self) -> std::io::Result<$primitive> {
             const SIZE: usize = std::mem::size_of::<$primitive>();
@@ -13,8 +13,8 @@ macro_rules! read_raw {
 }
 macro_rules! read_raw_size {
     ($primitive: ty, $func: ident, $read_internal: ident) => {
-        #[cfg(feature = "raw_size")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "raw_size")))]
+        #[cfg(feature = "sync_raw_size")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "sync_raw_size")))]
         #[inline]
         fn $func(&mut self) -> Result<$primitive> {
             self.$read_internal().map(|v| v as $primitive)

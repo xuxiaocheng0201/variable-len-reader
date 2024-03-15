@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "2.4.0"
+version = "3.0.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data. Support AsyncRead/AsyncWrite in tokio."
@@ -22,30 +22,39 @@ anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
 
 [features]
-default = ["varint", "string", "tokio"]
+default = ["sync_default"]
+full = ["sync_full", "async_full", "tokio"]
 
 zigzag = []
-tokio = ["dep:tokio"]
-
-full = ["bools", "raw", "raw_size", "varint", "varint_size", "long_varint", "signed", "long_signed", "float", "long_float", "vec_u8", "string",
-    "async", "async_bools", "async_raw", "async_raw_size", "async_varint", "async_varint_size", "async_long_varint", "async_signed", "async_long_signed", "async_float", "async_long_float", "async_vec_u8", "async_string",
-    "tokio"]
-
-bools = []
-raw = []
-raw_size = ["raw"]
-varint = ["raw"]
-varint_size = ["varint"]
-long_varint = ["varint"]
-signed = ["varint", "zigzag"]
-long_signed = ["signed", "long_varint"]
-float = ["varint"]
-long_float = ["float", "long_varint"]
-vec_u8 = ["varint_size"]
-string = ["vec_u8"]
-
+tokio = ["dep:tokio", "async"]
 async = ["dep:pin-project-lite"]
-async_default = ["async_varint", "async_string"]
+
+sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
+    "sync_varint", "sync_varint_size", "sync_long_varint",
+    "sync_signed", "sync_long_signed", "sync_float", "sync_long_float",
+    "sync_vec_u8", "sync_string"]
+sync_default = ["sync_varint", "sync_string"]
+
+sync_bools = []
+sync_raw = []
+sync_raw_size = ["sync_raw"]
+sync_varint = ["sync_raw"]
+sync_varint_size = ["sync_varint"]
+sync_long_varint = ["sync_varint"]
+sync_signed = ["sync_varint", "zigzag"]
+sync_long_signed = ["sync_signed", "sync_long_varint"]
+sync_float = ["sync_varint"]
+sync_long_float = ["sync_float", "sync_long_varint"]
+sync_vec_u8 = ["sync_varint_size"]
+sync_string = ["sync_vec_u8"]
+
+
+async_full = ["async_bools", "async_raw", "async_raw_size",
+    "async_varint", "async_varint_size", "async_long_varint",
+    "async_signed", "async_long_signed", "async_float", "async_long_float",
+    "async_vec_u8", "async_string"]
+async_default = ["async_varint", "async_string", "tokio"]
+
 async_bools = ["async"]
 async_raw = ["async"]
 async_raw_size = ["async_raw"]

@@ -1,9 +1,9 @@
 macro_rules! read_float {
     (varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        read_float!(cfg(feature = "float"), $primitive, $func, $read_internal);
+        read_float!(cfg(feature = "sync_float"), $primitive, $func, $read_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        read_float!(cfg(feature = "long_float"), $primitive, $func, $read_internal);
+        read_float!(cfg(feature = "sync_long_float"), $primitive, $func, $read_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $read_internal: ident) => {
         #[$feature]

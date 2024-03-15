@@ -1,9 +1,9 @@
 macro_rules! read_signed {
     (varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        read_signed!(cfg(feature = "signed"), $primitive, $func, $read_internal);
+        read_signed!(cfg(feature = "sync_signed"), $primitive, $func, $read_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $read_internal: ident) => {
-        read_signed!(cfg(feature = "long_signed"), $primitive, $func, $read_internal);
+        read_signed!(cfg(feature = "sync_long_signed"), $primitive, $func, $read_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $read_internal: ident) => {
         #[$feature]
@@ -17,10 +17,10 @@ macro_rules! read_signed {
 }
 macro_rules! read_signed_size {
     (varint, $func: ident, $read_internal: ident) => {
-        read_signed_size!(cfg(all(feature = "varint_size", feature = "signed")), $func, $read_internal);
+        read_signed_size!(cfg(all(feature = "sync_varint_size", feature = "sync_signed")), $func, $read_internal);
     };
     (long_varint, $func: ident, $read_internal: ident) => {
-        read_signed_size!(cfg(all(feature = "varint_size", feature = "long_signed")), $func, $read_internal);
+        read_signed_size!(cfg(all(feature = "sync_varint_size", feature = "sync_long_signed")), $func, $read_internal);
     };
     ($feature: meta, $func: ident, $read_internal: ident) => {
         #[$feature]

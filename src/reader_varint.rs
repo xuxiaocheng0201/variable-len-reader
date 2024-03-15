@@ -1,9 +1,9 @@
 macro_rules! read_varint {
     (varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
-        read_varint!(cfg(feature = "varint"), $primitive, $func, $internal, $read_internal);
+        read_varint!(cfg(feature = "sync_varint"), $primitive, $func, $internal, $read_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
-        read_varint!(cfg(feature = "long_varint"), $primitive, $func, $internal, $read_internal);
+        read_varint!(cfg(feature = "sync_long_varint"), $primitive, $func, $internal, $read_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
         #[$feature]
@@ -32,10 +32,10 @@ macro_rules! read_varint {
 }
 macro_rules! read_varint_size {
     (varint, $func: ident, $read_internal: ident) => {
-        read_varint_size!(cfg(feature = "varint_size"), $func, $read_internal);
+        read_varint_size!(cfg(feature = "sync_varint_size"), $func, $read_internal);
     };
     (long_varint, $func: ident, $read_internal: ident) => {
-        read_varint_size!(cfg(all(feature = "varint_size", feature = "long_varint")), $func, $read_internal);
+        read_varint_size!(cfg(all(feature = "sync_varint_size", feature = "sync_long_varint")), $func, $read_internal);
     };
     ($feature: meta, $func: ident, $read_internal: ident) => {
         #[$feature]

@@ -23,8 +23,8 @@ pub trait VariableReader: VariableReadable {
     define_read_signed!();
     define_read_float!();
 
-    #[cfg(feature = "vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]
+    #[cfg(feature = "sync_vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
     #[inline]
     fn read_u8_vec(&mut self) -> Result<Vec<u8>> {
         let length = self.read_usize_varint()?;
@@ -33,8 +33,8 @@ pub trait VariableReader: VariableReadable {
         Ok(bytes)
     }
 
-    #[cfg(feature = "string")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "string")))]
+    #[cfg(feature = "sync_string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_string")))]
     #[inline]
     fn read_string(&mut self) -> Result<String> {
         match String::from_utf8(self.read_u8_vec()?) {

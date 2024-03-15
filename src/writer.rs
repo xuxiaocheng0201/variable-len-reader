@@ -19,16 +19,16 @@ pub trait VariableWriter: VariableWritable {
     define_write_signed!();
     define_write_float!();
 
-    #[cfg(feature = "vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "vec_u8")))]
+    #[cfg(feature = "sync_vec_u8")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
     #[inline]
     fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize> {
         self.write_usize_varint(message.len())?;
         self.write_more(message)
     }
 
-    #[cfg(feature = "string")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "string")))]
+    #[cfg(feature = "sync_string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_string")))]
     #[inline]
     fn write_string(&mut self, message: &str) -> Result<usize> {
         self.write_u8_vec(message.as_bytes())

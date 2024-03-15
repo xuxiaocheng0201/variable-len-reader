@@ -1,9 +1,9 @@
 macro_rules! write_signed {
     (varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        write_signed!(cfg(feature = "signed"), $primitive, $func, $write_internal);
+        write_signed!(cfg(feature = "sync_signed"), $primitive, $func, $write_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        write_signed!(cfg(feature = "long_signed"), $primitive, $func, $write_internal);
+        write_signed!(cfg(feature = "sync_long_signed"), $primitive, $func, $write_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $write_internal: ident) => {
         #[$feature]
@@ -17,10 +17,10 @@ macro_rules! write_signed {
 }
 macro_rules! write_signed_size {
     (varint, $func: ident, $write_internal: ident) => {
-        write_signed_size!(cfg(all(feature = "varint_size", feature = "signed")), $func, $write_internal);
+        write_signed_size!(cfg(all(feature = "sync_varint_size", feature = "sync_signed")), $func, $write_internal);
     };
     (long_varint, $func: ident, $write_internal: ident) => {
-        write_signed_size!(cfg(all(feature = "varint_size", feature = "long_signed")), $func, $write_internal);
+        write_signed_size!(cfg(all(feature = "sync_varint_size", feature = "sync_long_signed")), $func, $write_internal);
     };
     ($feature: meta, $func: ident, $write_internal: ident) => {
         #[$feature]
