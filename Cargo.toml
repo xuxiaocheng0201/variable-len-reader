@@ -60,7 +60,7 @@ async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
 
 [build-dependencies]
-reportme = "~0.2"
+reportme = ">=0.2"
 
 [badges]
 maintenance = { status = "passively-maintained" }
