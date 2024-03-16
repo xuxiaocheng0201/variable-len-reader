@@ -3,7 +3,7 @@ macro_rules! write_varint {
         write_varint!(cfg(feature = "sync_varint"), $primitive, $func, $internal, $write_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
-        write_varint!(cfg(feature = "sync_long_varint"), $primitive, $func, $internal, $write_internal);
+        write_varint!(cfg(feature = "sync_varint_long"), $primitive, $func, $internal, $write_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
         #[$feature]
@@ -28,7 +28,7 @@ macro_rules! write_varint_size {
         write_varint_size!(cfg(feature = "sync_varint_size"), $func, $write_internal);
     };
     (long_varint, $func: ident, $write_internal: ident) => {
-        write_varint_size!(cfg(all(feature = "sync_varint_size", feature = "sync_long_varint")), $func, $write_internal);
+        write_varint_size!(cfg(all(feature = "sync_varint_size", feature = "sync_varint_long")), $func, $write_internal);
     };
     ($feature: meta, $func: ident, $write_internal: ident) => {
         #[$feature]

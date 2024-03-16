@@ -15,38 +15,44 @@ exclude = ["test-builds.bat"]
 [dependencies]
 pin-project-lite = { version = "~0.2", optional = true }
 tokio = { version = "^1", optional = true, default-features = false }
-bytes = { version = "^1", optional = true }
-
-[dev-dependencies]
-anyhow = "^1"
-tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
+bytes = { version = "^1", optional = true, default-features = false }
 
 [features]
-default = ["sync_default"]
+default = ["sync_default", "std"]
 full = ["sync_full", "async_full", "tokio"]
 
 zigzag = []
-tokio = ["dep:tokio", "async"]
+alloc = []
+std = ["bytes/std", "alloc"]
+
+sync = []
 async = ["dep:pin-project-lite"]
 
+tokio = ["dep:tokio", "async"]
+bytes = ["dep:bytes"]
+
+
 sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
-    "sync_varint", "sync_varint_size", "sync_long_varint",
-    "sync_signed", "sync_long_signed", "sync_float", "sync_long_float",
+    "sync_varint", "sync_varint_size", "sync_varint_long", "sync_varint_long_size",
+    "sync_signed_varint", "sync_signed_varint_long", "sync_float_varint", "sync_float_varint_long",
     "sync_vec_u8", "sync_string"]
 sync_default = ["sync_varint", "sync_string"]
 
-sync_bools = []
-sync_raw = []
+sync_bools = ["sync"]
+sync_raw = ["sync"]
 sync_raw_size = ["sync_raw"]
 sync_varint = ["sync_raw"]
 sync_varint_size = ["sync_varint"]
-sync_long_varint = ["sync_varint"]
-sync_signed = ["sync_varint", "zigzag"]
-sync_long_signed = ["sync_signed", "sync_long_varint"]
-sync_float = ["sync_varint"]
-sync_long_float = ["sync_float", "sync_long_varint"]
+sync_varint_long = ["sync_varint"]
+sync_varint_long_size = ["sync_varint_long"]
+sync_signed_varint = ["sync_varint", "zigzag"]
+sync_signed_varint_size = ["sync_signed_varint"]
+sync_signed_varint_long = ["sync_signed_varint", "sync_varint_long"]
+sync_signed_varint_long_size = ["sync_signed_varint_long"]
+sync_float_varint = ["sync_varint"]
+sync_float_varint_long = ["sync_float_varint"]
 sync_vec_u8 = ["sync_varint_size"]
-sync_string = ["sync_vec_u8"]
+sync_string = ["sync_vec_u8", "alloc"]
 
 
 async_full = ["async_bools", "async_raw", "async_raw_size",
@@ -67,6 +73,10 @@ async_float = ["async_varint"]
 async_long_float = ["async_float", "async_long_varint"]
 async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
+
+[dev-dependencies]
+anyhow = "^1"
+tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
 
 [build-dependencies]
 reportme = ">=0.2"

@@ -1,9 +1,9 @@
 macro_rules! write_float {
     (varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        write_float!(cfg(feature = "sync_float"), $primitive, $func, $write_internal);
+        write_float!(cfg(feature = "sync_float_varint"), $primitive, $func, $write_internal);
     };
     (long_varint, $primitive: ty, $func: ident, $write_internal: ident) => {
-        write_float!(cfg(feature = "sync_long_float"), $primitive, $func, $write_internal);
+        write_float!(cfg(feature = "sync_float_varint_long"), $primitive, $func, $write_internal);
     };
     ($feature: meta, $primitive: ty, $func: ident, $write_internal: ident) => {
         #[$feature]

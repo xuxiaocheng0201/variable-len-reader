@@ -1,5 +1,5 @@
 use std::io::{Result, Write};
-use crate::VariableWritable;
+use crate::synchronous::VariableWritable;
 
 include!("writer_bools.rs");
 include!("writer_raw.rs");

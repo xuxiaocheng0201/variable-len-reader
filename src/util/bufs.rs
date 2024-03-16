@@ -289,11 +289,11 @@ macro_rules! define_read_buf {
     };
 }
 
-define_read_buf!(OwnedReadBuf8, std::mem::size_of::<u8>());
-define_read_buf!(OwnedReadBuf16, std::mem::size_of::<u16>());
-define_read_buf!(OwnedReadBuf32, std::mem::size_of::<u32>());
-define_read_buf!(OwnedReadBuf64, std::mem::size_of::<u64>());
-define_read_buf!(OwnedReadBuf128, std::mem::size_of::<u128>());
+define_read_buf!(OwnedReadBuf8, core::mem::size_of::<u8>());
+define_read_buf!(OwnedReadBuf16, core::mem::size_of::<u16>());
+define_read_buf!(OwnedReadBuf32, core::mem::size_of::<u32>());
+define_read_buf!(OwnedReadBuf64, core::mem::size_of::<u64>());
+define_read_buf!(OwnedReadBuf128, core::mem::size_of::<u128>());
 
 
 #[macro_export]
@@ -343,8 +343,8 @@ macro_rules! define_write_buf {
     };
 }
 
-define_write_buf!(OwnedWriteBuf8, std::mem::size_of::<u8>());
-define_write_buf!(OwnedWriteBuf16, std::mem::size_of::<u16>());
-define_write_buf!(OwnedWriteBuf32, std::mem::size_of::<u32>());
-define_write_buf!(OwnedWriteBuf64, std::mem::size_of::<u64>());
-define_write_buf!(OwnedWriteBuf128, std::mem::size_of::<u128>());
+define_write_buf!(OwnedWriteBuf8, core::mem::size_of::<u8>());
+define_write_buf!(OwnedWriteBuf16, core::mem::size_of::<u16>());
+define_write_buf!(OwnedWriteBuf32, core::mem::size_of::<u32>());
+define_write_buf!(OwnedWriteBuf64, core::mem::size_of::<u64>());
+define_write_buf!(OwnedWriteBuf128, core::mem::size_of::<u128>());
