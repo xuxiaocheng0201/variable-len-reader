@@ -36,5 +36,5 @@ macro_rules! define_read_signed_varint_long {
     };
 }
 
-#[cfg(all(feature = "sync_signed_varint_long", not(feature = "sync_signed_varint"), not(feature = "sync_signed_varint_long")))]
+#[cfg(all(feature = "sync_signed_varint_long", not(feature = "sync_varint"), not(feature = "sync_varint_long")))]
 compile_error!("developer error: please check Cargo.toml");

@@ -20,5 +20,5 @@ macro_rules! define_write_signed_varint_size {
     };
 }
 
-#[cfg(all(feature = "sync_signed_varint_size", not(feature = "sync_varint"), not(feature = "sync_signed_varint")))]
+#[cfg(all(feature = "sync_signed_varint_size", not(feature = "sync_varint_size"), not(feature = "sync_signed_varint")))]
 compile_error!("developer error: please check Cargo.toml");

@@ -15,6 +15,7 @@ cargo build --no-default-features --features "sync_float_varint_long"
 cargo build --no-default-features --features "sync_vec_u8"
 cargo build --no-default-features --features "sync_string"
 cargo build --no-default-features --features "sync_full"
+cargo build --no-default-features --features "std,sync_full"
 
 
 cargo build --no-default-features --features "async"

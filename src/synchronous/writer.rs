@@ -8,7 +8,7 @@ macro_rules! write_size_ap {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, num: $primitive) -> ::core::result::Result<$primitive, Self::Error> {
+        fn $func(&mut self, num: $primitive) -> ::core::result::Result<usize, Self::Error> {
             self.$write_internal(num as $internal)
         }
     };

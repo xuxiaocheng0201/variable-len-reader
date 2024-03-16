@@ -5,6 +5,7 @@ macro_rules! write_varint {
     (f $feature: meta, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
+        #[allow(arithmetic_overflow)] // Safety: only used internally.
         fn $func(&mut self, num: $primitive) -> ::core::result::Result<usize, Self::Error> {
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;

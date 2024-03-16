@@ -65,9 +65,10 @@ pub trait VariableReader: VariableReadable {
     #[cfg(feature = "sync_vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
     #[inline]
-    fn read_u8_vec(&mut self) -> Result<Vec<u8>, Self::Error> {
+    #[allow(unused_qualifications)] // Only for IDE.
+    fn read_u8_vec(&mut self) -> Result<alloc::vec::Vec<u8>, Self::Error> {
         let length = self.read_usize_varint_ap()?;
-        let mut bytes = vec![0; length];
+        let mut bytes = alloc::vec![0; length];
         self.read_more(&mut bytes)?;
         Ok(bytes)
     }
@@ -79,8 +80,9 @@ pub trait VariableReader: VariableReadable {
     #[cfg(feature = "sync_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync_string")))]
     #[inline]
-    fn read_string(&mut self) -> Result<String, Self::Error> {
-        match String::from_utf8(self.read_u8_vec()?) {
+    #[allow(unused_qualifications)] // Only for IDE.
+    fn read_string(&mut self) -> Result<alloc::string::String, Self::Error> {
+        match alloc::string::String::from_utf8(self.read_u8_vec()?) {
             Ok(s) => Ok(s),
             Err(e) => Err(Self::read_string_error("read_string", e)),
         }
