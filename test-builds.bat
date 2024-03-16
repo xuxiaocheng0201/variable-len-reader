@@ -1,17 +1,21 @@
-cargo build --no-default-features --features "default"
+cargo build --no-default-features --features "sync"
 cargo build --no-default-features --features "sync_raw"
 cargo build --no-default-features --features "sync_raw_size"
 cargo build --no-default-features --features "sync_bools"
 cargo build --no-default-features --features "sync_varint"
 cargo build --no-default-features --features "sync_varint_size"
 cargo build --no-default-features --features "sync_varint_long"
-cargo build --no-default-features --features "varint_size,long_varint"
+cargo build --no-default-features --features "sync_varint_long_size"
 cargo build --no-default-features --features "sync_signed_varint"
+cargo build --no-default-features --features "sync_signed_varint_size"
 cargo build --no-default-features --features "sync_signed_varint_long"
+cargo build --no-default-features --features "sync_signed_varint_long_size"
 cargo build --no-default-features --features "sync_float_varint"
 cargo build --no-default-features --features "sync_float_varint_long"
 cargo build --no-default-features --features "sync_vec_u8"
 cargo build --no-default-features --features "sync_string"
+cargo build --no-default-features --features "sync_full"
+
 
 cargo build --no-default-features --features "async"
 cargo build --no-default-features --features "async_default"
@@ -29,5 +33,7 @@ cargo build --no-default-features --features "async_long_float"
 cargo build --no-default-features --features "async_vec_u8"
 cargo build --no-default-features --features "async_string"
 
+cargo build --no-default-features --features "default"
+cargo build --no-default-features --features "full"
 cargo test --no-default-features --features "full,bytes" --lib
 cargo test --features "async_default" --doc

@@ -1,22 +1,22 @@
-#[cfg(all(feature = "std", feature = "sync"))]
-macro_rules! test_sync_read {
-    ($tester: ident, $reader: ident, [$($source: expr, $res: expr;)+]) => {
-        #[test]
-        fn $tester() {
-            let mut cursor = ::std::io::Cursor::new(::alloc::vec::Vec::new());
-            $(
-                cursor.set_position(0);
-                ::std::io::Write::write_all(&mut cursor, $source).unwrap();
-                cursor.set_position(0);
-                let res = $crate::synchronous::VariableReader::$reader(&mut cursor)
-                    .expect(&format!("reading failed. tester={}, res={:?}, source={:?}.", stringify!($tester), $res, $source));
-                assert_eq!(res, $res, "comparing failed. tester={}, res={:?}, source={:?}.", stringify!($tester), $res, $source);
-            )+
-        }
-    };
-}
-#[cfg(all(feature = "std", feature = "sync"))]
-pub(in crate::synchronous) use test_sync_read;
+// #[cfg(all(feature = "std", feature = "sync"))]
+// macro_rules! test_sync_read {
+//     ($tester: ident, $reader: ident, [$($source: expr, $res: expr;)+]) => {
+//         #[test]
+//         fn $tester() {
+//             let mut cursor = ::std::io::Cursor::new(::alloc::vec::Vec::new());
+//             $(
+//                 cursor.set_position(0);
+//                 ::std::io::Write::write_all(&mut cursor, $source).unwrap();
+//                 cursor.set_position(0);
+//                 let res = $crate::synchronous::VariableReader::$reader(&mut cursor)
+//                     .expect(&format!("reading failed. tester={}, res={:?}, source={:?}.", stringify!($tester), $res, $source));
+//                 assert_eq!(res, $res, "comparing failed. tester={}, res={:?}, source={:?}.", stringify!($tester), $res, $source);
+//             )+
+//         }
+//     };
+// }
+// #[cfg(all(feature = "std", feature = "sync"))]
+// pub(in crate::synchronous) use test_sync_read;
 
 // #[cfg(feature = "sync_bools")]
 // mod bools {

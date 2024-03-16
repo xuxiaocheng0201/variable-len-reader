@@ -1,8 +1,8 @@
 mod reader;
 pub use reader::*;
 
-// mod writer;
-// pub use writer::*;
+mod writer;
+pub use writer::*;
 
 #[cfg(test)]
 mod tests;
@@ -21,10 +21,13 @@ pub trait VariableReadable {
 
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
-    fn read_more_buf<B: bytes::BufMut>(&mut self, len: usize, buf: &mut B) -> Result<(), Self::Error> {
-        let mut t = vec![0; len];
-        self.read_more(&mut t)?;
-        buf.put_slice(&t);
+    fn read_more_buf<B: bytes::BufMut>(&mut self, buf: &mut B) -> Result<(), Self::Error> {
+        use bytes::BufMut;
+        while buf.has_remaining_mut() {
+            let chunk = buf.chunk_mut();
+            let chunk = unsafe {&mut *core::ptr::slice_from_raw_parts_mut(chunk.as_mut_ptr(), chunk.len()) };
+            self.read_more(chunk)?;
+        }
         Ok(())
     }
 }
@@ -44,6 +47,7 @@ pub trait VariableWritable {
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     fn write_more_buf<B: bytes::Buf>(&mut self, buf: &mut B) -> Result<usize, Self::Error> {
+        use bytes::Buf;
         let mut len = 0;
         while buf.has_remaining() {
             let written = self.write_more(buf.chunk())?;

@@ -1,9 +1,12 @@
 macro_rules! write_bools {
     ($func: ident, $n: literal) => {
-        #[cfg(feature = "sync_bools")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "sync_bools")))]
+        write_bools!(f cfg(feature = "sync_bools"), $func, $n);
+    };
+    (f $feature: meta, $func: ident, $n: literal) => {
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, bools: [bool; $n]) -> Result<usize> {
+        fn $func(&mut self, bools: [bool; $n]) -> ::core::result::Result<usize, Self::Error> {
             let mut b = 0;
             for i in 0..$n {
                 if bools[i] {

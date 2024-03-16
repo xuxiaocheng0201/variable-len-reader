@@ -6,7 +6,7 @@ macro_rules! read_float_varint {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self) -> Result<$primitive> {
+        fn $func(&mut self) -> ::core::result::Result<$primitive, Self::Error> {
             self.$read_internal().map(|v| <$primitive>::from_bits(v))
         }
     };

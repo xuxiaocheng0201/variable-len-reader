@@ -39,3 +39,6 @@ macro_rules! define_read_varint {
         read_varint!(u128, read_u128_varint, u8, read_u8_raw);
     };
 }
+
+#[cfg(all(feature = "sync_varint", not(feature = "sync_raw")))]
+compile_error!("developer error: please check Cargo.toml");
