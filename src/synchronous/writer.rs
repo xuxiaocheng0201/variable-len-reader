@@ -2,7 +2,7 @@ use crate::synchronous::VariableWritable;
 
 /// AP means all-platform. This is used for usize/isize converting to u128/i128.
 /// CP means current-platform. It writes usize/isize directly.
-#[allow(dead_code)]
+#[allow(unused_macros)]
 macro_rules! write_size_ap {
     (f $feature: meta, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
         #[$feature]

@@ -42,3 +42,42 @@ pub mod asynchronous;
 //         }
 //     }
 // }
+// #[cfg(test)]
+// mod channel {
+//     use std::pin::Pin;
+//     use std::task::{Context, Poll};
+//     use tokio::sync::mpsc::{Receiver, Sender};
+//     use tokio::sync::mpsc::error::{TryRecvError, TrySendError};
+//     use crate::{AsyncVariableReadable, AsyncVariableWritable};
+//
+//     pub(crate) struct SenderWriter<T>(pub Sender<T>);
+//     pub(crate) struct ReceiverReader<T>(pub Receiver<T>);
+//
+//     impl AsyncVariableWritable for SenderWriter<u8> {
+//         fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<std::io::Result<usize>> {
+//             self.0.try_send(byte).map_or_else(|e| match e {
+//                 TrySendError::Full(_) => {
+//                     cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
+//                     Poll::Pending
+//                 }
+//                 TrySendError::Closed(_) => {
+//                     Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "channel disconnected")))
+//                 }
+//             }, |()| Poll::Ready(Ok(1)))
+//         }
+//     }
+//
+//     impl AsyncVariableReadable for ReceiverReader<u8> {
+//         fn poll_read_single(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<u8>> {
+//             self.0.try_recv().map_or_else(|e| match e {
+//                 TryRecvError::Empty => {
+//                     cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
+//                     Poll::Pending
+//                 }
+//                 TryRecvError::Disconnected => {
+//                     Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "channel disconnected")))
+//                 }
+//             }, |v| Poll::Ready(Ok(v)))
+//         }
+//     }
+// }

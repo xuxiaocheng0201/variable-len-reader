@@ -1,11 +1,5 @@
-mod reader;
-pub use reader::*;
-
-mod writer;
-pub use writer::*;
-
-#[cfg(test)]
-mod tests;
+pub mod reader;
+pub mod writer;
 
 pub trait VariableReadable {
     type Error;

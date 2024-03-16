@@ -16,7 +16,7 @@ pin_project! {
         byte: u8,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteSingle<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteSingle<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -35,7 +35,7 @@ pin_project! {
         buf: WriteBuf<'a>,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteMore<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteMore<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -54,7 +54,7 @@ pin_project! {
         b: bool,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin+ ?Sized> Future for WriteBool<'a, W> {
+impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteBool<'a, W> {
     type Output = Result<usize>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {

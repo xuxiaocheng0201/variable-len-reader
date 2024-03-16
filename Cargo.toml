@@ -54,7 +54,8 @@ sync_string = ["sync_vec_u8", "alloc"]
 async = ["dep:pin-project-lite"]
 async_full = ["async_bools", "async_raw", "async_raw_size",
     "async_varint", "async_varint_size", "async_long_varint",
-    "async_signed", "async_long_signed", "async_float", "async_long_float",
+    "async_signed", "async_long_signed",
+    "async_float", "async_long_float",
     "async_vec_u8", "async_string"]
 async_default = ["async_varint", "async_string", "tokio"]
 
@@ -72,12 +73,13 @@ async_vec_u8 = ["async_varint_size"]
 async_string = ["async_vec_u8"]
 
 
-tokio = ["dep:tokio", "async"]
+tokio = ["dep:tokio", "async", "alloc"]
 bytes = ["dep:bytes"]
 
 [dev-dependencies]
 anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
+futures = "~0.3" # delete
 
 [build-dependencies]
 reportme = ">=0.2"

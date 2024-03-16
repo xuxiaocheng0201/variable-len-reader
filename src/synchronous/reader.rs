@@ -2,7 +2,7 @@ use crate::synchronous::VariableReadable;
 
 /// AP means all-platform. This is used for usize/isize converting from u128/i128.
 /// CP means current-platform. It reads usize/isize directly.
-#[allow(dead_code)]
+#[allow(unused_macros)]
 macro_rules! read_size_ap {
     (f $feature: meta, $primitive: ty, $func: ident, $read_internal: ident) => {
         #[$feature]

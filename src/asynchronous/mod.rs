@@ -1,80 +1,51 @@
-#![allow(dead_code)] // Internal struct: 'reset'
+use core::pin::Pin;
+use core::task::{Context, Poll, ready};
+use crate::util::read_buf::ReadBuf;
+use crate::util::write_buf::WriteBuf;
 
-use std::io::Result;
-use std::pin::Pin;
-use std::task::{Context, Poll, ready};
-use crate::util::bufs::{ReadBuf, WriteBuf};
+pub mod reader;
+// pub mod writer;
 
-mod reader;
-pub use reader::*;
-
-mod writer;
-pub use writer::*;
-
-#[cfg(all(test, feature = "tokio"))]
-mod tests;
-
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableReadable {
-    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8>>;
+    type Error;
 
-    fn poll_read_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<()>> {
+    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8, Self::Error>>;
+
+    fn poll_read_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<(), Self::Error>> {
         while buf.left() > 0 {
             buf.put(ready!(self.as_mut().poll_read_single(cx))?);
         }
         Poll::Ready(Ok(()))
     }
+
+    #[cfg(feature = "bytes")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    #[inline]
+    fn poll_read_more_buf<'a, B: bytes::BufMut>(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &'a mut B) -> Poll<Result<(), Self::Error>> {
+        use bytes::BufMut;
+        while buf.has_remaining_mut() {
+            let chunk = buf.chunk_mut();
+            let chunk = unsafe {&mut *core::ptr::slice_from_raw_parts_mut(chunk.as_mut_ptr(), chunk.len()) };
+            let mut buf = ReadBuf::new(chunk);
+            let res = self.as_mut().poll_read_more(cx, &mut buf);
+            let position = buf.position();
+            buf.advance(position);
+            ready!(res)?;
+        }
+        Poll::Ready(Ok(()))
+    }
 }
 
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableWritable {
-    fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize>>;
+    type Error;
 
-    fn poll_write_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut WriteBuf<'_>) -> Poll<Result<usize>> {
+    fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize, Self::Error>>;
+
+    fn poll_write_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut WriteBuf<'_>) -> Poll<Result<usize, Self::Error>> {
         while buf.left() > 0 {
             ready!(self.as_mut().poll_write_single(cx, buf.get()))?;
             buf.skip(1);
         }
         Poll::Ready(Ok(buf.buf().len()))
-    }
-}
-
-#[cfg(test)]
-mod channel {
-    use std::pin::Pin;
-    use std::task::{Context, Poll};
-    use tokio::sync::mpsc::{Receiver, Sender};
-    use tokio::sync::mpsc::error::{TryRecvError, TrySendError};
-    use crate::{AsyncVariableReadable, AsyncVariableWritable};
-
-    pub(crate) struct SenderWriter<T>(pub Sender<T>);
-    pub(crate) struct ReceiverReader<T>(pub Receiver<T>);
-
-    impl AsyncVariableWritable for SenderWriter<u8> {
-        fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<std::io::Result<usize>> {
-            self.0.try_send(byte).map_or_else(|e| match e {
-                TrySendError::Full(_) => {
-                    cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
-                    Poll::Pending
-                }
-                TrySendError::Closed(_) => {
-                    Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "channel disconnected")))
-                }
-            }, |()| Poll::Ready(Ok(1)))
-        }
-    }
-
-    impl AsyncVariableReadable for ReceiverReader<u8> {
-        fn poll_read_single(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<u8>> {
-            self.0.try_recv().map_or_else(|e| match e {
-                TryRecvError::Empty => {
-                    cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
-                    Poll::Pending
-                }
-                TryRecvError::Disconnected => {
-                    Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "channel disconnected")))
-                }
-            }, |v| Poll::Ready(Ok(v)))
-        }
     }
 }
