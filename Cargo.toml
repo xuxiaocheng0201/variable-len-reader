@@ -81,7 +81,7 @@ bytes = ["dep:bytes"]
 
 [dev-dependencies]
 anyhow = "^1"
-tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
+tokio = { version = "^1", features = ["test-util", "macros", "io-util", "rt-multi-thread", "net"] }
 
 [build-dependencies]
 reportme = ">=0.2"

@@ -168,6 +168,5 @@ fn __owned_write_buf_u8_array() {
 }
 #[cfg(all(test, feature = "alloc"))]
 fn __owned_write_buf_u8_vec() {
-    use alloc::vec::Vec;
-    let _ = OwnedWriteBuf::<Vec<u8>>::new(Vec::new());
+    let _ = OwnedWriteBuf::<alloc::vec::Vec<u8>>::new(alloc::vec::Vec::new());
 }

@@ -44,5 +44,4 @@ cargo build --no-default-features --features "default"
 cargo build --no-default-features --features "full"
 cargo build --no-default-features --features "full,std,tokio,bytes"
 
-cargo test --no-default-features --features "full,bytes" --lib
-cargo test --features "async_default" --doc
+cargo test --no-default-features --features "full,std,tokio,bytes"

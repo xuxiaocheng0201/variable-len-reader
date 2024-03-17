@@ -193,6 +193,5 @@ fn __owned_read_buf_u8_array() {
 }
 #[cfg(all(test, feature = "alloc"))]
 fn __owned_read_buf_u8_vec() {
-    use alloc::vec::Vec;
-    let _ = OwnedReadBuf::<Vec<u8>>::new(Vec::new());
+    let _ = OwnedReadBuf::<alloc::vec::Vec<u8>>::new(alloc::vec::Vec::new());
 }

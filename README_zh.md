@@ -13,13 +13,27 @@
 一个基于 VarInt 的可变长数据读写器。
 
 
+# 特点
+
+* 读和写。
+* 同步和异步双实现。
+* 支持 [bytes](https://crates.io/crates/bytes) 和 [tokio](https://crates.io/crates/tokio) 库。
+* 长 chunk 版本的 varint 实现。（但是不建议使用，因为这太愚蠢了。）
+* 支持正负数读写。（通过 zigzag 编码）
+* 支持直接读写 usize/isize 或将其转换到 u128/i128 再读写。（带有 `ap` 后缀）
+* 支持额外的类型比如 `f32`，`f64`，`vec<u8>` 和 `string`。
+* 内置实现 `std::io::Read`，`std::io::Write` 和 `tokio::io::AsyncRead`，`tokio::io::AsyncWrite`。
+* 支持链式的 `bytes::Buf`。
+* 支持 no-std。
+
+
 # 用法
 
 将以下内容添加到你的`Cargo.toml`：
 
 ```toml
 [dependencies]
-variable-len-reader = "^2.4"
+variable-len-reader = "^3.0"
 ```
 
 
@@ -29,20 +43,23 @@ variable-len-reader = "^2.4"
 
 ```rust
 use std::net::{TcpListener, TcpStream};
-use variable_len_reader::{VariableReader, VariableWriter};
+use anyhow::Result;
+use variable_len_reader::synchronous::reader::VariableReader;
+use variable_len_reader::synchronous::writer::VariableWriter;
 
-fn main() {
-    let addr = "localhost:25564";
-    let server = TcpListener::bind(addr).unwrap();
-    let mut client = TcpStream::connect(addr).unwrap();
-    let mut server = server.incoming().next().unwrap().unwrap();
+fn main() -> Result<()> {
+    let server = TcpListener::bind("localhost:0")?;
+    let mut client = TcpStream::connect(server.local_addr()?)?;
+    let mut server = server.incoming().next().unwrap()?;
 
     // 写
-    client.write_string(&"Hello world!").unwrap();
+    client.write_string(&"Hello world!")?;
 
     // 读
-    let message = server.read_string().unwrap();
+    let message = server.read_string()?;
     assert_eq!("Hello world!", message);
+    
+    Ok(())
 }
 ```
 
@@ -50,7 +67,8 @@ fn main() {
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
-use variable_len_reader::{VariableReader, VariableWriter};
+use variable_len_reader::synchronous::reader::VariableReader;
+use variable_len_reader::synchronous::writer::VariableWriter;
 
 fn main() {
     let message = "Hello world!";
@@ -74,21 +92,24 @@ fn main() {
 (需要启用 'async_default' 功能)
 
 ```rust
+use anyhow::Result;
 use tokio::net::{TcpListener, TcpStream};
-use variable_len_reader::{AsyncVariableReader, AsyncVariableWriter};
+use variable_len_reader::asynchronous::reader::AsyncVariableReader;
+use variable_len_reader::asynchronous::writer::AsyncVariableWriter;
 
 #[tokio::main]
-async fn main() {
-    let addr = "localhost:25564";
-    let server = TcpListener::bind(addr).await.unwrap();
-    let mut client = TcpStream::connect(addr).await.unwrap();
-    let (mut server, _) = server.accept().await.unwrap();
+async fn main() -> Result<()> {
+    let server = TcpListener::bind("localhost:0").await?;
+    let mut client = TcpStream::connect(server.local_addr()?).await?;
+    let (mut server, _) = server.accept().await?;
 
     // 写
-    client.write_string(&"Hello tokio!").await.unwrap();
+    client.write_string_boxed(&"Hello tokio!").await?;
 
     // 读
-    let message = server.read_string().await.unwrap();
+    let message = server.read_string_boxed().await?;
     assert_eq!("Hello tokio!", message);
+    
+    Ok(())
 }
 ```
