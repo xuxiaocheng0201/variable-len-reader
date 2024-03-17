@@ -1,9 +1,9 @@
 macro_rules! write_float_future {
     (varint, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_float_future!(cfg(feature = "async_float"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
+        write_float_future!(cfg(feature = "async_float_varint"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
     };
     (long_varint, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_float_future!(cfg(feature = "async_long_float"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
+        write_float_future!(cfg(feature = "async_float_varint_long"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
     };
     ($feature: meta, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
         #[$feature]
@@ -34,10 +34,10 @@ macro_rules! write_float_future {
             }
         }
         #[$feature]
-        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
-            type Output = std::io::Result<usize>;
+        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = ::core::result::Result<usize>;
 
-            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
                 W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
@@ -46,10 +46,10 @@ macro_rules! write_float_future {
 }
 macro_rules! write_float_poll {
     (varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_float_poll!(cfg(feature = "async_float"), $poll_func, $poll_internal, $struct_buf);
+        write_float_poll!(cfg(feature = "async_float_varint"), $poll_func, $poll_internal, $struct_buf);
     };
     (long_varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_float_poll!(cfg(feature = "async_long_float"), $poll_func, $poll_internal, $struct_buf);
+        write_float_poll!(cfg(feature = "async_float_varint_long"), $poll_func, $poll_internal, $struct_buf);
     };
     ($feature: meta, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
         write_signed_poll!($feature, $poll_func, $poll_internal, $struct_buf); // The same code.
@@ -57,10 +57,10 @@ macro_rules! write_float_poll {
 }
 macro_rules! write_float_func {
     (varint, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_float_func!(cfg(feature = "async_float"), $primitive, $func, $future, $struct_buf);
+        write_float_func!(cfg(feature = "async_float_varint"), $primitive, $func, $future, $struct_buf);
     };
     (long_varint, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_float_func!(cfg(feature = "async_long_float"), $primitive, $func, $future, $struct_buf);
+        write_float_func!(cfg(feature = "async_float_varint_long"), $primitive, $func, $future, $struct_buf);
     };
     ($feature: meta, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
         write_signed_func!($feature, $primitive, $func, $future, $struct_buf); // The same code.

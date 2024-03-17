@@ -53,9 +53,9 @@ sync_string = ["sync_vec_u8", "alloc"]
 
 async = ["dep:pin-project-lite"]
 async_full = ["async_bools", "async_raw", "async_raw_size",
-    "async_varint", "async_varint_size", "async_long_varint",
-    "async_signed", "async_long_signed",
-    "async_float", "async_long_float",
+    "async_varint", "async_varint_size", "async_varint_long",
+    "async_signed_varint", "async_signed_varint_long",
+    "async_float_varint", "async_float_varint_long",
     "async_vec_u8", "async_string"]
 async_default = ["async_varint", "async_string", "tokio"]
 
@@ -63,14 +63,17 @@ async_bools = ["async"]
 async_raw = ["async"]
 async_raw_size = ["async_raw"]
 async_varint = ["async_raw"]
-async_varint_size = ["async_varint"]
-async_long_varint = ["async_varint"]
-async_signed = ["async_varint", "zigzag"]
-async_long_signed = ["async_signed", "async_long_varint"]
-async_float = ["async_varint"]
-async_long_float = ["async_float", "async_long_varint"]
-async_vec_u8 = ["async_varint_size"]
-async_string = ["async_vec_u8"]
+async_varint_size = ["async_raw", "async_varint"]
+async_varint_long = ["async_raw", "async_varint"]
+async_varint_long_size = ["async_raw", "async_varint_long", "async_varint"]
+async_signed_varint = ["async_varint", "zigzag"]
+async_signed_varint_size = ["async_varint_size", "async_signed_varint", "async_varint", "zigzag"]
+async_signed_varint_long = ["async_varint", "async_varint_long", "zigzag"]
+async_signed_varint_long_size = ["async_varint_long_size", "async_signed_varint_long", "async_varint", "zigzag"]
+async_float_varint = ["async_varint"]
+async_float_varint_long = ["async_varint_long"]
+async_vec_u8 = ["async_varint_size", "alloc"]
+async_string = ["async_vec_u8", "alloc"]
 
 
 tokio = ["dep:tokio", "async", "alloc"]
@@ -79,7 +82,6 @@ bytes = ["dep:bytes"]
 [dev-dependencies]
 anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt-multi-thread", "net", "time", "io-util", "sync"] }
-futures = "~0.3" # delete
 
 [build-dependencies]
 reportme = ">=0.2"

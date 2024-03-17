@@ -6,14 +6,18 @@ use crate::util::write_buf::WriteBuf;
 pub mod reader;
 // pub mod writer;
 
+pub trait ResettableFuture {
+    fn reset(self: Pin<&mut Self>);
+}
+
 pub trait AsyncVariableReadable {
     type Error;
 
-    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<u8, Self::Error>>;
+    fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut Option<u8>) -> Poll<Result<u8, Self::Error>>;
 
     fn poll_read_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<Result<(), Self::Error>> {
         while buf.left() > 0 {
-            buf.put(ready!(self.as_mut().poll_read_single(cx))?);
+            buf.put(ready!(self.as_mut().poll_read_single(cx, &mut None))?);
         }
         Poll::Ready(Ok(()))
     }

@@ -1,15 +1,15 @@
 macro_rules! read_varint_long_size {
     (cp, $func: ident, $internal: ty, $read_internal: ident) => {
-        read_varint_long_size!(f cfg(feature = "sync_varint_long_size"), cp, $func, $internal, $read_internal);
+        read_varint_long_size!(f cfg(feature = "sync_varint_long_size"), cp, usize, $func, $internal, $read_internal);
     };
     (ap, $func: ident, $read_internal: ident) => {
-        read_varint_long_size!(f cfg(feature = "sync_varint_long_size"), ap, $func, $read_internal);
+        read_varint_long_size!(f cfg(feature = "sync_varint_long_size"), ap, usize, $func, $read_internal);
     };
-    (f $feature: meta, cp, $func: ident, $internal: ty, $read_internal: ident) => {
-        read_varint_long!(f $feature, usize, $func, $internal, $read_internal);
+    (f $feature: meta, cp, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
+        read_varint_long!(f $feature, $primitive, $func, $internal, $read_internal);
     };
-    (f $feature: meta, ap, $func: ident, $read_internal: ident) => {
-        read_size_ap!(f $feature, usize, $func, $read_internal);
+    (f $feature: meta, ap, $primitive: ty, $func: ident, $read_internal: ident) => {
+        read_size_ap!(f $feature, $primitive, $func, $read_internal);
     };
 }
 macro_rules! define_read_varint_long_size {

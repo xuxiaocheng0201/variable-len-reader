@@ -65,7 +65,6 @@ pub trait VariableReader: VariableReadable {
     #[cfg(feature = "sync_vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
     #[inline]
-    #[allow(unused_qualifications)] // Only for IDE.
     fn read_u8_vec(&mut self) -> Result<alloc::vec::Vec<u8>, Self::Error> {
         let length = self.read_usize_varint_ap()?;
         let mut bytes = alloc::vec![0; length];
@@ -80,7 +79,6 @@ pub trait VariableReader: VariableReadable {
     #[cfg(feature = "sync_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync_string")))]
     #[inline]
-    #[allow(unused_qualifications)] // Only for IDE.
     fn read_string(&mut self) -> Result<alloc::string::String, Self::Error> {
         match alloc::string::String::from_utf8(self.read_u8_vec()?) {
             Ok(s) => Ok(s),
@@ -125,8 +123,8 @@ impl<R: std::io::Read> VariableReader for R {
     #[cfg(feature = "sync_varint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync_varint")))]
     #[inline]
-    fn read_varint_error(func_name: &'static str, current: u128) -> Self::Error {
-        std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Too long varint value. {} at {}.", current, func_name))
+    fn read_varint_error(func_name: &'static str, value: u128) -> Self::Error {
+        std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Too long varint value. {} at {}.", value, func_name))
     }
 
     #[cfg(feature = "sync_string")]

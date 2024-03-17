@@ -1,9 +1,9 @@
 macro_rules! write_signed_future {
     (varint, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_signed_future!(cfg(feature = "async_signed"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
+        write_signed_future!(cfg(feature = "async_signed_varint"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
     };
     (long_varint, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_signed_future!(cfg(feature = "async_long_signed"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
+        write_signed_future!(cfg(feature = "async_signed_varint_long"), $primitive, $future, $poll_func, $struct_buf, $internal_struct);
     };
     ($feature: meta, $primitive: ty, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
         #[$feature]
@@ -36,10 +36,10 @@ macro_rules! write_signed_future {
             }
         }
         #[$feature]
-        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
-            type Output = std::io::Result<usize>;
+        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = ::core::result::Result<usize>;
 
-            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
                 W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
@@ -48,26 +48,26 @@ macro_rules! write_signed_future {
 }
 macro_rules! write_signed_poll {
     (varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_signed_poll!(cfg(feature = "async_signed"), $poll_func, $poll_internal, $struct_buf);
+        write_signed_poll!(cfg(feature = "async_signed_varint"), $poll_func, $poll_internal, $struct_buf);
     };
     (long_varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_signed_poll!(cfg(feature = "async_long_signed"), $poll_func, $poll_internal, $struct_buf);
+        write_signed_poll!(cfg(feature = "async_signed_varint_long"), $poll_func, $poll_internal, $struct_buf);
     };
     ($feature: meta, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
+        fn $poll_func(self: Pin<&mut Self>, cx: &mut Context<'_>, inner: &mut $struct_buf) -> Poll<::core::result::Result<usize>> {
             self.$poll_internal(cx, &mut inner.internal)
         }
     };
 }
 macro_rules! write_signed_func {
     (varint, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_signed_func!(cfg(feature = "async_signed"), $primitive, $func, $future, $struct_buf);
+        write_signed_func!(cfg(feature = "async_signed_varint"), $primitive, $func, $future, $struct_buf);
     };
     (long_varint, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_signed_func!(cfg(feature = "async_long_signed"), $primitive, $func, $future, $struct_buf);
+        write_signed_func!(cfg(feature = "async_signed_varint_long"), $primitive, $func, $future, $struct_buf);
     };
     ($feature: meta, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
         #[$feature]
@@ -80,10 +80,10 @@ macro_rules! write_signed_func {
 }
 macro_rules! write_signed_size_future {
     (varint, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_signed_size_future!(cfg(all(feature = "async_varint_size", feature = "async_signed")), $future, $poll_func, $struct_buf, $internal_struct);
+        write_signed_size_future!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint")), $future, $poll_func, $struct_buf, $internal_struct);
     };
     (long_varint, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_signed_size_future!(cfg(all(feature = "async_varint_size", feature = "async_long_signed")), $future, $poll_func, $struct_buf, $internal_struct);
+        write_signed_size_future!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint_long")), $future, $poll_func, $struct_buf, $internal_struct);
     };
     ($feature: meta, $future: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
         write_signed_future!($feature, isize, $future, $poll_func, $struct_buf, $internal_struct);
@@ -91,10 +91,10 @@ macro_rules! write_signed_size_future {
 }
 macro_rules! write_signed_size_poll {
     (varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_signed_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_signed")), $poll_func, $poll_internal, $struct_buf);
+        write_signed_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint")), $poll_func, $poll_internal, $struct_buf);
     };
     (long_varint, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
-        write_signed_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_long_signed")), $poll_func, $poll_internal, $struct_buf);
+        write_signed_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint_long")), $poll_func, $poll_internal, $struct_buf);
     };
     ($feature: meta, $poll_func: ident, $poll_internal: ident, $struct_buf: ident) => {
         write_signed_poll!($feature, $poll_func, $poll_internal, $struct_buf);
@@ -102,10 +102,10 @@ macro_rules! write_signed_size_poll {
 }
 macro_rules! write_signed_size_func {
     (varint, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_signed_size_func!(cfg(all(feature = "async_varint_size", feature = "async_signed")), $func, $future, $struct_buf);
+        write_signed_size_func!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint")), $func, $future, $struct_buf);
     };
     (long_varint, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_signed_size_func!(cfg(all(feature = "async_varint_size", feature = "async_long_signed")), $func, $future, $struct_buf);
+        write_signed_size_func!(cfg(all(feature = "async_varint_size", feature = "async_signed_varint_long")), $func, $future, $struct_buf);
     };
     ($feature: meta, $func: ident, $future: ident, $struct_buf: ident) => {
         write_signed_func!($feature, isize, $func, $future, $struct_buf);

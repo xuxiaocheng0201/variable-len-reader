@@ -3,7 +3,7 @@ macro_rules! write_varint_future {
         write_varint_future!(cfg(feature = "async_varint"), $primitive, $primitive, $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
     };
     (long_varint, $primitive: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_varint_future!(cfg(feature = "async_long_varint"), $primitive, $primitive, $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
+        write_varint_future!(cfg(feature = "async_varint_long"), $primitive, $primitive, $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
     };
     ($feature: meta, $primitive: ty, $source: ty, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
         #[$feature]
@@ -50,10 +50,10 @@ macro_rules! write_varint_future {
             }
         }
         #[$feature]
-        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
-            type Output = std::io::Result<usize>;
+        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = ::core::result::Result<usize>;
 
-            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
                 W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
@@ -65,13 +65,13 @@ macro_rules! write_varint_poll {
         write_varint_poll!(cfg(feature = "async_varint"), $primitive, $poll_func, $internal, $poll_internal, $struct_buf);
     };
     (long_varint, $primitive: ty, $poll_func: ident, $internal: ty, $poll_internal: ident, $struct_buf: ident) => {
-        write_varint_poll!(cfg(feature = "async_long_varint"), $primitive, $poll_func, $internal, $poll_internal, $struct_buf);
+        write_varint_poll!(cfg(feature = "async_varint_long"), $primitive, $poll_func, $internal, $poll_internal, $struct_buf);
     };
     ($feature: meta, $primitive: ty, $poll_func: ident, $internal: ty, $poll_internal: ident, $struct_buf: ident) => {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $poll_func(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
+        fn $poll_func(mut self: Pin<&mut Self>, cx: &mut Context<'_>, inner: &mut $struct_buf) -> Poll<::core::result::Result<usize>> {
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
@@ -82,7 +82,7 @@ macro_rules! write_varint_poll {
                     inner.value >>= POS_OFFSET;
                 } else {
                     if (inner.value == 0) {
-                        return std::task::Poll::Ready(Ok(inner.size));
+                        return Poll::Ready(Ok(inner.size));
                     }
                     inner.internal.reset(inner.value as $internal);
                     inner.value = 0;
@@ -96,7 +96,7 @@ macro_rules! write_varint_func {
         write_varint_func!(cfg(feature = "async_varint"), $primitive, $func, $future, $struct_buf);
     };
     (long_varint, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_varint_func!(cfg(feature = "async_long_varint"), $primitive, $func, $future, $struct_buf);
+        write_varint_func!(cfg(feature = "async_varint_long"), $primitive, $func, $future, $struct_buf);
     };
     ($feature: meta, $primitive: ty, $func: ident, $future: ident, $struct_buf: ident) => {
         #[$feature]
@@ -112,7 +112,7 @@ macro_rules! write_varint_size_future {
         write_varint_size_future!(cfg(feature = "async_varint_size"), $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
     };
     (long_varint, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
-        write_varint_size_future!(cfg(all(feature = "async_varint_size", feature = "async_long_varint")), $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
+        write_varint_size_future!(cfg(all(feature = "async_varint_size", feature = "async_varint_long")), $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
     };
     ($feature: meta, $future: ident, $internal: ident, $to: ident, $poll_func: ident, $struct_buf: ident, $internal_struct: ident) => {
         write_varint_future!($feature, u128, usize, $future, $internal, $to, $poll_func, $struct_buf, $internal_struct);
@@ -123,7 +123,7 @@ macro_rules! write_varint_size_poll {
         write_varint_size_poll!(cfg(feature = "async_varint_size"), $poll_func, $internal, $poll_internal, $struct_buf);
     };
     (long_varint, $poll_func: ident, $internal: ty, $poll_internal: ident, $struct_buf: ident) => {
-        write_varint_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_long_varint")), $poll_func, $internal, $poll_internal, $struct_buf);
+        write_varint_size_poll!(cfg(all(feature = "async_varint_size", feature = "async_varint_long")), $poll_func, $internal, $poll_internal, $struct_buf);
     };
     ($feature: meta, $poll_func: ident, $internal: ty, $poll_internal: ident, $struct_buf: ident) => {
         write_varint_poll!($feature, u128, $poll_func, $internal, $poll_internal, $struct_buf);
@@ -134,7 +134,7 @@ macro_rules! write_varint_size_func {
         write_varint_size_func!(cfg(feature = "async_varint_size"), $func, $future, $struct_buf);
     };
     (long_varint, $func: ident, $future: ident, $struct_buf: ident) => {
-        write_varint_size_func!(cfg(all(feature = "async_varint_size", feature = "async_long_varint")), $func, $future, $struct_buf);
+        write_varint_size_func!(cfg(all(feature = "async_varint_size", feature = "async_varint_long")), $func, $future, $struct_buf);
     };
     ($feature: meta, $func: ident, $future: ident, $struct_buf: ident) => {
         write_varint_func!($feature, usize, $func, $future, $struct_buf);

@@ -139,7 +139,7 @@ impl<'a, 'b> From<&'b mut ReadBuf<'a>> for tokio::io::ReadBuf<'b> {
 
 
 /// The type parameter `B` should be `[u8, $n]`.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OwnedReadBuf<B: AsRef<[u8]> + AsMut<[u8]>> {
     buf: B,
     position: usize
@@ -153,6 +153,10 @@ impl<B: AsRef<[u8]> + AsMut<[u8]>> OwnedReadBuf<B> {
         }
     }
 
+    pub fn into_inner(self) -> B {
+        self.buf
+    }
+
     impl_read_buf!();
 }
 
@@ -160,6 +164,15 @@ impl<B: AsRef<[u8]> + AsMut<[u8]>> OwnedReadBuf<B> {
 #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 unsafe impl<B: AsRef<[u8]> + AsMut<[u8]>> bytes::BufMut for OwnedReadBuf<B> {
     impl_bytes_buf!();
+}
+
+impl<'a, B: AsRef<[u8]> + AsMut<[u8]>> From<&'a mut OwnedReadBuf<B>> for ReadBuf<'a> { // TODO: guard
+    #[inline]
+    fn from(value: &'a mut OwnedReadBuf<B>) -> Self {
+        let mut buf = Self::new(value.buf.as_mut());
+        buf.set_position(value.position);
+        buf
+    }
 }
 
 #[cfg(feature = "tokio")]
@@ -177,4 +190,5 @@ impl<'a, B: AsRef<[u8]> + AsMut<[u8]>> From<&'a mut OwnedReadBuf<B>> for tokio::
 #[test]
 fn __owned_read_buf_u8_array() {
     let _ = OwnedReadBuf::<[u8; 16]>::new([0; 16]);
+    let _ = OwnedReadBuf::<Vec<u8>>::new(Vec::new());
 }

@@ -41,10 +41,10 @@ macro_rules! write_bools_future {
             }
         }
         #[cfg(feature = "async_bools")]
-        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
-            type Output = std::io::Result<usize>;
+        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = ::core::result::Result<usize>;
 
-            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
                 W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
@@ -55,9 +55,9 @@ macro_rules! write_bools_poll {
     ($poll_func:ident, $struct_buf: ident) => {
         #[cfg(feature = "async_bools")]
         #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
-        fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
+        fn $poll_func(self: Pin<&mut Self>, cx: &mut Context<'_>, inner: &mut $struct_buf) -> Poll<::core::result::Result<usize>> {
             let b = match inner.b {
-                Some(b) => b, None => { return std::task::Poll::Ready(Ok(0)); }
+                Some(b) => b, None => { return Poll::Ready(Ok(0)); }
             };
             self.poll_write_single(cx, b)
         }

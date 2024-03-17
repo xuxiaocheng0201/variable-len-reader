@@ -6,12 +6,19 @@ macro_rules! read_bools_future {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         $crate::pin_project_lite::pin_project! {
-            #[derive(::core::fmt::Debug)]
+            #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]
             pub struct $future<'a, R: ?Sized> {
                 #[pin]
                 inner: ReadSingle<'a, R>,
+            }
+        }
+        #[$feature]
+        impl<'a, R: ?Sized> ResettableFuture for $future<'_, R> {
+            fn reset(self: Pin<&mut Self>) {
+                let me = self.project();
+                me.inner.reset();
             }
         }
         #[$feature]

@@ -1,6 +1,6 @@
 macro_rules! read_varint {
-    ($primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
-        read_varint!(f cfg(feature = "sync_varint"), $primitive, $func, $internal, $read_internal);
+    ($primitive: ty, $func: ident) => {
+        read_varint!(f cfg(feature = "sync_varint"), $primitive, $func, u8, read_u8_raw);
     };
     (f $feature: meta, $primitive: ty, $func: ident, $internal: ty, $read_internal: ident) => {
         #[$feature]
@@ -20,7 +20,7 @@ macro_rules! read_varint {
                 }
                 position += POS_OFFSET;
                 if position >= SIZE {
-                    return Err(Self::read_varint_error(stringify!($func), current as u128));
+                    return Err(Self::read_varint_error(stringify!($func), value as u128));
                 }
             }
             Ok(value)
@@ -31,12 +31,12 @@ macro_rules! define_read_varint {
     () => {
         #[cfg(feature = "sync_varint")]
         #[cfg_attr(docsrs, doc(cfg(feature = "sync_varint")))]
-        fn read_varint_error(func_name: &'static str, current: u128) -> Self::Error;
+        fn read_varint_error(func_name: &'static str, value: u128) -> Self::Error;
 
-        read_varint!(u16, read_u16_varint, u8, read_u8_raw);
-        read_varint!(u32, read_u32_varint, u8, read_u8_raw);
-        read_varint!(u64, read_u64_varint, u8, read_u8_raw);
-        read_varint!(u128, read_u128_varint, u8, read_u8_raw);
+        read_varint!(u16, read_u16_varint);
+        read_varint!(u32, read_u32_varint);
+        read_varint!(u64, read_u64_varint);
+        read_varint!(u128, read_u128_varint);
     };
 }
 

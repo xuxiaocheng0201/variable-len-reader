@@ -1,5 +1,4 @@
 use std::future::Future;
-use std::io::Result;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use pin_project_lite::pin_project;

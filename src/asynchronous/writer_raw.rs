@@ -35,10 +35,10 @@ macro_rules! write_raw_future {
             }
         }
         #[$feature]
-        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> std::future::Future for $future<'a, W> {
-            type Output = std::io::Result<usize>;
+        impl<'a, W: $crate::AsyncVariableWritable + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = ::core::result::Result<usize>;
 
-            fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
                 W::$poll_func(Pin::new(&mut *me.writer), cx, me.inner)
             }
@@ -56,7 +56,7 @@ macro_rules! write_raw_poll {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $poll_func(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>, inner: &mut $struct_buf) -> std::task::Poll<std::io::Result<usize>> {
+        fn $poll_func(self: Pin<&mut Self>, cx: &mut Context<'_>, inner: &mut $struct_buf) -> Poll<::core::result::Result<usize>> {
             let mut ref_buf = (&inner.buf).into();
             let res = self.poll_write_more(cx, &mut ref_buf);
             let read = ref_buf.read();
