@@ -16,7 +16,7 @@ macro_rules! read_raw_future {
             }
         }
         #[$feature]
-        impl<'a, R: ?Sized> ResettableFuture for $future<'a, R> {
+        impl<'a, R: ?Sized> ReaderFuture for $future<'a, R> {
             fn reset(self: Pin<&mut Self>) {
                 let me = self.project();
                 me.inner.reset();

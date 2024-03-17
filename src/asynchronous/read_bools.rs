@@ -3,24 +3,7 @@ macro_rules! read_bools_future {
         read_bools_future!(f cfg(feature = "async_bools"), $future, $n);
     };
     (f $feature: meta, $future: ident, $n: literal) => {
-        #[$feature]
-        #[cfg_attr(docsrs, doc($feature))]
-        $crate::pin_project_lite::pin_project! {
-            #[derive(Debug)]
-            #[project(!Unpin)]
-            #[must_use = "futures do nothing unless you `.await` or poll them"]
-            pub struct $future<'a, R: ?Sized> {
-                #[pin]
-                inner: ReadSingle<'a, R>,
-            }
-        }
-        #[$feature]
-        impl<'a, R: ?Sized> ResettableFuture for $future<'_, R> {
-            fn reset(self: Pin<&mut Self>) {
-                let me = self.project();
-                me.inner.reset();
-            }
-        }
+        read_wrap_future!(f $feature, $future, ReadSingle);
         #[$feature]
         impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for $future<'a, R> {
             type Output = ::core::result::Result<[bool; $n], R::Error>;
@@ -42,16 +25,11 @@ macro_rules! read_bools_future {
     };
 }
 macro_rules! read_bools_func {
-    ($func: ident, $future: ident) => {
-        read_bools_func!(f cfg(feature = "async_bools"), $func, $future);
+    ($future: ident, $func: ident) => {
+        read_bools_func!(f cfg(feature = "async_bools"), $future, $func);
     };
-    (f $feature: meta, $func: ident, $future: ident) => {
-        #[$feature]
-        #[cfg_attr(docsrs, doc($feature))]
-        #[inline]
-        fn $func(&mut self) -> $future<Self> where Self: Unpin {
-            $future { inner: self.read_single() }
-        }
+    (f $feature: meta, $future: ident, $func: ident) => {
+        read_wrap_func!(f $feature, $future, $func, read_single);
     };
 }
 
@@ -72,13 +50,13 @@ macro_rules! define_read_bools_func {
         #[cfg_attr(docsrs, doc(cfg(feature = "async_bools")))]
         fn read_bools_error(future_name: &'static str, byte: u8) -> Self::Error;
 
-        read_bools_func!(read_bools_2, ReadBools2);
-        read_bools_func!(read_bools_3, ReadBools3);
-        read_bools_func!(read_bools_4, ReadBools4);
-        read_bools_func!(read_bools_5, ReadBools5);
-        read_bools_func!(read_bools_6, ReadBools6);
-        read_bools_func!(read_bools_7, ReadBools7);
-        read_bools_func!(read_bools_8, ReadBools8);
+        read_bools_func!(ReadBools2, read_bools_2);
+        read_bools_func!(ReadBools3, read_bools_3);
+        read_bools_func!(ReadBools4, read_bools_4);
+        read_bools_func!(ReadBools5, read_bools_5);
+        read_bools_func!(ReadBools6, read_bools_6);
+        read_bools_func!(ReadBools7, read_bools_7);
+        read_bools_func!(ReadBools8, read_bools_8);
     };
 }
 

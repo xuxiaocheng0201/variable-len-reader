@@ -401,3 +401,66 @@
 //         Ok(())
 //     }
 // }
+
+// #[cfg(all(test, feature = "tokio"))]
+// mod tests {
+//     use std::time::Duration;
+//     use anyhow::Result;
+//     use tokio::spawn;
+//     use tokio::sync::mpsc::channel;
+//     use tokio::task::JoinHandle;
+//     use tokio::time::sleep;
+//     use crate::asynchronous::AsyncVariableWriter;
+//     use crate::asynchronous::channel::SenderWriter;
+//
+//     #[tokio::test]
+//     async fn write_single() -> Result<()> {
+//         let mut buf = Vec::with_capacity(1);
+//         buf.write_single(1).await?;
+//         assert_eq!(&buf, &[1]);
+//         Ok(())
+//     }
+//
+//     #[tokio::test]
+//     async fn write_more() -> Result<()> {
+//         let mut buf = Vec::with_capacity(2);
+//         buf.write_more(&[1, 2]).await?;
+//         assert_eq!(&buf, &[1, 2]);
+//         Ok(())
+//     }
+//
+//     #[tokio::test]
+//     async fn write_more_twice() -> Result<()> {
+//         let (sender, mut receiver) = channel(1);
+//         let mut sender = SenderWriter(sender);
+//         let j: JoinHandle<Result<()>> = spawn(async move {
+//             assert_eq!(receiver.recv().await, Some(1));
+//             sleep(Duration::from_millis(300)).await;
+//             assert_eq!(receiver.recv().await, Some(2));
+//             Ok(())
+//         });
+//         sender.write_more(&[1, 2]).await?;
+//         j.await??;
+//         Ok(())
+//     }
+//
+//     #[tokio::test]
+//     #[cfg(feature = "bytes")]
+//     async fn write_buf() -> Result<()> {
+//         use bytes::Bytes;
+//         let mut buf = Vec::with_capacity(2);
+//         buf.write_more_buf(&mut Bytes::from_static(&[1, 2])).await?;
+//         assert_eq!(&buf, &[1, 2]);
+//         Ok(())
+//     }
+//
+//     #[tokio::test]
+//     #[cfg(feature = "bytes")]
+//     async fn write_buf_slice() -> Result<()> {
+//         use bytes::{Buf, Bytes};
+//         let mut buf = Vec::with_capacity(2);
+//         buf.write_more_buf(&mut Bytes::from_static(&[1]).chain(Bytes::from_static(&[2]))).await?;
+//         assert_eq!(&buf, &[1, 2]);
+//         Ok(())
+//     }
+// }

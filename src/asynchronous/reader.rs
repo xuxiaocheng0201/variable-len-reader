@@ -2,14 +2,19 @@ use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 use pin_project_lite::pin_project;
-use crate::asynchronous::{AsyncVariableReadable, ResettableFuture};
+use crate::asynchronous::AsyncVariableReadable;
 use crate::util::read_buf::*;
 
-#[allow(unused_macros)]
+pub trait ReaderFuture {
+    fn reset(self: Pin<&mut Self>);
+}
+
 macro_rules! read_wrap_future {
-    (f $feature: meta, $future: ident, $inner_future: ident) => {
+    (@$future: ident, $inner_future: ident $(, $feature: meta)?) => {
+        $(
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
+        )?
         $crate::pin_project_lite::pin_project! {
             #[derive(Debug)]
             #[project(!Unpin)]
@@ -19,25 +24,40 @@ macro_rules! read_wrap_future {
                 inner: $inner_future<'a, R>,
             }
         }
+        $(
         #[$feature]
-        impl<'a, R: ?Sized> ResettableFuture for $future<'a, R> {
+        )?
+        impl<'a, R: ?Sized> ReaderFuture for $future<'a, R> {
             fn reset(self: Pin<&mut Self>) {
                 let me = self.project();
                 me.inner.reset();
             }
         }
     };
+    (f $feature: meta, $future: ident, $inner_future: ident) => {
+        read_wrap_future!(@$future, $inner_future, $feature);
+    };
+    ($future: ident, $inner_future: ident) => {
+        read_wrap_future!(@$future, $inner_future);
+    };
 }
-#[allow(unused_macros)]
 macro_rules! read_wrap_func {
-    (f $feature: meta, $future: ident, $func: ident, $inner_func: ident) => {
+    (@$future: ident, $func: ident, $inner_func: ident $(, $feature: meta)?) => {
+        $(
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
+        )?
         #[inline]
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
             $future { inner: self.$inner_func() }
         }
     };
+    (f $feature: meta, $future: ident, $func: ident, $inner_func: ident) => {
+		read_wrap_func!(@$future, $func, $inner_func, $feature);
+	};
+    ($future: ident, $func: ident, $inner_func: ident) => {
+		read_wrap_func!(@$future, $func, $inner_func);
+	};
 }
 
 /// AP means all-platform. This is used for usize/isize converting from u128/i128.
@@ -57,6 +77,7 @@ macro_rules! read_size_ap_future {
     };
 }
 
+
 pin_project! {
     #[derive(Debug)]
     #[project(!Unpin)]
@@ -67,7 +88,7 @@ pin_project! {
         buf: Option<u8>,
     }
 }
-impl<'a, R: ?Sized> ResettableFuture for ReadSingle<'a, R> {
+impl<'a, R: ?Sized> ReaderFuture for ReadSingle<'a, R> {
     fn reset(self: Pin<&mut Self>) {
         let me = self.project();
         *me.buf = None;
@@ -78,7 +99,6 @@ impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadSingle<'a, R>
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
-        if let Some(b) = me.buf.as_ref() { return Poll::Ready(Ok(*b)); }
         R::poll_read_single(Pin::new(&mut *me.reader), cx, me.buf)
     }
 }
@@ -93,7 +113,7 @@ pin_project! {
         buf: ReadBuf<'a>,
     }
 }
-impl<'a, R: ?Sized> ResettableFuture for ReadMore<'a, R> {
+impl<'a, R: ?Sized> ReaderFuture for ReadMore<'a, R> {
     fn reset(self: Pin<&mut Self>) {
         let me = self.project();
         me.buf.reset();
@@ -132,21 +152,7 @@ impl<'a, R: AsyncVariableReadable + Unpin + ?Sized, B: bytes::BufMut> Future for
 }
 
 
-pin_project! {
-    #[derive(Debug)]
-    #[project(!Unpin)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadBool<'a, R: ?Sized> {
-        #[pin]
-        inner: ReadSingle<'a, R>,
-    }
-}
-impl<'a, R: ?Sized> ResettableFuture for ReadBool<'a, R> {
-    fn reset(self: Pin<&mut Self>) {
-        let me = self.project();
-        me.inner.reset();
-    }
-}
+read_wrap_future!(ReadBool, ReadSingle);
 impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadBool<'a, R> {
     type Output = Result<bool, R::Error>;
 
@@ -190,7 +196,7 @@ pin_project! {
     }
 }
 #[cfg(feature = "async_vec_u8")]
-impl<'a, R: ?Sized> ResettableFuture for ReadVecU8<'a, R> {
+impl<'a, R: ?Sized> ReaderFuture for ReadVecU8<'a, R> {
     fn reset(self: Pin<&mut Self>) {
         let me = self.project();
         me.inner.reset();
@@ -219,6 +225,21 @@ impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadVecU8<'a, R> {
     }
 }
 
+read_wrap_future!(f cfg(feature = "async_string"), ReadString, ReadVecU8);
+#[cfg(feature = "async_string")]
+impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadString<'a, R> {
+    type Output = Result<alloc::string::String, R::Error>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        self.project().inner.poll(cx).map(|r| r.and_then(|v| {
+            match alloc::string::String::from_utf8(v) {
+                Ok(s) => Ok(s),
+                Err(e) => Err(R::read_string_error("ReadString", e)),
+            }
+        }))
+    }
+}
+
 pub trait AsyncVariableReader: AsyncVariableReadable {
     #[inline]
     fn read_single(&mut self) -> ReadSingle<Self> where Self: Unpin {
@@ -240,10 +261,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
 
     fn read_bool_error(feature_name: &'static str, byte: u8) -> Self::Error;
 
-    #[inline]
-    fn read_bool(&mut self) -> ReadBool<Self> where Self: Unpin {
-        ReadBool { inner: self.read_single() }
-    }
+    read_wrap_func!(ReadBool, read_bool, read_single);
 
     define_read_bools_func!();
 
@@ -272,7 +290,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     /// let buf = vec![0; len];
     /// self.read_more(&mut buf).await?;
     /// ```
-    /// Or you can simply call [`self.read_u8_vec_boxed`] instead.
+    /// Or you can simply call [Self::read_u8_vec_boxed] instead.
     /// ```rust,ignore
     /// self.read_u8_vec_boxed().await?;
     /// ```
@@ -285,7 +303,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     }
 
     /// This future is not zero-cost.
-    /// But it is more efficient than [`self.read_u8_vec`]
+    /// But it is more efficient than [Self::read_u8_vec]
     /// when you need to read a large number of u8s.
     #[cfg(feature = "async_vec_u8")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
@@ -303,6 +321,19 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "async_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     fn read_string_error(future_name: &'static str, error: alloc::string::FromUtf8Error) -> Self::Error;
+
+    /// This future is based on [Self::read_u8_vec],
+    /// which is not zero-cost and deprecated.
+    ///
+    /// Or you can simply call [Self::read_string_boxed] instead.
+    #[cfg(feature = "async_string")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
+    #[inline]
+    #[deprecated(since = "3.0.0", note = "see docs for details")]
+    #[allow(deprecated)]
+    fn read_string(&mut self) -> ReadString<Self> where Self: Unpin {
+        ReadString { inner: self.read_u8_vec() }
+    }
 
     #[cfg(feature = "async_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]

@@ -1,9 +1,77 @@
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll, ready};
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
 use pin_project_lite::pin_project;
 use crate::asynchronous::AsyncVariableWritable;
-use crate::util::bufs::*;
+use crate::util::write_buf::WriteBuf;
+
+pub trait WriterFuture<'a, W: ?Sized, B> {
+    fn new(writer: &'a mut W, buf: B) -> Self;
+    fn reset(self: Pin<&mut Self>, buf: B);
+}
+
+macro_rules! write_wrap_future {
+    (@$primitive: ty, $future: ident, $inner_future: ident, $bound: ident $(, $feature: meta)?) => {
+        $(
+        #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
+        )?
+        $crate::pin_project_lite::pin_project! {
+            #[derive(Debug)]
+            #[project(!Unpin)]
+            #[must_use = "futures do nothing unless you `.await` or poll them"]
+            pub struct $future<'a, W: ?Sized> {
+                #[pin]
+                inner: $inner_future<'a, W>,
+            }
+        }
+        $(
+        #[$feature]
+        )?
+        impl<'a, W: ?Sized> WriterFuture<'a, W, $primitive> for $future<'a, W> {
+            fn new(writer: &'a mut W, buf: $primitive) -> Self {
+                Self { inner: $inner_future::new(writer, Self::_handle(buf)) }
+            }
+            fn reset(self: Pin<&mut Self>, buf: $primitive) {
+                let me = self.project();
+                me.inner.reset(Self::_handle(buf));
+            }
+        }
+        $(
+        #[$feature]
+        )?
+        impl<'a, W: $bound + Unpin + ?Sized> Future for $future<'a, W> {
+            type Output = Result<(), W::Error>;
+
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+                self.project().inner.poll(cx)
+            }
+        }
+    };
+    (f $feature: meta, $primitive: ty, $future: ident, $inner_future: ident) => {
+        write_wrap_future!(@$primitive, $future, $inner_future, AsyncVariableWriter, $feature);
+    };
+    ($primitive: ty, $future: ident, $inner_future: ident able) => {
+        write_wrap_future!(@$primitive, $future, $inner_future, AsyncVariableWritable);
+    };
+}
+macro_rules! write_wrap_func {
+    (@$primitive: ty, $future: ident, $func: ident $(, $feature: meta)?) => {
+        $(
+        #[$feature]
+        )?
+        #[inline]
+        fn $func(&mut self, value: $primitive) -> $future<Self> where Self: Unpin {
+            $future::new(self, value)
+        }
+    };
+    (f $feature: meta, $primitive: ty, $future: ident, $func: ident) => {
+        write_wrap_func!(@$primitive, $future, $func, $feature);
+    };
+    ($primitive: ty, $future: ident, $func: ident) => {
+        write_wrap_func!(@$primitive, $future, $func);
+    };
+}
 
 pin_project! {
     #[derive(Debug)]
@@ -12,15 +80,24 @@ pin_project! {
     pub struct WriteSingle<'a, W: ?Sized> {
         #[pin]
         writer: &'a mut W,
-        byte: u8,
+        buf: Option<u8>,
+    }
+}
+impl<'a, W: ?Sized> WriterFuture<'a, W, u8> for WriteSingle<'a, W> {
+    fn new(writer: &'a mut W, buf: u8) -> Self {
+        Self { writer, buf: Some(buf) }
+    }
+    fn reset(self: Pin<&mut Self>, buf: u8) {
+        let me = self.project();
+        *me.buf = Some(buf);
     }
 }
 impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteSingle<'a, W> {
-    type Output = Result<usize>;
+    type Output = Result<(), W::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
-        W::poll_write_single(Pin::new(&mut *me.writer), cx, *me.byte)
+        W::poll_write_single(Pin::new(&mut *me.writer), cx, me.buf)
     }
 }
 
@@ -34,8 +111,17 @@ pin_project! {
         buf: WriteBuf<'a>,
     }
 }
+impl<'a, W: ?Sized> WriterFuture<'a, W, WriteBuf<'a>> for WriteMore<'a, W> {
+    fn new(writer: &'a mut W, buf: WriteBuf<'a>) -> Self {
+        Self { writer, buf }
+    }
+    fn reset(self: Pin<&mut Self>, buf: WriteBuf<'a>) {
+        let me = self.project();
+        *me.buf = buf;
+    }
+}
 impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteMore<'a, W> {
-    type Output = Result<usize>;
+    type Output = Result<(), W::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
@@ -43,52 +129,48 @@ impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteMore<'a, W> 
     }
 }
 
+#[cfg(feature = "bytes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 pin_project! {
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct WriteBool<'a, W: ?Sized> {
+    pub struct WriteMoreBuf<'a, W: ?Sized, B> where B: bytes::Buf {
         #[pin]
         writer: &'a mut W,
-        b: bool,
+        #[pin]
+        buf: &'a mut B,
     }
 }
-impl<'a, W: AsyncVariableWritable + Unpin + ?Sized> Future for WriteBool<'a, W> {
-    type Output = Result<usize>;
+#[cfg(feature = "bytes")]
+impl<'a, W: AsyncVariableWritable + Unpin + ?Sized, B: bytes::Buf> Future for WriteMoreBuf<'a, W, B> {
+    type Output = Result<(), W::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut me = self.project();
-        W::poll_write_bool(Pin::new(&mut *me.writer), cx, *me.b)
+        W::poll_write_more_buf(Pin::new(&mut *me.writer), cx, &mut *me.buf)
     }
 }
 
-include!("writer_bools.rs");
-include!("writer_raw.rs");
-include!("writer_varint.rs");
-include!("writer_signed.rs");
-include!("writer_float.rs");
 
-trait InternalAsyncVariableWriter: AsyncVariableWriter {
-    fn poll_write_bool(self: Pin<&mut Self>, cx: &mut Context<'_>, b: bool) -> Poll<Result<usize>> {
-        self.poll_write_single(cx, if b { 1 } else { 0 })
+write_wrap_future!(bool, WriteBool, WriteSingle able);
+impl<'a, W: ?Sized> WriteBool<'a, W> {
+    fn _handle(buf: bool) -> u8 {
+        if buf { 1 } else { 0 }
     }
-
-    define_write_bools_poll!();
-    define_write_raw_poll!();
-    define_write_varint_poll!();
-    define_write_signed_poll!();
-    define_write_float_poll!();
 }
 
-impl<R: AsyncVariableWriter + ?Sized> InternalAsyncVariableWriter for R {
-}
+include!("write_bools.rs");
 
+// include!("writer_raw.rs");
+// include!("writer_varint.rs");
+// include!("writer_signed.rs");
+// include!("writer_float.rs");
 
-#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[inline]
     fn write_single(&mut self, byte: u8) -> WriteSingle<Self> where Self: Unpin {
-        WriteSingle { writer: self, byte }
+        WriteSingle::new(self, byte)
     }
 
     #[inline]
@@ -99,134 +181,63 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn write_more_buf<'a, B: bytes::Buf + Send>(&'a mut self, message: &'a mut B) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
-        Box::pin(async move {
-            let mut len = 0;
-            while message.has_remaining() {
-                let written = self.write_more(message.chunk()).await?;
-                message.advance(written);
-                len += written;
-            }
-            Ok(len)
-        })
+    fn write_more_buf<'a, B: bytes::Buf>(&'a mut self, buf: &'a mut B) -> WriteMoreBuf<Self, B> where Self: Unpin {
+        WriteMoreBuf { writer: self, buf }
     }
 
-    #[inline]
-    fn write_bool(&mut self, b: bool) -> WriteBool<Self> where Self: Unpin {
-        WriteBool { writer: self, b }
-    }
+
+    write_wrap_func!(bool, WriteBool, write_bool);
 
     define_write_bools_func!();
-    define_write_raw_func!();
-    define_write_varint_func!();
-    define_write_signed_func!();
-    define_write_float_func!();
 
-    #[cfg(feature = "async_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
-    #[inline]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn write_u8_vec<'a>(&'a mut self, message: &'a [u8]) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
-        Box::pin(async move {
-            let mut size = self.write_usize_varint(message.len()).await?;
-            size += self.write_more(message).await?;
-            Ok(size)
-        })
-    }
-
-    #[cfg(feature = "async_string")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
-    #[inline]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    fn write_string<'a>(&'a mut self, message: &'a str) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
-        self.write_u8_vec(message.as_bytes())
-    }
+    // define_write_raw_func!();
+    // define_write_varint_func!();
+    // define_write_signed_func!();
+    // define_write_float_func!();
+    //
+    // #[cfg(feature = "async_vec_u8")]
+    // #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    // #[inline]
+    // #[must_use = "futures do nothing unless you `.await` or poll them"]
+    // fn write_u8_vec<'a>(&'a mut self, message: &'a [u8]) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+    //     Box::pin(async move {
+    //         let mut size = self.write_usize_varint(message.len()).await?;
+    //         size += self.write_more(message).await?;
+    //         Ok(size)
+    //     })
+    // }
+    //
+    // #[cfg(feature = "async_string")]
+    // #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
+    // #[inline]
+    // #[must_use = "futures do nothing unless you `.await` or poll them"]
+    // fn write_string<'a>(&'a mut self, message: &'a str) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> where Self: Unpin + Send {
+    //     self.write_u8_vec(message.as_bytes())
+    // }
 }
 
 impl<W: AsyncVariableWritable + ?Sized> AsyncVariableWriter for W {
 }
 
-
 #[cfg(feature = "tokio")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
-    fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<Result<usize>> {
-        W::poll_write(self, cx, &[byte])
-    }
-
-    fn poll_write_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut WriteBuf<'_>) -> Poll<Result<usize>> {
-        while buf.left() > 0 {
-            let read = buf.read();
-            let n = ready!(W::poll_write(self.as_mut(), cx, &buf.buf()[read..]))?;
-            buf.skip(n);
-            if n == 0 {
-                return Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::WriteZero, "failed to write whole buffer")));
-            }
+    fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut Option<u8>) -> Poll<Result<(), Self::Error>> {
+        match buf.as_ref() {
+            None => Poll::Ready(Ok(())),
+            Some(b) => W::poll_write(self, cx, &[*b]).map_ok(|_i| { buf.take(); () })
         }
-        Poll::Ready(Ok(buf.buf().len()))
-    }
-}
-
-#[cfg(all(test, feature = "tokio"))]
-mod tests {
-    use std::time::Duration;
-    use anyhow::Result;
-    use tokio::spawn;
-    use tokio::sync::mpsc::channel;
-    use tokio::task::JoinHandle;
-    use tokio::time::sleep;
-    use crate::asynchronous::AsyncVariableWriter;
-    use crate::asynchronous::channel::SenderWriter;
-
-    #[tokio::test]
-    async fn write_single() -> Result<()> {
-        let mut buf = Vec::with_capacity(1);
-        buf.write_single(1).await?;
-        assert_eq!(&buf, &[1]);
-        Ok(())
     }
 
-    #[tokio::test]
-    async fn write_more() -> Result<()> {
-        let mut buf = Vec::with_capacity(2);
-        buf.write_more(&[1, 2]).await?;
-        assert_eq!(&buf, &[1, 2]);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn write_more_twice() -> Result<()> {
-        let (sender, mut receiver) = channel(1);
-        let mut sender = SenderWriter(sender);
-        let j: JoinHandle<Result<()>> = spawn(async move {
-            assert_eq!(receiver.recv().await, Some(1));
-            sleep(Duration::from_millis(300)).await;
-            assert_eq!(receiver.recv().await, Some(2));
-            Ok(())
-        });
-        sender.write_more(&[1, 2]).await?;
-        j.await??;
-        Ok(())
-    }
-
-    #[tokio::test]
-    #[cfg(feature = "bytes")]
-    async fn write_buf() -> Result<()> {
-        use bytes::Bytes;
-        let mut buf = Vec::with_capacity(2);
-        buf.write_more_buf(&mut Bytes::from_static(&[1, 2])).await?;
-        assert_eq!(&buf, &[1, 2]);
-        Ok(())
-    }
-
-    #[tokio::test]
-    #[cfg(feature = "bytes")]
-    async fn write_buf_slice() -> Result<()> {
-        use bytes::{Buf, Bytes};
-        let mut buf = Vec::with_capacity(2);
-        buf.write_more_buf(&mut Bytes::from_static(&[1]).chain(Bytes::from_static(&[2]))).await?;
-        assert_eq!(&buf, &[1, 2]);
-        Ok(())
+    fn poll_write_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut WriteBuf<'_>) -> Poll<Result<(), Self::Error>> {
+        while buf.left() > 0 {
+            let position = buf.position();
+            let n = ready!(W::poll_write(self.as_mut(), cx, &buf.buf()[position..]))?;
+            if n == 0 {
+                return Poll::Ready(Err(tokio::io::Error::new(tokio::io::ErrorKind::WriteZero, "write 0 bytes")));
+            }
+            buf.skip(n);
+        }
+        Poll::Ready(Ok(()))
     }
 }
