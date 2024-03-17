@@ -6,9 +6,9 @@ macro_rules! write_signed_varint {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, num: $primitive) -> ::core::result::Result<usize, Self::Error> {
+        fn $func(&mut self, value: $primitive) -> ::core::result::Result<usize, Self::Error> {
             use $crate::util::zigzag::Zigzag;
-            self.$write_internal(num.zigzag())
+            self.$write_internal(value.zigzag())
         }
     };
 }

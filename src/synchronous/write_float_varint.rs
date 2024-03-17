@@ -6,8 +6,8 @@ macro_rules! write_float_varint {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, num: $primitive) -> ::core::result::Result<usize, Self::Error> {
-            self.$write_internal(num.to_bits())
+        fn $func(&mut self, value: $primitive) -> ::core::result::Result<usize, Self::Error> {
+            self.$write_internal(value.to_bits())
         }
     };
 }

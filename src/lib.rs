@@ -7,8 +7,6 @@ extern crate alloc;
 
 #[cfg(feature = "async")]
 extern crate pin_project_lite;
-#[cfg(feature = "tokio")]
-extern crate tokio;
 
 pub mod util;
 #[cfg(feature = "sync")]

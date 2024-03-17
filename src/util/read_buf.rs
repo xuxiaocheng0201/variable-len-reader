@@ -187,8 +187,12 @@ impl<'a, B: AsRef<[u8]> + AsMut<[u8]>> From<&'a mut OwnedReadBuf<B>> for tokio::
 }
 
 
-#[test]
+#[cfg(test)]
 fn __owned_read_buf_u8_array() {
     let _ = OwnedReadBuf::<[u8; 16]>::new([0; 16]);
+}
+#[cfg(all(test, feature = "alloc"))]
+fn __owned_read_buf_u8_vec() {
+    use alloc::vec::Vec;
     let _ = OwnedReadBuf::<Vec<u8>>::new(Vec::new());
 }

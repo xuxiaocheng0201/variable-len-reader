@@ -152,7 +152,22 @@ impl<B: AsRef<[u8]>> bytes::Buf for OwnedWriteBuf<B> {
     impl_bytes_buf!();
 }
 
-#[test]
+impl<'a, B: AsRef<[u8]>> From<&'a mut OwnedWriteBuf<B>> for WriteBuf<'a> { // TODO: guard
+    #[inline]
+    fn from(value: &'a mut OwnedWriteBuf<B>) -> Self {
+        let mut buf = Self::new(value.buf.as_ref());
+        buf.set_position(value.position);
+        buf
+    }
+}
+
+
+#[cfg(test)]
 fn __owned_write_buf_u8_array() {
     let _ = OwnedWriteBuf::<[u8; 16]>::new([0; 16]);
+}
+#[cfg(all(test, feature = "alloc"))]
+fn __owned_write_buf_u8_vec() {
+    use alloc::vec::Vec;
+    let _ = OwnedWriteBuf::<Vec<u8>>::new(Vec::new());
 }

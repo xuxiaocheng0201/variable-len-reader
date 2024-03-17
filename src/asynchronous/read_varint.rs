@@ -4,8 +4,8 @@ macro_rules! read_varint_future {
     };
     (f $feature: meta, $primitive: ty, $future: ident, $internal: ty, $inner_future: ident) => {
         #[$feature]
-        #[cfg_attr(docsrs, doc($feature))]
         $crate::pin_project_lite::pin_project! {
+            #[cfg_attr(docsrs, doc($feature))]
             #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]

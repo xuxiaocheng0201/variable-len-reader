@@ -13,9 +13,11 @@ macro_rules! read_wrap_future {
     (@$future: ident, $inner_future: ident $(, $feature: meta)?) => {
         $(
         #[$feature]
-        #[cfg_attr(docsrs, doc($feature))]
         )?
         $crate::pin_project_lite::pin_project! {
+            $(
+            #[cfg_attr(docsrs, doc($feature))]
+            )?
             #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]
@@ -129,8 +131,8 @@ impl<'a, R: AsyncVariableReadable + Unpin + ?Sized> Future for ReadMore<'a, R> {
 }
 
 #[cfg(feature = "bytes")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
 pin_project! {
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
@@ -184,8 +186,8 @@ include!("read_float_varint.rs");
 include!("read_float_varint_long.rs");
 
 #[cfg(feature = "async_vec_u8")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
 pin_project! {
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
@@ -211,7 +213,7 @@ impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadVecU8<'a, R> {
         let mut me = self.project();
         let buf = match me.buf.as_mut() {
             None => {
-                let size = ::core::task::ready!(me.inner.as_mut().poll(cx))?;
+                let size = core::task::ready!(me.inner.as_mut().poll(cx))?;
                 *me.buf = Some(OwnedReadBuf::new(alloc::vec![0; size]));
                 me.buf.as_mut().unwrap()
             }, Some(b) => b,
@@ -220,7 +222,7 @@ impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadVecU8<'a, R> {
         let res = R::poll_read_more(Pin::new(&mut me.inner.project().inner.project().inner.project().reader), cx, &mut ref_buf);
         let position = ref_buf.position();
         buf.set_position(position);
-        ::core::task::ready!(res)?;
+        core::task::ready!(res)?;
         Poll::Ready(Ok(buf.clone().into_inner()))
     }
 }
@@ -357,7 +359,7 @@ impl<R: tokio::io::AsyncRead + Unpin> AsyncVariableReadable for R {
     fn poll_read_single(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut Option<u8>) -> Poll<Result<u8, Self::Error>> {
         if let Some(b) = buf.as_ref() { return Poll::Ready(Ok(*b)); }
         let mut b = [0];
-        ::core::task::ready!(R::poll_read(self, cx, &mut tokio::io::ReadBuf::new(&mut b)))?;
+        core::task::ready!(R::poll_read(self, cx, &mut tokio::io::ReadBuf::new(&mut b)))?;
         buf.replace(b[0]);
         Poll::Ready(Ok(b[0]))
     }
@@ -366,7 +368,7 @@ impl<R: tokio::io::AsyncRead + Unpin> AsyncVariableReadable for R {
         let origin = buf.left();
         if origin == 0 { return Poll::Ready(Ok(())); }
         let mut tokio_buf = buf.into();
-        ::core::task::ready!(R::poll_read(self, cx, &mut tokio_buf))?;
+        core::task::ready!(R::poll_read(self, cx, &mut tokio_buf))?;
         let filled = tokio_buf.filled().len();
         buf.set_position(filled);
         let left = buf.left();

@@ -4,22 +4,22 @@ macro_rules! read_raw_future {
     };
     (f $feature: meta, $primitive: ty, $future: ident, $from: ident) => {
         #[$feature]
-        #[cfg_attr(docsrs, doc($feature))]
         $crate::pin_project_lite::pin_project! {
+            #[cfg_attr(docsrs, doc($feature))]
             #[derive(Debug)]
             #[project(!Unpin)]
             #[must_use = "futures do nothing unless you `.await` or poll them"]
             pub struct $future<'a, R: ?Sized> {
                 #[pin]
                 reader: &'a mut R,
-                inner: OwnedReadBuf<[u8; ::core::mem::size_of::<$primitive>()]>,
+                buf: OwnedReadBuf<[u8; ::core::mem::size_of::<$primitive>()]>,
             }
         }
         #[$feature]
         impl<'a, R: ?Sized> ReaderFuture for $future<'a, R> {
             fn reset(self: Pin<&mut Self>) {
                 let me = self.project();
-                me.inner.reset();
+                me.buf.reset();
             }
         }
         #[$feature]
@@ -28,12 +28,12 @@ macro_rules! read_raw_future {
 
             fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
                 let mut me = self.project();
-                let mut ref_buf = me.inner.into();
+                let mut ref_buf = me.buf.into();
                 let res = R::poll_read_more(Pin::new(&mut *me.reader), cx, &mut ref_buf);
                 let position = ref_buf.position();
-                me.inner.set_position(position);
+                me.buf.set_position(position);
                 ::core::task::ready!(res)?;
-                Poll::Ready(Ok(<$primitive>::$from(me.inner.clone().into_inner())))
+                Poll::Ready(Ok(<$primitive>::$from(me.buf.clone().into_inner())))
             }
         }
     };
@@ -47,7 +47,7 @@ macro_rules! read_raw_func {
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
         fn $func(&mut self) -> $future<Self> where Self: Unpin {
-            $future { reader: self, inner: OwnedReadBuf::new([0; ::core::mem::size_of::<$primitive>()]) }
+            $future { reader: self, buf: OwnedReadBuf::new([0; ::core::mem::size_of::<$primitive>()]) }
         }
     };
 }
