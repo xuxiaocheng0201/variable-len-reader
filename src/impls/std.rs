@@ -48,15 +48,13 @@ impl<W: Write> VariableWritable for W {
     type Error = Error;
 
     #[inline]
-    fn write_single(&mut self, byte: u8) -> Result<usize, Self::Error> {
-        W::write_all(self, &[byte])?;
-        Ok(1)
+    fn write_single(&mut self, byte: u8) -> Result<(), Self::Error> {
+        W::write_all(self, &[byte])
     }
 
     #[inline]
-    fn write_more(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-        W::write_all(self, buf)?;
-        Ok(buf.len())
+    fn write_more(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
+        W::write_all(self, buf)
     }
 }
 
