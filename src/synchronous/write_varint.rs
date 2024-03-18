@@ -6,18 +6,17 @@ macro_rules! write_varint {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[allow(arithmetic_overflow)] // Safety: only used internally.
-        fn $func(&mut self, value: $primitive) -> ::core::result::Result<usize, Self::Error> {
+        fn $func(&mut self, value: $primitive) -> ::core::result::Result<(), Self::Error> {
             const NUM_BITS: $internal = <$internal>::MAX >> 1;
             const SIGN_BIT: $internal = NUM_BITS + 1;
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
-            let mut size = 0;
             let mut value = value;
             while (value & NUM_BITS as $primitive) != value {
-                size += self.$write_internal(((value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)?;
+                self.$write_internal(((value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)?;
                 value >>= POS_OFFSET;
             }
-            size += self.$write_internal(value as $internal)?;
-            Ok(size)
+            self.$write_internal(value as $internal)?;
+            Ok(())
         }
     };
 }

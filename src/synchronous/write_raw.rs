@@ -6,7 +6,7 @@ macro_rules! write_raw {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, value: $primitive) -> ::core::result::Result<usize, Self::Error> {
+        fn $func(&mut self, value: $primitive) -> ::core::result::Result<(), Self::Error> {
             self.write_more(&<$primitive>::$to(value))
         }
     };

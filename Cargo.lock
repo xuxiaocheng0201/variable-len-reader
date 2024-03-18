@@ -205,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "reportme"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5fc18b7408e5b94182f453b54d78cc01206ccaa8c19571137532b43ae7a318a"
+checksum = "7eeb21d4121310ff4f71c8557d18b72b82a1a8386aec91fd787569fec7a64310"
 dependencies = [
  "anyhow",
  "ureq",

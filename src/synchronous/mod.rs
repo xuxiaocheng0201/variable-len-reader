@@ -29,25 +29,24 @@ pub trait VariableReadable {
 pub trait VariableWritable {
     type Error;
 
-    fn write_single(&mut self, byte: u8) -> Result<usize, Self::Error>;
+    fn write_single(&mut self, byte: u8) -> Result<(), Self::Error>;
 
-    fn write_more(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+    fn write_more(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
         for i in 0..buf.len() {
             self.write_single(buf[i])?;
         }
-        Ok(buf.len())
+        Ok(())
     }
 
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
-    fn write_more_buf<B: bytes::Buf>(&mut self, buf: &mut B) -> Result<usize, Self::Error> {
+    fn write_more_buf<B: bytes::Buf>(&mut self, buf: &mut B) -> Result<(), Self::Error> {
         use bytes::Buf;
-        let mut len = 0;
         while buf.has_remaining() {
-            let written = self.write_more(buf.chunk())?;
-            buf.advance(written);
-            len += written;
+            let chunk = buf.chunk();
+            self.write_more(chunk)?;
+            buf.advance(chunk.len());
         }
-        Ok(len)
+        Ok(())
     }
 }

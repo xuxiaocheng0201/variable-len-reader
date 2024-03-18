@@ -6,7 +6,7 @@ macro_rules! write_bools {
         #[$feature]
         #[cfg_attr(docsrs, doc($feature))]
         #[inline]
-        fn $func(&mut self, bools: [bool; $n]) -> ::core::result::Result<usize, Self::Error> {
+        fn $func(&mut self, bools: [bool; $n]) -> ::core::result::Result<(), Self::Error> {
             let mut b = 0;
             for i in 0..$n {
                 if bools[i] {
