@@ -8,9 +8,8 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/xuxiaocheng0201/variable-len-reader/"
 documentation = "https://docs.rs/variable-len-reader/"
-categories = ["encoding"]
-keywords = ["varint", "zigzag", "io", "async", "futures"]
-exclude = ["test-builds.bat"]
+categories = ["encoding", "asynchronous", "no-std"]
+keywords = ["varint", "io", "async", "futures", "no-std"]
 
 [dependencies]
 pin-project-lite = { version = "~0.2", optional = true }
@@ -25,7 +24,6 @@ alloc = []
 std = ["alloc", "bytes?/std"]
 zigzag = []
 
-
 sync = []
 sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
     "sync_varint", "sync_varint_size", "sync_varint_long", "sync_varint_long_size",
@@ -33,7 +31,6 @@ sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
     "sync_float_varint", "sync_float_varint_long",
     "sync_u8_vec", "sync_string"]
 sync_default = ["sync_varint", "sync_string", "std"]
-
 sync_bools = ["sync"]
 sync_raw = ["sync"]
 sync_raw_size = ["sync_raw"]
@@ -50,7 +47,6 @@ sync_float_varint_long = ["sync_varint_long"]
 sync_u8_vec = ["sync_varint_size", "alloc"]
 sync_string = ["sync_u8_vec", "alloc"]
 
-
 async = ["dep:pin-project-lite"]
 async_full = ["async_bools", "async_raw", "async_raw_size",
     "async_varint", "async_varint_size", "async_varint_long", "async_varint_long_size",
@@ -58,7 +54,6 @@ async_full = ["async_bools", "async_raw", "async_raw_size",
     "async_float_varint", "async_float_varint_long",
     "async_u8_vec", "async_string"]
 async_default = ["async_varint", "async_string", "tokio"]
-
 async_bools = ["async"]
 async_raw = ["async"]
 async_raw_size = ["async_raw"]
@@ -74,7 +69,6 @@ async_float_varint = ["async_varint"]
 async_float_varint_long = ["async_varint_long"]
 async_u8_vec = ["async_varint_size", "alloc"]
 async_string = ["async_u8_vec", "alloc"]
-
 
 tokio = ["dep:tokio", "async", "alloc"]
 bytes = ["dep:bytes"]
