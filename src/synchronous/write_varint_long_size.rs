@@ -1,17 +1,18 @@
 macro_rules! write_varint_long_size {
     (cp, $func: ident, $internal: ty, $write_internal: ident) => {
-        write_varint_long_size!(f cfg(feature = "sync_varint_long_size"), cp, $func, $internal, $write_internal);
+        write_varint_long_size!(f cfg(feature = "sync_varint_long_size"), cp, usize, $func, $internal, $write_internal);
     };
     (ap, $func: ident, $write_internal: ident) => {
-        write_varint_long_size!(f cfg(feature = "sync_varint_long_size"), ap, $func, $write_internal);
+        write_varint_long_size!(f cfg(feature = "sync_varint_long_size"), ap, usize, $func, u128, $write_internal);
     };
-    (f $feature: meta, cp, $func: ident, $internal: ty, $write_internal: ident) => {
-        write_varint_long!(f $feature, usize, $func, $internal, $write_internal);
+    (f $feature: meta, cp, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
+        write_varint_long!(f $feature, $primitive, $func, $internal, $write_internal);
     };
-    (f $feature: meta, ap, $func: ident, $write_internal: ident) => {
-        write_size_ap!(f $feature, usize, $func, u128, $write_internal);
+    (f $feature: meta, ap, $primitive: ty, $func: ident, $internal: ty, $write_internal: ident) => {
+        write_size_ap!(f $feature, $primitive, $func, $internal, $write_internal);
     };
 }
+
 macro_rules! define_write_varint_long_size {
     () => {
         write_varint_long_size!(cp, write_usize_varint_2_le, u16, write_u16_raw_le);

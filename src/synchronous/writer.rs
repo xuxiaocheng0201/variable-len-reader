@@ -56,8 +56,8 @@ pub trait VariableWriter: VariableWritable {
     define_write_float_varint!();
     define_write_float_varint_long!();
 
-    #[cfg(feature = "sync_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
+    #[cfg(feature = "sync_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_u8_vec")))]
     #[inline]
     fn write_u8_vec(&mut self, message: &[u8]) -> Result<usize, Self::Error> {
         let mut len = self.write_usize_varint_ap(message.len())?;

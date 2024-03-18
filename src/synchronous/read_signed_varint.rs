@@ -12,6 +12,7 @@ macro_rules! read_signed_varint {
         }
     };
 }
+
 macro_rules! define_read_signed_varint {
     () => {
         read_signed_varint!(i16, read_i16_varint, read_u16_varint);

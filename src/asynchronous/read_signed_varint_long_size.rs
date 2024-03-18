@@ -38,27 +38,18 @@ macro_rules! define_read_signed_varint_long_size_future {
         read_signed_varint_long_size_future!(cp, ReadIsizeVarint16Le, ReadUsizeVarint16Le);
         read_signed_varint_long_size_future!(cp, ReadIsizeVarint16Be, ReadUsizeVarint16Be);
 
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint2LeAp, ReadU128Varint2Le);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint2BeAp, ReadU128Varint2Be);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint4LeAp, ReadU128Varint4Le);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint4BeAp, ReadU128Varint4Be);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint8LeAp, ReadU128Varint8Le);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint8BeAp, ReadU128Varint8Be);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint16LeAp, ReadU128Varint16Le);
-        read_signed_varint_long_size_future!(ap, ReadIsizeVarint16BeAp, ReadU128Varint16Be);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint2LeAp, ReadI128Varint2Le);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint2BeAp, ReadI128Varint2Be);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint4LeAp, ReadI128Varint4Le);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint4BeAp, ReadI128Varint4Be);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint8LeAp, ReadI128Varint8Le);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint8BeAp, ReadI128Varint8Be);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint16LeAp, ReadI128Varint16Le);
+        read_signed_varint_long_size_future!(ap, ReadIsizeVarint16BeAp, ReadI128Varint16Be);
     };
 }
 macro_rules! define_read_signed_varint_long_size_func {
     () => {
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint2LeAp, read_isize_varint_2_le_ap, read_u128_varint_2_le);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint2BeAp, read_isize_varint_2_be_ap, read_u128_varint_2_be);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint4LeAp, read_isize_varint_4_le_ap, read_u128_varint_4_le);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint4BeAp, read_isize_varint_4_be_ap, read_u128_varint_4_be);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint8LeAp, read_isize_varint_8_le_ap, read_u128_varint_8_le);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint8BeAp, read_isize_varint_8_be_ap, read_u128_varint_8_be);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint16LeAp, read_isize_varint_16_le_ap, read_u128_varint_16_le);
-        read_signed_varint_long_size_func!(ap, ReadIsizeVarint16BeAp, read_isize_varint_16_be_ap, read_u128_varint_16_be);
-
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint2Le, read_isize_varint_2_le, read_usize_varint_2_le);
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint2Be, read_isize_varint_2_be, read_usize_varint_2_be);
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint4Le, read_isize_varint_4_le, read_usize_varint_4_le);
@@ -67,6 +58,15 @@ macro_rules! define_read_signed_varint_long_size_func {
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint8Be, read_isize_varint_8_be, read_usize_varint_8_be);
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint16Le, read_isize_varint_16_le, read_usize_varint_16_le);
         read_signed_varint_long_size_func!(cp, ReadIsizeVarint16Be, read_isize_varint_16_be, read_usize_varint_16_be);
+
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint2LeAp, read_isize_varint_2_le_ap, read_i128_varint_2_le);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint2BeAp, read_isize_varint_2_be_ap, read_i128_varint_2_be);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint4LeAp, read_isize_varint_4_le_ap, read_i128_varint_4_le);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint4BeAp, read_isize_varint_4_be_ap, read_i128_varint_4_be);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint8LeAp, read_isize_varint_8_le_ap, read_i128_varint_8_le);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint8BeAp, read_isize_varint_8_be_ap, read_i128_varint_8_be);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint16LeAp, read_isize_varint_16_le_ap, read_i128_varint_16_le);
+        read_signed_varint_long_size_func!(ap, ReadIsizeVarint16BeAp, read_isize_varint_16_be_ap, read_i128_varint_16_be);
     };
 }
 

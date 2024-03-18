@@ -61,6 +61,7 @@ macro_rules! write_wrap_func {
     (@$primitive: ty, $future: ident, $func: ident $(, $feature: meta)?) => {
         $(
         #[$feature]
+        #[cfg_attr(docsrs, doc($feature))]
         )?
         #[inline]
         fn $func(&mut self, value: $primitive) -> $future<Self> where Self: Unpin {
@@ -196,20 +197,20 @@ include!("write_signed_varint_long_size.rs");
 include!("write_float_varint.rs");
 include!("write_float_varint_long.rs");
 
-#[cfg(feature = "async_vec_u8")]
+#[cfg(feature = "async_u8_vec")]
 pin_project! {
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct WriteVecU8<'a, W: ?Sized> {
+    pub struct WriteU8Vec<'a, W: ?Sized> {
         #[pin]
         inner: WriteUsizeVarintAp<'a, W>,
         buf: Option<OwnedWriteBuf<alloc::vec::Vec<u8>>>,
     }
 }
-#[cfg(feature = "async_vec_u8")]
-impl<'a, W: ?Sized> WriterFuture<'a, W, alloc::vec::Vec<u8>> for WriteVecU8<'a, W> {
+#[cfg(feature = "async_u8_vec")]
+impl<'a, W: ?Sized> WriterFuture<'a, W, alloc::vec::Vec<u8>> for WriteU8Vec<'a, W> {
     fn new(writer: &'a mut W, buf: alloc::vec::Vec<u8>) -> Self {
         Self { inner: WriteUsizeVarintAp::new(writer, buf.len()), buf: Some(OwnedWriteBuf::new(buf)) }
     }
@@ -220,8 +221,8 @@ impl<'a, W: ?Sized> WriterFuture<'a, W, alloc::vec::Vec<u8>> for WriteVecU8<'a, 
         *me.buf = Some(OwnedWriteBuf::new(buf));
     }
 }
-#[cfg(feature = "async_vec_u8")]
-impl<'a, W: AsyncVariableWriter + Unpin + ?Sized> Future for WriteVecU8<'a, W> {
+#[cfg(feature = "async_u8_vec")]
+impl<'a, W: AsyncVariableWriter + Unpin + ?Sized> Future for WriteU8Vec<'a, W> {
     type Output = Result<(), W::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -231,7 +232,7 @@ impl<'a, W: AsyncVariableWriter + Unpin + ?Sized> Future for WriteVecU8<'a, W> {
         };
         core::task::ready!(me.inner.as_mut().poll(cx))?;
         let mut ref_buf = buf.into();
-        let res = W::poll_write_more(Pin::new(&mut me.inner.project().inner.project().writer), cx, &mut ref_buf);
+        let res = W::poll_write_more(Pin::new(&mut me.inner.project().inner.project().inner.project().writer), cx, &mut ref_buf);
         let position = ref_buf.position();
         buf.set_position(position);
         core::task::ready!(res)?;
@@ -240,7 +241,7 @@ impl<'a, W: AsyncVariableWriter + Unpin + ?Sized> Future for WriteVecU8<'a, W> {
     }
 }
 
-write_wrap_future!(f cfg(feature = "async_string"), alloc::string::String, WriteString, WriteVecU8);
+write_wrap_future!(f cfg(feature = "async_string"), alloc::string::String, WriteString, WriteU8Vec);
 #[cfg(feature = "async_string")]
 impl<'a, W: ?Sized> WriteString<'a, W> {
     fn _handle(value: alloc::string::String) -> alloc::vec::Vec<u8> {
@@ -298,17 +299,17 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     /// ```rust,ignore
     /// self.write_u8_vec_boxed(&value).await?;
     /// ```
-    #[cfg(feature = "async_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg(feature = "async_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
-    fn write_u8_vec(&mut self, value: alloc::vec::Vec<u8>) -> WriteVecU8<Self> where Self: Unpin {
-        WriteVecU8::new(self, value)
+    fn write_u8_vec(&mut self, value: alloc::vec::Vec<u8>) -> WriteU8Vec<Self> where Self: Unpin {
+        WriteU8Vec::new(self, value)
     }
 
     /// This future is not zero-cost.
     /// But it borrows the vec, different from [Self::write_u8_vec].
-    #[cfg(feature = "async_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg(feature = "async_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn write_u8_vec_boxed<'a>(&'a mut self, value: &'a [u8]) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<(), Self::Error>> + Send + 'a>> where Self: Unpin + Send {
@@ -339,9 +340,6 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     }
 }
 
-impl<W: AsyncVariableWritable + ?Sized> AsyncVariableWriter for W {
-}
-
 #[cfg(feature = "tokio")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
@@ -366,3 +364,7 @@ impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
         Poll::Ready(Ok(()))
     }
 }
+
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
+impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWriter for W { }

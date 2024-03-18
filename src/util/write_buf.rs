@@ -152,7 +152,7 @@ impl<B: AsRef<[u8]>> bytes::Buf for OwnedWriteBuf<B> {
     impl_bytes_buf!();
 }
 
-impl<'a, B: AsRef<[u8]>> From<&'a mut OwnedWriteBuf<B>> for WriteBuf<'a> { // TODO: guard
+impl<'a, B: AsRef<[u8]>> From<&'a mut OwnedWriteBuf<B>> for WriteBuf<'a> {
     #[inline]
     fn from(value: &'a mut OwnedWriteBuf<B>) -> Self {
         let mut buf = Self::new(value.buf.as_ref());

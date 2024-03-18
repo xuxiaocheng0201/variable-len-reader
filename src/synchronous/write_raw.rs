@@ -11,6 +11,7 @@ macro_rules! write_raw {
         }
     };
 }
+
 macro_rules! define_write_raw {
     () => {
         write_raw!(u8, write_u8_raw, to_ne_bytes);

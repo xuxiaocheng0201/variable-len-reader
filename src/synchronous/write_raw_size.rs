@@ -12,6 +12,7 @@ macro_rules! write_raw_size {
         write_size_ap!(f $feature, $primitive, $func, $internal, $write_internal);
     };
 }
+
 macro_rules! define_write_raw_size {
     () => {
         write_raw_size!(cp, usize, write_usize_raw_le, to_le_bytes);

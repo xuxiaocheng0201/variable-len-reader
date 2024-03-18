@@ -12,6 +12,7 @@ macro_rules! write_signed_varint {
         }
     };
 }
+
 macro_rules! define_write_signed_varint {
     () => {
         write_signed_varint!(i16, write_i16_varint, write_u16_varint);

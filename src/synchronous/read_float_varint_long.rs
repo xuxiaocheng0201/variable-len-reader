@@ -6,6 +6,7 @@ macro_rules! read_float_varint_long {
         read_float_varint!(f $feature, $primitive, $func, $read_internal);
     };
 }
+
 macro_rules! define_read_float_varint_long {
     () => {
         read_float_varint_long!(f32, read_f32_varint_2_le, read_u32_varint_2_le);

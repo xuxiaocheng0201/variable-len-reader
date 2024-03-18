@@ -12,7 +12,7 @@ macro_rules! write_varint {
             const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
             let mut size = 0;
             let mut value = value;
-            while value >= SIGN_BIT as $primitive {
+            while (value & NUM_BITS as $primitive) != value {
                 size += self.$write_internal(((value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT)?;
                 value >>= POS_OFFSET;
             }
@@ -21,6 +21,7 @@ macro_rules! write_varint {
         }
     };
 }
+
 macro_rules! define_write_varint {
     () => {
         write_varint!(u16, write_u16_varint);

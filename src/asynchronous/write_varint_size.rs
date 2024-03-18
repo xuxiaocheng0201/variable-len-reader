@@ -3,7 +3,7 @@ macro_rules! write_varint_size_future {
         write_varint_size_future!(f cfg(feature = "async_varint_size"), cp, usize, $future, u8, WriteU8Raw);
     };
     (ap, $future: ident) => {
-        write_varint_size_future!(f cfg(feature = "async_varint_size"), ap, usize, $future, u8, WriteU8Raw);
+        write_varint_size_future!(f cfg(feature = "async_varint_size"), ap, usize, $future, u128, WriteU128Varint);
     };
     (f $feature: meta, cp, $primitive: ty, $future: ident, $internal: ty, $inner_future: ident) => {
         write_varint_future!(f $feature, $primitive, $future, $internal, $inner_future);

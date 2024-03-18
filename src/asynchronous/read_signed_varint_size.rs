@@ -31,14 +31,14 @@ macro_rules! define_read_signed_varint_size_future {
     () => {
         read_signed_varint_size_future!(cp, ReadIsizeVarint, ReadUsizeVarint);
 
-        read_signed_varint_size_future!(ap, ReadIsizeVarintAp, ReadU128Varint);
+        read_signed_varint_size_future!(ap, ReadIsizeVarintAp, ReadI128Varint);
     };
 }
 macro_rules! define_read_signed_varint_size_func {
     () => {
         read_signed_varint_size_func!(cp, ReadIsizeVarint, read_isize_varint, read_usize_varint);
 
-        read_signed_varint_size_func!(ap, ReadIsizeVarintAp, read_isize_varint_ap, read_u128_varint);
+        read_signed_varint_size_func!(ap, ReadIsizeVarintAp, read_isize_varint_ap, read_i128_varint);
     };
 }
 

@@ -185,28 +185,28 @@ include!("read_signed_varint_long_size.rs");
 include!("read_float_varint.rs");
 include!("read_float_varint_long.rs");
 
-#[cfg(feature = "async_vec_u8")]
+#[cfg(feature = "async_u8_vec")]
 pin_project! {
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[derive(Debug)]
     #[project(!Unpin)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct ReadVecU8<'a, R: ?Sized> {
+    pub struct ReadU8Vec<'a, R: ?Sized> {
         #[pin]
         inner: ReadUsizeVarintAp<'a, R>,
         buf: Option<OwnedReadBuf<alloc::vec::Vec<u8>>>,
     }
 }
-#[cfg(feature = "async_vec_u8")]
-impl<'a, R: ?Sized> ReaderFuture for ReadVecU8<'a, R> {
+#[cfg(feature = "async_u8_vec")]
+impl<'a, R: ?Sized> ReaderFuture for ReadU8Vec<'a, R> {
     fn reset(self: Pin<&mut Self>) {
         let me = self.project();
         me.inner.reset();
         *me.buf = None;
     }
 }
-#[cfg(feature = "async_vec_u8")]
-impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadVecU8<'a, R> {
+#[cfg(feature = "async_u8_vec")]
+impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadU8Vec<'a, R> {
     type Output = Result<alloc::vec::Vec<u8>, R::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -227,7 +227,7 @@ impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadVecU8<'a, R> {
     }
 }
 
-read_wrap_future!(f cfg(feature = "async_string"), ReadString, ReadVecU8);
+read_wrap_future!(f cfg(feature = "async_string"), ReadString, ReadU8Vec);
 #[cfg(feature = "async_string")]
 impl<'a, R: AsyncVariableReader + Unpin + ?Sized> Future for ReadString<'a, R> {
     type Output = Result<alloc::string::String, R::Error>;
@@ -296,19 +296,19 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     /// ```rust,ignore
     /// self.read_u8_vec_boxed().await?;
     /// ```
-    #[cfg(feature = "async_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg(feature = "async_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
     #[deprecated(since = "3.0.0", note = "see docs for details")]
-    fn read_u8_vec(&mut self) -> ReadVecU8<Self> where Self: Unpin {
-        ReadVecU8 { inner: self.read_usize_varint_ap(), buf: None }
+    fn read_u8_vec(&mut self) -> ReadU8Vec<Self> where Self: Unpin {
+        ReadU8Vec { inner: self.read_usize_varint_ap(), buf: None }
     }
 
     /// This future is not zero-cost.
     /// But it is more efficient than [Self::read_u8_vec]
     /// when you need to read a large number of u8s.
-    #[cfg(feature = "async_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async_vec_u8")))]
+    #[cfg(feature = "async_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     fn read_u8_vec_boxed(&mut self) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<alloc::vec::Vec<u8>, Self::Error>> + Send + '_>> where Self: Unpin + Send {

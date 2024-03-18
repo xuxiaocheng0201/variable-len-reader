@@ -11,6 +11,7 @@ macro_rules! read_float_varint {
         }
     };
 }
+
 macro_rules! define_read_float_varint {
     () => {
         read_float_varint!(f32, read_f32_varint, read_u32_varint);

@@ -17,6 +17,7 @@ macro_rules! write_bools {
         }
     };
 }
+
 macro_rules! define_write_bools {
     () => {
         write_bools!(write_bools_2, 2);

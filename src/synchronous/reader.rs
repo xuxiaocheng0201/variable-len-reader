@@ -62,8 +62,8 @@ pub trait VariableReader: VariableReadable {
     define_read_float_varint!();
     define_read_float_varint_long!();
 
-    #[cfg(feature = "sync_vec_u8")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sync_vec_u8")))]
+    #[cfg(feature = "sync_u8_vec")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sync_u8_vec")))]
     #[inline]
     fn read_u8_vec(&mut self) -> Result<alloc::vec::Vec<u8>, Self::Error> {
         let length = self.read_usize_varint_ap()?;

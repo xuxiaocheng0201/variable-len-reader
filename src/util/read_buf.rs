@@ -166,7 +166,7 @@ unsafe impl<B: AsRef<[u8]> + AsMut<[u8]>> bytes::BufMut for OwnedReadBuf<B> {
     impl_bytes_buf!();
 }
 
-impl<'a, B: AsRef<[u8]> + AsMut<[u8]>> From<&'a mut OwnedReadBuf<B>> for ReadBuf<'a> { // TODO: guard
+impl<'a, B: AsRef<[u8]> + AsMut<[u8]>> From<&'a mut OwnedReadBuf<B>> for ReadBuf<'a> {
     #[inline]
     fn from(value: &'a mut OwnedReadBuf<B>) -> Self {
         let mut buf = Self::new(value.buf.as_mut());

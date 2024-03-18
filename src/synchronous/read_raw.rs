@@ -14,6 +14,7 @@ macro_rules! read_raw {
         }
     };
 }
+
 macro_rules! define_read_raw {
     () => {
         read_raw!(u8, read_u8_raw, from_ne_bytes);

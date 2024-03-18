@@ -6,6 +6,7 @@ macro_rules! write_float_varint_long {
         write_float_varint!(f $feature, $primitive, $func, $write_internal);
     };
 }
+
 macro_rules! define_write_float_varint_long {
     () => {
         write_float_varint_long!(f32, write_f32_varint_2_le, write_u32_varint_2_le);

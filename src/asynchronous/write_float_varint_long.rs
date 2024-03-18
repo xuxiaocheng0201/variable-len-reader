@@ -47,3 +47,6 @@ macro_rules! define_write_float_long_func {
 }
 
 define_write_float_long_future!();
+
+#[cfg(all(feature = "async_float_varint_long", not(feature = "async_varint_long")))]
+compile_error!("developer error: please check Cargo.toml");

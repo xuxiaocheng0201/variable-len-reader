@@ -6,6 +6,7 @@ macro_rules! write_varint_long {
         write_varint!(f $feature, $primitive, $func, $internal, $write_internal);
     };
 }
+
 macro_rules! define_write_varint_long {
     () => {
         write_varint_long!(u8, write_u8_varint, u8, write_u8_raw);

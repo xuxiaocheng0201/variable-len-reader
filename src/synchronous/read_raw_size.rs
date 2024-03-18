@@ -12,6 +12,7 @@ macro_rules! read_raw_size {
         read_size_ap!(f $feature, $primitive, $func, $read_internal);
     };
 }
+
 macro_rules! define_read_raw_size {
     () => {
         read_raw_size!(cp, usize, read_usize_raw_le, from_le_bytes);

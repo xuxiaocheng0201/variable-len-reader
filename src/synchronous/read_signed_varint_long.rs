@@ -6,6 +6,7 @@ macro_rules! read_signed_varint_long {
         read_signed_varint!(f $feature, $primitive, $func, $read_internal);
     };
 }
+
 macro_rules! define_read_signed_varint_long {
     () => {
         read_signed_varint_long!(i8, read_i8_varint, read_u8_varint);

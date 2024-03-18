@@ -6,6 +6,7 @@ macro_rules! write_signed_varint_long {
         write_signed_varint!(f $feature, $primitive, $func, $write_internal);
     };
 }
+
 macro_rules! define_write_signed_varint_long {
     () => {
         write_signed_varint_long!(i8, write_i8_varint, write_u8_varint);

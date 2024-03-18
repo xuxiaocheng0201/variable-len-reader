@@ -20,6 +20,7 @@ macro_rules! read_bools {
         }
     };
 }
+
 macro_rules! define_read_bools {
     () => {
         #[cfg(feature = "sync_bools")]

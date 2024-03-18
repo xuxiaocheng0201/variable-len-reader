@@ -59,7 +59,7 @@ macro_rules! write_varint_future {
                 const NUM_BITS: $internal = <$internal>::MAX >> 1;
                 const SIGN_BIT: $internal = NUM_BITS + 1;
                 const POS_OFFSET: usize = (<$internal>::BITS - 1) as usize;
-                if value >= SIGN_BIT as $primitive {
+                if (value & NUM_BITS as $primitive) != value {
                     (value >> POS_OFFSET, ((value & (NUM_BITS as $primitive)) as $internal) | SIGN_BIT, position + POS_OFFSET)
                 } else {
                     (0, value as $internal, position + POS_OFFSET)

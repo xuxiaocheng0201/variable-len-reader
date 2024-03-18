@@ -12,6 +12,7 @@ macro_rules! read_varint_long_size {
         read_size_ap!(f $feature, $primitive, $func, $read_internal);
     };
 }
+
 macro_rules! define_read_varint_long_size {
     () => {
         read_varint_long_size!(cp, read_usize_varint_2_le, u16, read_u16_raw_le);

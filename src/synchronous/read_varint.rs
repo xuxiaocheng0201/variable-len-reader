@@ -27,6 +27,7 @@ macro_rules! read_varint {
         }
     };
 }
+
 macro_rules! define_read_varint {
     () => {
         #[cfg(feature = "sync_varint")]

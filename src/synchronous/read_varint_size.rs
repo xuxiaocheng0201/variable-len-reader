@@ -12,6 +12,7 @@ macro_rules! read_varint_size {
         read_size_ap!(f $feature, $primitive, $func, $read_internal);
     };
 }
+
 macro_rules! define_read_varint_size {
     () => {
         read_varint_size!(cp, read_usize_varint, u8, read_u8_raw);

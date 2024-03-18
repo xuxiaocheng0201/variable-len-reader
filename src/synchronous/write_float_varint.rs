@@ -11,6 +11,7 @@ macro_rules! write_float_varint {
         }
     };
 }
+
 macro_rules! define_write_float_varint {
     () => {
         write_float_varint!(f32, write_f32_varint, write_u32_varint);
