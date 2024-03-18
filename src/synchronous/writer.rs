@@ -72,24 +72,3 @@ pub trait VariableWriter: VariableWritable {
         self.write_u8_vec(message.as_bytes())
     }
 }
-
-impl<W: VariableWritable> VariableWriter for W {
-}
-
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<W: std::io::Write> VariableWritable for W {
-    type Error = std::io::Error;
-
-    #[inline]
-    fn write_single(&mut self, byte: u8) -> Result<usize, Self::Error> {
-        W::write_all(self, &[byte])?;
-        Ok(1)
-    }
-
-    #[inline]
-    fn write_more(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-        W::write_all(self, buf)?;
-        Ok(buf.len())
-    }
-}

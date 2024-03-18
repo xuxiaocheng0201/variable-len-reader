@@ -339,32 +339,3 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
         self.write_u8_vec_boxed(value.as_bytes())
     }
 }
-
-#[cfg(feature = "tokio")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
-impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWritable for W {
-    type Error = tokio::io::Error;
-    
-    fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut Option<u8>) -> Poll<Result<(), Self::Error>> {
-        match buf.as_ref() {
-            None => Poll::Ready(Ok(())),
-            Some(b) => W::poll_write(self, cx, &[*b]).map_ok(|_i| { *buf = None; () })
-        }
-    }
-
-    fn poll_write_more(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut WriteBuf<'_>) -> Poll<Result<(), Self::Error>> {
-        while buf.left() > 0 {
-            let position = buf.position();
-            let n = core::task::ready!(W::poll_write(self.as_mut(), cx, &buf.buf()[position..]))?;
-            if n == 0 {
-                return Poll::Ready(Err(tokio::io::Error::new(tokio::io::ErrorKind::WriteZero, "write 0 bytes")));
-            }
-            buf.skip(n);
-        }
-        Poll::Ready(Ok(()))
-    }
-}
-
-#[cfg(feature = "tokio")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
-impl<W: tokio::io::AsyncWrite + Unpin> AsyncVariableWriter for W { }

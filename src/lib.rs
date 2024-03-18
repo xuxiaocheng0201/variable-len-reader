@@ -15,6 +15,7 @@ pub mod synchronous;
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub mod asynchronous;
+mod impls;
 
 // #[cfg(test)] // TODO
 // pub(crate) mod channel {
@@ -55,7 +56,7 @@ pub mod asynchronous;
 //         fn poll_write_single(self: Pin<&mut Self>, cx: &mut Context<'_>, byte: u8) -> Poll<std::io::Result<usize>> {
 //             self.0.try_send(byte).map_or_else(|e| match e {
 //                 TrySendError::Full(_) => {
-//                     cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
+//                     cx.waker().wake_by_ref();
 //                     Poll::Pending
 //                 }
 //                 TrySendError::Closed(_) => {
@@ -69,7 +70,7 @@ pub mod asynchronous;
 //         fn poll_read_single(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<u8>> {
 //             self.0.try_recv().map_or_else(|e| match e {
 //                 TryRecvError::Empty => {
-//                     cx.waker().wake_by_ref(); // TODO: transfer handle into self.0
+//                     cx.waker().wake_by_ref();
 //                     Poll::Pending
 //                 }
 //                 TryRecvError::Disconnected => {
