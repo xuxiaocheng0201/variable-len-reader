@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 include!("func/value_generator.rs");
 
 macro_rules! test_func {
@@ -6,7 +8,7 @@ macro_rules! test_func {
         use variable_len_reader::asynchronous::writer::AsyncVariableWriter;
         $cursor.set_position(0);
         let source = $source;
-        $cursor.$writer(source).await.expect(&format!("writing failed. tester={}, source={:?}", stringify!($tester), source));
+        $cursor.$writer(source.clone()).await.expect(&format!("writing failed. tester={}, source={:?}", stringify!($tester), source));
         let len = $cursor.position();
         $cursor.set_position(0);
         let target = $cursor.$reader().await.expect(&format!("reading failed. tester={}, source={:?}, len={}, buffer={:?}", stringify!($tester), source, len, $cursor));
@@ -49,17 +51,13 @@ include!("func/varint.rs");
 include!("func/varint_signed.rs");
 include!("func/varint_float.rs");
 
-test_func!(u8_vec, read_u8_vec_boxed, write_u8_vec_boxed @m [
-    &vec![1,2,3],
-    &vec![5,4,3,2,1],
-], |a, b| a.as_slice() == b.as_slice());
+include!("func/string.rs");
 
-test_func!(string, read_string_boxed, write_string_boxed @m [
-    "hello world!",
-    include_str!("func/varint.rs") /*a very long string*/,
-    "一些非 ASCII 字符",
-]);
+test_func!(u8_vec, read_u8_vec, write_u8_vec @m test_u8_vec_values!(|v| v.to_vec()));
+test_func!(u8_vec_boxed, read_u8_vec_boxed, write_u8_vec_boxed @m test_u8_vec_values!());
 
+test_func!(string, read_string, write_string @m test_string_values!(|s| s.to_string()));
+test_func!(string_boxed, read_string_boxed, write_string_boxed @m test_string_values!());
 
 // #[cfg(all(test, feature = "tokio"))]
 // mod tests {

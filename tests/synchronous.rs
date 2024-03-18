@@ -6,7 +6,7 @@ macro_rules! test_func {
         use variable_len_reader::synchronous::writer::VariableWriter;
         $cursor.set_position(0);
         let source = $source;
-        $cursor.$writer(source).expect(&format!("writing failed. tester={}, source={:?}", stringify!($tester), source));
+        $cursor.$writer(source.clone()).expect(&format!("writing failed. tester={}, source={:?}", stringify!($tester), source));
         let len = $cursor.position();
         $cursor.set_position(0);
         let target = $cursor.$reader().expect(&format!("reading failed. tester={}, source={:?}, len={}, buffer={:?}", stringify!($tester), source, len, $cursor));
@@ -51,6 +51,6 @@ include!("func/varint_float.rs");
 
 include!("func/string.rs");
 
-test_func!(u8_vec, read_u8_vec, write_u8_vec @m test_u8_vec_values!(), |a, b| a.as_slice() == b.as_slice());
+test_func!(u8_vec, read_u8_vec, write_u8_vec @m test_u8_vec_values!());
 
 test_func!(string, read_string, write_string @m test_string_values!());
