@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "3.0.0"
+version = "3.1.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data. Support AsyncRead/AsyncWrite in tokio."
@@ -18,11 +18,13 @@ bytes = { version = "^1", optional = true, default-features = false }
 
 [features]
 default = ["sync_default", "std"]
-full = ["sync_full", "async_full", "tokio"]
+full = ["sync_full", "async_full", "comp-full"]
 
 alloc = []
 std = ["alloc", "bytes?/std"]
 zigzag = []
+tokio = ["dep:tokio"]
+bytes = ["dep:bytes"]
 
 sync = []
 sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
@@ -30,7 +32,7 @@ sync_full = ["sync_bools", "sync_raw", "sync_raw_size",
     "sync_signed_varint", "sync_signed_varint_size", "sync_signed_varint_long", "sync_signed_varint_long_size",
     "sync_float_varint", "sync_float_varint_long",
     "sync_u8_vec", "sync_string"]
-sync_default = ["sync_varint", "sync_string", "std"]
+sync_default = ["sync_varint", "sync_string"]
 sync_bools = ["sync"]
 sync_raw = ["sync"]
 sync_raw_size = ["sync_raw"]
@@ -53,7 +55,7 @@ async_full = ["async_bools", "async_raw", "async_raw_size",
     "async_signed_varint", "async_signed_varint_size", "async_signed_varint_long", "async_signed_varint_long_size",
     "async_float_varint", "async_float_varint_long",
     "async_u8_vec", "async_string"]
-async_default = ["async_varint", "async_string", "tokio"]
+async_default = ["async_varint", "async_string"]
 async_bools = ["async"]
 async_raw = ["async"]
 async_raw_size = ["async_raw"]
@@ -70,8 +72,10 @@ async_float_varint_long = ["async_varint_long"]
 async_u8_vec = ["async_varint_size", "alloc"]
 async_string = ["async_u8_vec", "alloc"]
 
-tokio = ["dep:tokio", "async", "alloc"]
-bytes = ["dep:bytes"]
+comp-full = ["std", "bytes-comp", "tokio-comp"]
+# std-comp = ["std"] # always enable
+bytes-comp = ["bytes", "alloc", "sync"]
+tokio-comp = ["tokio", "alloc", "async"]
 
 [dev-dependencies]
 anyhow = "^1"
