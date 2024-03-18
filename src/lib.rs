@@ -15,7 +15,7 @@ pub mod synchronous;
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub mod asynchronous;
-pub mod impls;
+mod impls;
 
 // #[cfg(test)] // TODO
 // pub(crate) mod channel {
