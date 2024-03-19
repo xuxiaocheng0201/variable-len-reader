@@ -20,9 +20,9 @@ bytes = { version = "^1", optional = true, default-features = false }
 default = ["sync_default", "std"]
 full = ["sync_full", "async_full", "comp-full"]
 
+zigzag = []
 alloc = []
 std = ["alloc", "bytes?/std"]
-zigzag = []
 tokio = ["dep:tokio"]
 bytes = ["dep:bytes"]
 
@@ -72,9 +72,8 @@ async_float_varint_long = ["async_varint_long"]
 async_u8_vec = ["async_varint_size", "alloc"]
 async_string = ["async_u8_vec", "alloc"]
 
-comp-full = ["std", "bytes-comp", "tokio-comp"]
-# std-comp = ["std"] # always enable
-bytes-comp = ["bytes", "alloc", "sync"]
+comp-full = ["std-comp", "tokio-comp"]
+std-comp = ["std", "alloc", "sync"]
 tokio-comp = ["tokio", "alloc", "async"]
 
 [dev-dependencies]
