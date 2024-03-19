@@ -18,6 +18,14 @@ pub mod asynchronous;
 
 mod impls;
 
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub use synchronous::{reader::VariableReader, writer::VariableWriter};
+#[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
+pub use asynchronous::{reader::AsyncVariableReader, writer::AsyncVariableWriter};
+
+
 // #[cfg(test)] // TODO
 // pub(crate) mod channel {
 //     use std::io::Result;
