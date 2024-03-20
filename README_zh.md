@@ -44,8 +44,7 @@ variable-len-reader = "^3.1"
 ```rust
 use std::net::{TcpListener, TcpStream};
 use anyhow::Result;
-use variable_len_reader::synchronous::reader::VariableReader;
-use variable_len_reader::synchronous::writer::VariableWriter;
+use variable_len_reader::{VariableReader, VariableWriter};
 
 fn main() -> Result<()> {
     let server = TcpListener::bind("localhost:0")?;
@@ -67,8 +66,7 @@ fn main() -> Result<()> {
 
 ```rust
 use bytes::{Buf, BufMut, BytesMut};
-use variable_len_reader::synchronous::reader::VariableReader;
-use variable_len_reader::synchronous::writer::VariableWriter;
+use variable_len_reader::{VariableReader, VariableWriter};
 
 fn main() {
     let message = "Hello world!";
@@ -94,8 +92,8 @@ fn main() {
 ```rust
 use anyhow::Result;
 use tokio::net::{TcpListener, TcpStream};
-use variable_len_reader::asynchronous::reader::AsyncVariableReader;
-use variable_len_reader::asynchronous::writer::AsyncVariableWriter;
+use variable_len_reader::{AsyncVariableReader, AsyncVariableWriter};
+use variable_len_reader::helper::{AsyncReaderHelper, AsyncWriterHelper};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -104,10 +102,10 @@ async fn main() -> Result<()> {
     let (mut server, _) = server.accept().await?;
 
     // 写
-    client.write_string_boxed(&"Hello tokio!").await?;
+    AsyncWriterHelper(&mut client).help_write_string(&"Hello tokio!").await?;
 
     // 读
-    let message = server.read_string_boxed().await?;
+    let message = AsyncReaderHelper(&mut server).help_read_string().await?;
     assert_eq!("Hello tokio!", message);
     
     Ok(())
