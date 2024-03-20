@@ -1,6 +1,6 @@
 [package]
 name = "variable-len-reader"
-version = "3.1.1"
+version = "3.2.0"
 authors = ["xuxiaocheng <2762267080@qq.com>"]
 edition = "2021"
 description = "A library for reading/writing variable length data. Support AsyncRead/AsyncWrite in tokio."
