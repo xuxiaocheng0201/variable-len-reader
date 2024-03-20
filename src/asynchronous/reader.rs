@@ -253,6 +253,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadMore { reader: self, buf: ReadBuf::new(buf) }
     }
 
+    /// You may call [bytes::BytesMut::limit] to prevent reading more data than needed.
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]

@@ -1,5 +1,5 @@
 #[cfg(all(feature = "sync", feature = "std-comp"))]
-mod std;
+pub mod std;
 
 #[cfg(all(feature = "async", feature = "tokio-comp"))]
-mod tokio;
+pub mod tokio;

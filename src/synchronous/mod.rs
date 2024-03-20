@@ -13,6 +13,7 @@ pub trait VariableReadable {
         Ok(())
     }
 
+    /// You may call [bytes::BytesMut::limit] to prevent reading more data than needed.
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     fn read_more_buf<B: bytes::BufMut>(&mut self, buf: &mut B) -> Result<(), Self::Error> {
