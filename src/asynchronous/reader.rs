@@ -288,13 +288,18 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     ///
     /// You can use the example below instead.
     /// ```rust,ignore
-    /// let len = self.read_usize_varint_ap().await?;
+    /// let len = reader.read_usize_varint_ap().await?;
     /// let buf = vec![0; len];
-    /// self.read_more(&mut buf).await?;
+    /// reader.read_more(&mut buf).await?;
     /// ```
     /// Or you can simply call [Self::read_u8_vec_boxed] instead.
     /// ```rust,ignore
-    /// self.read_u8_vec_boxed().await?;
+    /// reader.read_u8_vec_boxed().await?;
+    /// ```
+    ///
+    /// Now you can call
+    /// ```rust,ignore
+    /// AsyncReaderHelper(&mut reader).help_read_u8_vec().await?;
     /// ```
     #[cfg(feature = "async_u8_vec")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
@@ -311,6 +316,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
+    #[deprecated(since = "3.2.0", note = "use [AsyncReaderHelper::help_read_u8_vec] instead")]
     fn read_u8_vec_boxed(&mut self) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<alloc::vec::Vec<u8>, Self::Error>> + Send + '_>> where Self: Unpin + Send {
         alloc::boxed::Box::pin(async move {
             let length = self.read_usize_varint().await?;
@@ -328,6 +334,14 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     /// which is not zero-cost and deprecated.
     ///
     /// Or you can simply call [Self::read_string_boxed] instead.
+    /// ```rust,ignore
+    /// reader.read_string_boxed().await?;
+    /// ```
+    ///
+    /// Now you can call
+    /// ```rust,ignore
+    /// AsyncReaderHelper(&mut reader).help_read_string().await?;
+    /// ```
     #[cfg(feature = "async_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
@@ -341,6 +355,8 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
+    #[deprecated(since = "3.2.0", note = "use [AsyncReaderHelper::help_read_string] instead")]
+    #[allow(deprecated)]
     fn read_string_boxed(&mut self) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<alloc::string::String, Self::Error>> + Send + '_>> where Self: Unpin + Send {
         alloc::boxed::Box::pin(async move {
             match alloc::string::String::from_utf8(self.read_u8_vec_boxed().await?) {

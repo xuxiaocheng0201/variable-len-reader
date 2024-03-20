@@ -5,6 +5,9 @@ use crate::util::write_buf::WriteBuf;
 
 pub mod reader;
 pub mod writer;
+#[cfg(feature = "async_string")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
+pub mod helper;
 
 pub trait AsyncVariableReadable {
     type Error;

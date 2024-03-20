@@ -292,12 +292,17 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     ///
     /// You can use the example instead.
     /// ```rust,ignore
-    /// self.write_usize_varint_ap(value.len()).await?;
-    /// self.write_more(value).await?;
+    /// writer.write_usize_varint_ap(value.len()).await?;
+    /// writer.write_more(value).await?;
     /// ```
     /// Or you can simply call [Self::write_u8_vec_boxed] instead.
     /// ```rust,ignore
-    /// self.write_u8_vec_boxed(&value).await?;
+    /// writer.write_u8_vec_boxed(&value).await?;
+    /// ```
+    ///
+    /// Now you can call
+    /// ```rust,ignore
+    /// AsyncWriterHelper(&mut writer).help_write_u8_vec().await?;
     /// ```
     #[cfg(feature = "async_u8_vec")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
@@ -312,6 +317,7 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
+    #[deprecated(since = "3.2.0", note = "use [AsyncWriterHelper::help_write_u8_vec] instead")]
     fn write_u8_vec_boxed<'a>(&'a mut self, value: &'a [u8]) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<(), Self::Error>> + Send + 'a>> where Self: Unpin + Send {
         alloc::boxed::Box::pin(async move {
             self.write_usize_varint_ap(value.len()).await?;
@@ -324,6 +330,11 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     /// which consumes the value.
     ///
     /// Or you can simply call [Self::write_string_boxed] instead.
+    ///
+    /// Now you can call
+    /// ```rust,ignore
+    /// AsyncWriterHelper(&mut writer).help_write_string().await?;
+    /// ```
     #[cfg(feature = "async_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
@@ -335,6 +346,8 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
+    #[deprecated(since = "3.2.0", note = "use [AsyncWriterHelper::help_write_string] instead")]
+    #[allow(deprecated)]
     fn write_string_boxed<'a>(&'a mut self, value: &'a str) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<(), Self::Error>> + Send + 'a>> where Self: Unpin + Send {
         self.write_u8_vec_boxed(value.as_bytes())
     }

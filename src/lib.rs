@@ -24,6 +24,9 @@ pub use synchronous::{reader::VariableReader, writer::VariableWriter};
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub use asynchronous::{reader::AsyncVariableReader, writer::AsyncVariableWriter};
+#[cfg(feature = "async_u8_vec")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async_u8_vec")))]
+pub use asynchronous::helper::{AsyncReaderHelper, AsyncWriterHelper};
 
 
 // #[cfg(test)] // TODO
