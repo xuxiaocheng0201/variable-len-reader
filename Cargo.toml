@@ -77,11 +77,8 @@ std-comp = ["std", "alloc", "sync"]
 tokio-comp = ["tokio", "alloc", "async"]
 
 [dev-dependencies]
-anyhow = "^1"
+anyhow = "^1" # this is used in Readme test
 tokio = { version = "^1", features = ["test-util", "macros", "rt-multi-thread", "net"] }
-
-[build-dependencies]
-reportme = ">=0.2"
 
 [badges]
 maintenance = { status = "passively-maintained" }
