@@ -256,14 +256,14 @@ pub trait AsyncVariableWriter: AsyncVariableWritable {
     }
 
     #[inline]
-    fn write_more<'a>(&'a mut self, buf: &'a [u8]) -> WriteMore<Self> where Self: Unpin {
+    fn write_more<'a>(&'a mut self, buf: &'a [u8]) -> WriteMore<'a, Self> where Self: Unpin {
         WriteMore { writer: self, buf: WriteBuf::new(buf) }
     }
 
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
-    fn write_more_buf<'a, B: bytes::Buf>(&'a mut self, buf: &'a mut B) -> WriteMoreBuf<Self, B> where Self: Unpin {
+    fn write_more_buf<'a, B: bytes::Buf>(&'a mut self, buf: &'a mut B) -> WriteMoreBuf<'a, Self, B> where Self: Unpin {
         WriteMoreBuf { writer: self, buf }
     }
 

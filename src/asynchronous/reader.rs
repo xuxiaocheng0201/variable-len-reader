@@ -249,7 +249,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     }
 
     #[inline]
-    fn read_more<'a>(&'a mut self, buf: &'a mut [u8]) -> ReadMore<Self> where Self: Unpin {
+    fn read_more<'a>(&'a mut self, buf: &'a mut [u8]) -> ReadMore<'a, Self> where Self: Unpin {
         ReadMore { reader: self, buf: ReadBuf::new(buf) }
     }
 
@@ -257,7 +257,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg(feature = "bytes")]
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[inline]
-    fn read_more_buf<'a, B: bytes::BufMut>(&'a mut self, buf: &'a mut B) -> ReadMoreBuf<Self, B> where Self: Unpin {
+    fn read_more_buf<'a, B: bytes::BufMut>(&'a mut self, buf: &'a mut B) -> ReadMoreBuf<'a, Self, B> where Self: Unpin {
         ReadMoreBuf { reader: self, buf }
     }
 
