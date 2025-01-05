@@ -284,6 +284,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     define_read_float_varint_func!();
     define_read_float_varint_long_func!();
 
+    #[allow(deprecated)]
     /// Note this future is not zero-cost,
     /// it will clone the inner vec buf when poll returns ready.
     ///
@@ -310,6 +311,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
         ReadU8Vec { inner: self.read_usize_varint_ap(), buf: None }
     }
 
+    #[allow(deprecated)]
     /// This future is not zero-cost.
     /// But it is more efficient than [Self::read_u8_vec]
     /// when you need to read a large number of u8s.
@@ -331,6 +333,7 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     fn read_string_error(future_name: &'static str, error: alloc::string::FromUtf8Error) -> Self::Error;
 
+    #[allow(deprecated)]
     /// This future is based on [Self::read_u8_vec],
     /// which is not zero-cost and deprecated.
     ///
@@ -347,17 +350,19 @@ pub trait AsyncVariableReader: AsyncVariableReadable {
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[deprecated(since = "3.0.0", note = "see docs for details")]
-    #[allow(deprecated)]
     fn read_string(&mut self) -> ReadString<Self> where Self: Unpin {
         ReadString { inner: self.read_u8_vec() }
     }
 
+    #[allow(deprecated)]
+    /// This future is not zero-cost.
+    /// But it is more efficient than [Self::read_string]
+    /// when you need to read a long string.
     #[cfg(feature = "async_string")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async_string")))]
     #[inline]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     #[deprecated(since = "3.2.0", note = "use [AsyncReaderHelper::help_read_string] instead")]
-    #[allow(deprecated)]
     fn read_string_boxed(&mut self) -> Pin<alloc::boxed::Box<dyn Future<Output = Result<alloc::string::String, Self::Error>> + Send + '_>> where Self: Unpin + Send {
         alloc::boxed::Box::pin(async move {
             match alloc::string::String::from_utf8(self.read_u8_vec_boxed().await?) {
