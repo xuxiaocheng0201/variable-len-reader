@@ -8,7 +8,8 @@
 ### Project ###
 !/src
 !/build.rs
-!/LICENSE
+!/LICENSE-MIT
+!/LICENSE-APACHE
 !/README.md
 !/README_zh.md
 
