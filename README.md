@@ -18,10 +18,10 @@ A Rust crate to read variable length data based on varint format.
 * Reading and writing.
 * Both synchronous and asynchronous implementations.
 * Support [bytes](https://crates.io/crates/bytes) and [tokio](https://crates.io/crates/tokio) crates.
-* Long chunk version for varint implementations. (But not recommended to use because it's stupid.)
+* Long chunk version for varint implementations. (But not recommended to use.)
 * Support signed and unsigned value. (Using zigzag encoding.)
-* Support usize/isize directly or convert from/to u128/i128. (with the `ap` suffix.)
-* Support extra type of `f32`, `f64`, `vec<u8>` and `string`.
+* Support usize/isize directly or convert from/to u128/i128 (which is with the `_ap` suffix.).
+* Support extra type of `f32`, `f64`, `Vec<u8>` and `string`.
 * Built-in implementation of `std::io::Read`, `std::io::Write` and `tokio::io::AsyncRead`, `tokio::io::AsyncWrite`.
 * Chaining `bytes::Buf` support.
 * no-std support.

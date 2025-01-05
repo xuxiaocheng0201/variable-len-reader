@@ -18,10 +18,10 @@
 * 读和写。
 * 同步和异步双实现。
 * 支持 [bytes](https://crates.io/crates/bytes) 和 [tokio](https://crates.io/crates/tokio) 库。
-* 长 chunk 版本的 varint 实现。（但是不建议使用，因为这太愚蠢了。）
+* 长 chunk 版本的 varint 实现。（但是不建议使用）
 * 支持正负数读写。（通过 zigzag 编码）
-* 支持直接读写 usize/isize 或将其转换到 u128/i128 再读写。（带有 `ap` 后缀）
-* 支持额外的类型比如 `f32`，`f64`，`vec<u8>` 和 `string`。
+* 支持直接读写 usize/isize 或将其转换到 u128/i128 再读写（带有 `_ap` 后缀）。
+* 支持额外的类型比如 `f32`，`f64`，`Vec<u8>` 和 `string`。
 * 内置实现 `std::io::Read`，`std::io::Write` 和 `tokio::io::AsyncRead`，`tokio::io::AsyncWrite`。
 * 支持链式的 `bytes::Buf`。
 * 支持 no-std。
